@@ -10,6 +10,7 @@ import JSZip = require('jszip');
  */
 export interface Datasets {
     [id: string]: {};
+    result: Object; // change to object
 }
 
 export default class DatasetController {
@@ -29,7 +30,6 @@ export default class DatasetController {
      */
     public getDataset(id: string): any {
         // TODO: this should check if the dataset is on disk in ./data if it is not already in memory.
-
         return this.datasets[id];
     }
 
@@ -56,6 +56,7 @@ export default class DatasetController {
                 myZip.loadAsync(data, {base64: true}).then(function (zip: JSZip) {
                     Log.trace('DatasetController::process(..) - unzipped');
 
+                    // switch to var
                     let processedDataset = {};
                     // TODO: iterate through files in zip (zip.files)
                     // The contents of the file will depend on the id provided. e.g.,
@@ -63,13 +64,49 @@ export default class DatasetController {
                     // You can depend on 'id' to differentiate how the zip should be handled,
                     // although you should still be tolerant to errors.
 
-                    that.save(id, processedDataset);
+                    processedDataset['courses'] = [];
 
-                    fulfill(true);
-                }).catch(function (err) {
-                    Log.trace('DatasetController::process(..) - unzip ERROR: ' + err.message);
-                    reject(err);
-                });
+                    var currentCourse = {};
+                    currentCourse['dept'] = [];
+                    currentCourse['id'] = [];
+                    currentCourse['info'] = [];
+
+                    var allCourseArray = zip.folder("courses").file(/CPSC/);
+                    for (var i = 0; i < allCourseArray.length; i++ )
+                    {
+                      //  console.log(allCourseArray[i].name); // Gets name in format "courses/courseName"
+                    //    console.log(JSON.stringify(allCourseArray[i]));
+                        currentCourse.dept.push(allCourseArray[i].name.substring(allCourseArray[i].name.indexOf("/") + 1).substring(0,4));
+                        currentCourse.id.push(allCourseArray[i].name.substring(allCourseArray[i].name.indexOf("/") + 1).substring(4,allCourseArray[i].name.length - 8));
+
+                        allCourseArray[i].async("string")
+                            .then(function success(content) {
+                                //    console.log(content);
+                              //  console.log(JSON.stringify(currentCourse));
+                               // var test = JSON.stringify(content);
+                                var test2 = JSON.parse(content);
+                                currentCourse.info.push(test2.result);
+                                console.log(JSON.stringify(test2));
+                                //  console.log(JSON.stringify(currentCourse.info));
+                                //console.log(JSON.stringify(currentCourse)
+                            },      function error(e) {
+                                console.log("hola");
+                            });
+
+                    }
+                    console.log(JSON.stringify(currentCourse));
+                    return  processedDataset;
+
+                }).then(function (dataset) {
+                    // these used to be in the function 3 lines above
+                        console.log("Hello " + JSON.stringify(dataset));
+                     //   that.save(id, processedDataset);
+                     //   fulfill(true);
+                    })
+                    .catch(function (err) {
+                        Log.trace('DatasetController::process(..) - unzip ERROR: ' + err.message);
+                        reject(err);
+                    });
             } catch (err) {
                 Log.trace('DatasetController::process(..) - ERROR: ' + err);
                 reject(err);
@@ -87,7 +124,6 @@ export default class DatasetController {
     private save(id: string, processedDataset: any) {
         // add it to the memory model
         this.datasets[id] = processedDataset;
-
         // TODO: actually write to disk in the ./data directory
     }
 }
