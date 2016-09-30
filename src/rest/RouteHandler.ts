@@ -48,13 +48,26 @@ export default class RouteHandler {
                 Log.trace('RouteHandler::postDataset(..) on end; total length: ' + req.body.length);
 
                 let controller = RouteHandler.datasetController;
-                controller.process(id, req.body).then(function (result) {
-                    Log.trace('RouteHandler::postDataset(..) - processed');
-                    res.json(200, {success: result});
-                }).catch(function (err: Error) {
-                    Log.trace('RouteHandler::postDataset(..) - ERROR: ' + err.message);
-                    res.json(400, {err: err.message});
-                });
+                if (controller.getDataset(id)) {
+                    controller.process(id, req.body).then(function (result) {
+                        Log.trace('RouteHandler::postDataset(..) - processed');
+                        Log.trace("sending 204");
+                        res.json(204, {success: result});
+                    }).catch(function (err:Error) {
+                        Log.trace('RouteHandler::postDataset(..) - ERROR: ' + err.message);
+                        res.json(400, {err: err.message});
+                    });
+                }
+                else {
+                    controller.process(id, req.body).then(function (result) {
+                        Log.trace('RouteHandler::postDataset(..) - processed');
+                        Log.trace("sending 201");
+                        res.json(201, {success: result});
+                    }).catch(function (err:Error) {
+                        Log.trace('RouteHandler::postDataset(..) - ERROR: ' + err.message);
+                        res.json(400, {err: err.message});
+                    });
+                }
             });
 
         } catch (err) {
