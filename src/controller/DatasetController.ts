@@ -170,9 +170,9 @@ export default class DatasetController {
             fs.unlinkSync("data/" + id + '.json');
             console.log('done unlinkSync in DatasetController.ts');
         }
-        if (this.datasets[id] !== null) { // NEED TO UPDATE
-            this.datasets[id] = {}; // NEED TO UPDATE
-            console.log('done setting cache (this.datasets) to {}');
+        if (this.datasets[id] !== undefined) { // NEED TO UPDATE
+            this.datasets[id] = undefined; // NEED TO UPDATE
+            console.log('done setting cache (this.datasets) to undefined');
             console.log(this.datasets[id]);
         }
     }
