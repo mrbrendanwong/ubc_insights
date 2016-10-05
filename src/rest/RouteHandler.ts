@@ -88,6 +88,38 @@ export default class RouteHandler {
         return next();
     }
 
+    // FIRST DRAFT: BRENDON DID THIS
+    public static deleteDataset(req: restify.Request, res: restify.Response, next: restify.Next) {
+        Log.trace('RouteHandler::postDataset(..) - params: ' + JSON.stringify(req.params));
+        try {
+            var id: string = req.params.id;
+
+            let controller = RouteHandler.datasetController;
+            if (controller.getDataset(id)) {
+                controller.deleteDataset(id);
+                console.log('delete done in RouteHandler');
+                // check if file in path has been deleted
+                // if file in path deleted, res 204
+                // else file in path has not been deleted for whatever reason, return an res 400 (?)
+                if (fs.existsSync("data/" + id + '.json'))
+                    res.json(400, {err: 'delete did not delete for some reason!'});
+                else
+                    res.json(204, {success: 'the operation was successful.'}) //need to fix this
+            } else {
+                // was not previously put, or has been deleted already, so 404
+                res.json(404, {err: 'the operation was unsuccessful because the ' +
+                'delete was for a resource that was not previously PUT.'});
+
+                console.log('tripped the DELETE 404');
+            }
+
+        } catch (err) {
+            Log.error('RouteHandler::deleteDataset(..) - ERROR: ' + err.message);
+            res.send(400, {err: err.message});
+        }
+        return next();
+    }
+
     public static postQuery(req: restify.Request, res: restify.Response, next: restify.Next) {
         Log.trace('RouteHandler::postQuery(..) - params: ' + JSON.stringify(req.params));
         try {
