@@ -52,7 +52,13 @@ export default class RouteHandler {
                     controller.process(id, req.body).then(function (result) {
                         Log.trace('RouteHandler::postDataset(..) - processed');
                         Log.trace("sending 204");
-                        res.json(204, {success: result});
+                        Log.trace("this is the result " + result);
+                        if (result)
+                            res.json(204, {success: result});
+                        else {
+                            Log.trace('does this  get tripped? ');
+                            res.json(400, {err: err.message});
+                        }
                     }).catch(function (err:Error) {
                         Log.trace('RouteHandler::postDataset(..) - ERROR: ' + err.message);
                         res.json(400, {err: err.message});
@@ -62,7 +68,13 @@ export default class RouteHandler {
                     controller.process(id, req.body).then(function (result) {
                         Log.trace('RouteHandler::postDataset(..) - processed');
                         Log.trace("sending 201");
-                        res.json(201, {success: result});
+                        Log.trace("this is the result " + result);
+                        if (result)
+                            res.json(201, {success: result});
+                        else {
+                            res.json(400, {err: err.message});
+                            Log.trace('does this  get tripped? ');
+                        }
                     }).catch(function (err:Error) {
                         Log.trace('RouteHandler::postDataset(..) - ERROR: ' + err.message);
                         res.json(400, {err: err.message});

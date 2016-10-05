@@ -6,6 +6,7 @@ import Log from "../Util";
 import JSZip = require('jszip');
 import resolve = require("resolve");
 var fs = require("fs");
+var path = require("path");
 /**
  * In memory representation of all datasets.
  */
@@ -31,13 +32,38 @@ export default class DatasetController {
      * @returns {{}}
      */
     public getDataset(id:string):any {
+        this.getDatasets();
         // TODO: this should check if the dataset is on disk in ./data if it is not already in memory.
-        return this.datasets[id];
+        if (this.datasets[id] == null || this.datasets[id] == undefined) {
+            switch(id) {
+                case 'courses':
+                    if (fs.existsSync('data/' + id + ".json")) {
+                        return true;
+                    }
+                    break;
+                default:
+                    break;
+            }
+        }
+        return null;
     }
 
     public getDatasets():Datasets {
         // TODO: if datasets is empty, load all dataset files in ./data from disk
-
+        if (Object.keys(this.datasets).length == 0 || this.datasets == null || this.datasets == undefined){
+            //  //console.log(fs.existsSync('data'));
+            if (fs.existsSync('data')) {
+                fs.readdir('data', function (err, files) {
+                    if (err) {
+                        console.error("Error");
+                        return null;
+                    }
+                })
+            }
+            else {
+                return null;
+            }
+        }
         return this.datasets;
     }
 
@@ -66,76 +92,43 @@ export default class DatasetController {
                     // You can depend on 'id' to differentiate how the zip should be handled,
                     // although you should still be tolerant to errors.
 
-                    if (id == 'courses') {
 
-                        processedDataset['courses'] = [];
-                        // for future reference if (id == "courses") then do this for loop
-                        var i = 0;
-                        zip.folder("courses").forEach(function (relativePath, file) {
-                            // check for dir
-                            if (!file.dir) {
-
+                    processedDataset['courses'] = [];
+                    // for future reference if (id == "courses") then do this for loop
+                    var i = 0;
+                    zip.folder(id).forEach(function (relativePath, file) {
+                        // check for dir
+                        if (!file.dir) {
+                            if (id == 'courses') {
                                 var currentCourse = {};
                                 currentCourse['dept'] = relativePath.substring(0, 4);
                                 currentCourse['id'] = relativePath.substring(4, relativePath.length);
                                 currentCourse['info'] = "";
-                                //console.log(JSON.stringify(file));
-                                file.async("string").then(function success(contents) {
+                            }
+                            ////console.log(JSON.stringify(file));
+                            file.async("string").then(function success(contents) {
+                                if (id == 'courses') {
                                     var test = JSON.stringify(contents);
                                     var test2 = JSON.parse(contents);
+                                    if (test2.result != "")
+                                        if (i < 10)
+                                            console.log("I is " + i);
                                     processedDataset.courses[i].info = test2.result;
-                                    // console.log(JSON.stringify(processedDataset.courses[i].dept));
-                                    // console.log(processedDataset.courses.length);
                                     if (i == (processedDataset.courses.length - 1)) {
-                                        console.log(JSON.stringify(processedDataset.courses[i]));
-                                        that.save(id, processedDataset);
+                                        //console.log(JSON.stringify(processedDataset.courses[i]));
                                         fulfill(true);
+                                        that.save(id, processedDataset);
                                     }
-                                    i++;
-                                });
-
+                                }
+                                i++;
+                            });
+                            if (id == 'courses') {
                                 processedDataset.courses.push(currentCourse);
                             }
-                        });
-                    }
+                        }
+                    });
+                    reject("Hello mom");
 
-                    //Promise.all().then{
-                    //
-                    //}
-                    //setTimeout(function() {
-                    //    console.log("DONE");
-                    //    that.save(id, processedDataset);
-                    //}, 20000);
-
-
-
-
-                    //   console.log(JSON.stringify(processedDataset));
-                    //var allCourseArray = zip.folder("courses").file(/CPSC/);
-                    //for (var i = 0; i < allCourseArray.length; i++ )
-                    //{
-                    //  //  console.log(allCourseArray[i].name); // Gets name in format "courses/courseName"
-                    ////    console.log(JSON.stringify(allCourseArray[i]));
-                    //    currentCourse.dept.push(allCourseArray[i].name.substring(allCourseArray[i].name.indexOf("/") + 1).substring(0,4));
-                    //    currentCourse.id.push(allCourseArray[i].name.substring(allCourseArray[i].name.indexOf("/") + 1).substring(4,allCourseArray[i].name.length - 8));
-                    //
-                    //    allCourseArray[i].async("string")
-                    //        .then(function success(content) {
-                    //            //    console.log(content);
-                    //          //  console.log(JSON.stringify(currentCourse));
-                    //           // var test = JSON.stringify(content);
-                    //            var test2 = JSON.parse(content);
-                    //            currentCourse.info.push(test2.result);
-                    //            console.log(JSON.stringify(test2));
-                    //            //  console.log(JSON.stringify(currentCourse.info));
-                    //            //console.log(JSON.stringify(currentCourse)
-                    //        },      function error(e) {
-                    //            console.log("hola");
-                    //        });
-                    //
-                    //}
-                    //  console.log(JSON.stringify(currentCourse));
-                    // console.log("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
 
 
                 }).catch(function (err) {
@@ -157,10 +150,13 @@ export default class DatasetController {
      * @param processedDataset
      */
     private save(id:string, processedDataset:any) {
-        // add it to the memory m
-        // fs unlinkodel
-        fs.writeFileSync('courses.json', JSON.stringify(processedDataset.courses));
-        console.log("THIS SHIT IS DONE");
+
+        if (!fs.existsSync('data')) {
+            fs.mkdirSync('data');
+        }
+        if (id == "courses") {
+            fs.writeFileSync('data/' + id + '.json', JSON.stringify(processedDataset.courses));
+        }
         this.datasets[id] = processedDataset;
     }
 
