@@ -95,7 +95,7 @@ export default class DatasetController {
                     // although you should still be tolerant to errors.
 
 
-                  //  processedDataset['courses'] = [];
+                    //  processedDataset['courses'] = [];
                     // for future reference if (id == "courses") then do this for loop
                     var i = 0;
                     zip.folder(id).forEach(function (relativePath, file) {
@@ -131,8 +131,7 @@ export default class DatasetController {
                             }
                         }
                     });
-                   // reject("Hello mom");
-
+                    fulfill(false);
 
                 }).catch(function (err:any) {
                     Log.trace('DatasetController::process(..) - unzip ERROR: ' + err.message);

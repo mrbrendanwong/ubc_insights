@@ -51,14 +51,13 @@ export default class RouteHandler {
                 if (controller.getDataset(id)) {
                     controller.process(id, req.body).then(function (result) {
                         Log.trace('RouteHandler::postDataset(..) - processed');
-                        Log.trace("sending 204");
+                        Log.trace("sending 201");
                         Log.trace("this is the result " + result);
                         if (result)
-                            res.json(204, {success: result});
-                        else {
-                            Log.trace('does this  get tripped? ');
-                            res.json(400, "test");
-                        }
+                            res.json(201, {success: result});
+                        else
+                            res.json(400, {error: "Incorrect dataset"});
+
                     }).catch(function (err:Error) {
                         Log.trace('RouteHandler::postDataset(..) - ERROR: ' + err.message);
                         res.json(400, {err: err.message});
@@ -67,14 +66,14 @@ export default class RouteHandler {
                 else {
                     controller.process(id, req.body).then(function (result) {
                         Log.trace('RouteHandler::postDataset(..) - processed');
-                        Log.trace("sending 201");
+                        Log.trace("sending 204");
                         Log.trace("this is the result " + result);
                         if (result)
-                            res.json(201, {success: result});
-                        else {
-                            res.json(400, "test");
-                            Log.trace('does this  get tripped? ');
-                        }
+                            res.json(204, {success: result});
+                        else
+                            res.json(400, {error: "Incorrect dataset"});
+
+
                     }).catch(function (err:Error) {
                         Log.trace('RouteHandler::postDataset(..) - ERROR: ' + err.message);
                         res.json(400, {err: err.message});
