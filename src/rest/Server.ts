@@ -58,6 +58,7 @@ export default class Server {
 		    directory: __dirname
 		}));
 
+
                 // Loads the homepage.
                 // curl -is  http://localhost:4321/
 		that.rest.get('/', RouteHandler.getHomepage);
@@ -75,6 +76,7 @@ export default class Server {
                     Log.info('Server::start() - restify listening: ' + that.rest.url);
                     fulfill(true);
                 });
+
 
                 that.rest.on('error', function (err: string) {
                     // catches errors in restify start; unusual syntax due to internal node not using normal exceptions here
