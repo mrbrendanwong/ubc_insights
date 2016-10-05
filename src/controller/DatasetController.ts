@@ -4,7 +4,7 @@
 
 import Log from "../Util";
 import JSZip = require('jszip');
-import resolve = require("resolve");
+//import resolve = require("resolve");
 var fs = require("fs");
 var path = require("path");
 /**
@@ -35,7 +35,7 @@ export default class DatasetController {
         this.getDatasets();
         // TODO: this should check if the dataset is on disk in ./data if it is not already in memory.
         if (this.datasets[id] == null || this.datasets[id] == undefined) {
-            switch(id) {
+            switch (id) {
                 case 'courses':
                     if (fs.existsSync('data/' + id + ".json")) {
                         return true;
@@ -50,10 +50,10 @@ export default class DatasetController {
 
     public getDatasets():Datasets {
         // TODO: if datasets is empty, load all dataset files in ./data from disk
-        if (Object.keys(this.datasets).length == 0 || this.datasets == null || this.datasets == undefined){
+        if (Object.keys(this.datasets).length == 0 || this.datasets == null || this.datasets == undefined) {
             //  //console.log(fs.existsSync('data'));
             if (fs.existsSync('data')) {
-                fs.readdir('data', function (err, files) {
+                fs.readdir('data', function (err:any, files:any):any {
                     if (err) {
                         console.error("Error");
                         return null;
@@ -85,7 +85,9 @@ export default class DatasetController {
                     Log.trace('DatasetController::process(..) - unzipped');
 
                     // switch to var
-                    let processedDataset = {};
+                    let processedDataset = {
+                        courses: <Array<any>> [],
+                    };
                     // TODO: iterate through files in zip (zip.files)
                     // The contents of the file will depend on the id provided. e.g.,
                     // some zips will contain .html files, some will contain .json files.
@@ -93,19 +95,22 @@ export default class DatasetController {
                     // although you should still be tolerant to errors.
 
 
-                    processedDataset['courses'] = [];
+                  //  processedDataset['courses'] = [];
                     // for future reference if (id == "courses") then do this for loop
                     var i = 0;
                     zip.folder(id).forEach(function (relativePath, file) {
                         // check for dir
                         if (!file.dir) {
                             if (id == 'courses') {
-                                var currentCourse = {};
-                                currentCourse['dept'] = relativePath.substring(0, 4);
-                                currentCourse['id'] = relativePath.substring(4, relativePath.length);
-                                currentCourse['info'] = "";
+                                var currentCourse = {
+                                    dept: <string> null,
+                                    id:<string> null,
+                                    info:<string> null,
+                                };
+                                currentCourse.dept = relativePath.substring(0, 4);
+                                currentCourse.id = relativePath.substring(4, relativePath.length);
+                                currentCourse.info = "";
                             }
-                            ////console.log(JSON.stringify(file));
                             file.async("string").then(function success(contents) {
                                 if (id == 'courses') {
                                     var test = JSON.stringify(contents);
@@ -115,7 +120,6 @@ export default class DatasetController {
                                             console.log("I is " + i);
                                     processedDataset.courses[i].info = test2.result;
                                     if (i == (processedDataset.courses.length - 1)) {
-                                        //console.log(JSON.stringify(processedDataset.courses[i]));
                                         fulfill(true);
                                         that.save(id, processedDataset);
                                     }
@@ -127,11 +131,10 @@ export default class DatasetController {
                             }
                         }
                     });
-                    reject("Hello mom");
+                   // reject("Hello mom");
 
 
-
-                }).catch(function (err) {
+                }).catch(function (err:any) {
                     Log.trace('DatasetController::process(..) - unzip ERROR: ' + err.message);
                     reject(err);
                 });
@@ -159,5 +162,4 @@ export default class DatasetController {
         }
         this.datasets[id] = processedDataset;
     }
-
 }

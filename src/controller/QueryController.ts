@@ -39,22 +39,23 @@ export default class QueryController {
 
         var resp: QueryResponse;
 
-        if (query.add) {
-            let res = 0;
-            for(var n of query.add) {
-                res += n;
-            }
-            resp.result = res;
-        } else if (query.multiply) {
-            let res = 1;
-            for(var n of query.add) {
-                res += n;
-            }
-            resp.result = res;
-
-        } else {
-            resp.error = 'bad name';
-        }
-        return {status: 'received', ts: new Date().getTime()};
+        //if (query.add) {
+        //    let res = 0;
+        //    for(var n of query.add) {
+        //        res += n;
+        //    }
+        //    resp.result = res;
+        //} else if (query.multiply) {
+        //    let res = 1;
+        //    for(var n of query.add) {
+        //        res += n;
+        //    }
+        //    resp.result = res;
+        //
+        //} else {
+        //    resp.error = 'bad name';
+        //}
+        //return {status: 'received', ts: new Date().getTime()};
+        return {result: 123};
     }
 }

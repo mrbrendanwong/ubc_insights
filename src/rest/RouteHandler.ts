@@ -57,7 +57,7 @@ export default class RouteHandler {
                             res.json(204, {success: result});
                         else {
                             Log.trace('does this  get tripped? ');
-                            res.json(400, {err: err.message});
+                            res.json(400, "test");
                         }
                     }).catch(function (err:Error) {
                         Log.trace('RouteHandler::postDataset(..) - ERROR: ' + err.message);
@@ -72,7 +72,7 @@ export default class RouteHandler {
                         if (result)
                             res.json(201, {success: result});
                         else {
-                            res.json(400, {err: err.message});
+                            res.json(400, "test");
                             Log.trace('does this  get tripped? ');
                         }
                     }).catch(function (err:Error) {
