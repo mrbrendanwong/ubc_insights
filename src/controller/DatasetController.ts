@@ -53,12 +53,14 @@ export default class DatasetController {
         if (Object.keys(this.datasets).length == 0 || this.datasets == null || this.datasets == undefined) {
             //  //console.log(fs.existsSync('data'));
             if (fs.existsSync('data')) {
-                fs.readdir('data', function (err:any, files:any):any {
-                    if (err) {
-                        console.error("Error");
-                        return null;
+                let fileArray = fs.readdirSync('data');
+                for (var i = 0; i < fileArray.length; i++) {
+                    if (fileArray[i].includes("json")) {
+                        console.log("Found one!");
+                        return this.datasets;
                     }
-                })
+                }
+                return null;
             }
             else {
                 return null;

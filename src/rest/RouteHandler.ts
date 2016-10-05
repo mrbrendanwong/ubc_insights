@@ -95,7 +95,7 @@ export default class RouteHandler {
             var id: string = req.params.id;
 
             let controller = RouteHandler.datasetController;
-            if (controller.getDataset(id)) {
+            if (controller.getDataset(id) || fs.existsSync("data/" + id + '.json')) {
                 controller.deleteDataset(id);
                 console.log('delete done in RouteHandler');
                 // check if file in path has been deleted
