@@ -49,7 +49,7 @@ export default class DatasetController {
     }
 
     public getDatasets():Datasets {
-        // TODO: if datasets is empty, load all dataset files in ./data from disk
+        //TODO: if datasets is empty, load all dataset files in ./data from disk
         if (Object.keys(this.datasets).length == 0 || this.datasets == null || this.datasets == undefined) {
             //  //console.log(fs.existsSync('data'));
             if (fs.existsSync('data')) {
@@ -95,7 +95,7 @@ export default class DatasetController {
                     // although you should still be tolerant to errors.
 
 
-                  //  processedDataset['courses'] = [];
+                    //  processedDataset['courses'] = [];
                     // for future reference if (id == "courses") then do this for loop
                     var i = 0;
                     zip.folder(id).forEach(function (relativePath, file) {
@@ -131,7 +131,7 @@ export default class DatasetController {
                             }
                         }
                     });
-                   // reject("Hello mom");
+                    // reject("Hello mom");
 
 
                 }).catch(function (err:any) {
@@ -161,5 +161,18 @@ export default class DatasetController {
             fs.writeFileSync('data/' + id + '.json', JSON.stringify(processedDataset.courses));
         }
         this.datasets[id] = processedDataset;
+    }
+
+    // FIRST DRAFT: BRENDON DID THIS
+    public deleteDataset(id:string) {
+        if (fs.existsSync("data/" + id + '.json')) {
+            fs.unlinkSync("data/" + id + '.json');
+            console.log('done unlinkSync in DatasetController.ts');
+        }
+        if (this.datasets[id] !== null) { // NEED TO UPDATE
+            this.datasets[id] = {}; // NEED TO UPDATE
+            console.log('done setting cache (this.datasets) to {}');
+            console.log(this.datasets[id]);
+        }
     }
 }
