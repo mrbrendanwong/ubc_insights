@@ -113,6 +113,9 @@ export default class DatasetController {
                                 currentCourse.id = relativePath.substring(4, relativePath.length);
                                 currentCourse.info = "";
                             }
+                            else {
+                                fulfill(false);
+                            }
                             file.async("string").then(function success(contents) {
                                 if (id == 'courses') {
                                     var test = JSON.stringify(contents);
@@ -133,7 +136,6 @@ export default class DatasetController {
                             }
                         }
                     });
-                    fulfill(false);
 
                 }).catch(function (err:any) {
                     Log.trace('DatasetController::process(..) - unzip ERROR: ' + err.message);
