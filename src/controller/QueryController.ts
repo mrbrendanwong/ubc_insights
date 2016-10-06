@@ -29,6 +29,7 @@ export default class QueryController {
 
     public isValid(query: QueryRequest): boolean {
         if (typeof query !== 'undefined' && query !== null && Object.keys(query).length > 0) {
+            console.log('QueryController.isValid: Object.keys(query) is ' + Object.keys(query));
             return true;
         }
         return false;
