@@ -38,12 +38,16 @@ export default class DatasetController {
             switch (id) {
                 case 'courses':
                     if (fs.existsSync('data/' + id + ".json")) {
-                        return true;
+                        //this.datasets[id] = fs.readFileSync('data/' + id + '.json', 'utf8');
+                        return this.datasets[id];
                     }
-                    break;
+                    else
+                        return null;
                 default:
                     break;
             }
+        } else {
+            return this.datasets[id];
         }
         return null;
     }
@@ -56,6 +60,10 @@ export default class DatasetController {
                 let fileArray = fs.readdirSync('data');
                 for (var i = 0; i < fileArray.length; i++) {
                     if (fileArray[i].includes("json")) {
+                        if (fileArray[i] == "courses.json") {
+                            console.log("Loading time");
+                            this.datasets["courses"] = fs.readFileSync('data/courses.json', 'utf8');
+                        }
                         console.log("Found one!");
                         return this.datasets;
                     }
@@ -164,6 +172,27 @@ export default class DatasetController {
             fs.writeFileSync('data/' + id + '.json', JSON.stringify(processedDataset.courses));
         }
         this.datasets[id] = processedDataset;
+    }
+
+    // FIRST DRAFT: SPENCER DID THIS
+
+    public queryDataset(searchID:string) {
+        console.log("I received this " + searchID);
+        this.getDatasets();
+        let dataID = searchID.split("_")[0];
+        switch (dataID) {
+            case 'courses':
+                var coursesDataset = this.getDataset(dataID);
+                var parsedCDB = JSON.parse(coursesDataset);
+                for (var i = 0; i < parsedCDB.length; i++) {
+                    //console.log(JSON.parse(coursesDataset)[i].length);
+                }
+                console.log("DB length is " + JSON.parse(coursesDataset).length);
+                console.log("this is " + JSON.stringify(JSON.parse(coursesDataset).dept));
+                break;
+            default:
+                break;
+        }
     }
 
     // FIRST DRAFT: BRENDON DID THIS
