@@ -43,7 +43,6 @@ export default class DatasetController {
                     }
                     else
                         return null;
-                    break;
                 default:
                     break;
             }
@@ -188,8 +187,8 @@ export default class DatasetController {
                 for (var i = 0; i < parsedCDB.length; i++) {
                     //console.log(JSON.parse(coursesDataset)[i].length);
                 }
-                console.log("DB length is " + JSON.parse(asdf).length);
-                console.log("this is " + JSON.stringify(JSON.parse(asdf).dept));
+                console.log("DB length is " + JSON.parse(coursesDataset).length);
+                console.log("this is " + JSON.stringify(JSON.parse(coursesDataset).dept));
                 break;
             default:
                 break;
