@@ -46,55 +46,8 @@ export default class QueryController {
         // For the get query
         if (query.GET){
             console.log("inside : " + query.GET);
-            for (var i =0; i < query.GET.length; i++){
-                switch (query.GET[i]) {
-                    case 'courses_dept':
-                        controller.queryDataset(query.GET[i]);
-                        break;
-                    case 'courses_id':
-                        controller.queryDataset(query.GET[i]);
-                        break;
-                    case 'courses_avg':
-                        controller.queryDataset(query.GET[i]);
-                        break;
-                    case 'courses_instructor':
-                        controller.queryDataset(query.GET[i]);
-                        break;
-                    case 'courses_title':
-                        controller.queryDataset(query.GET[i]);
-                        break;
-                    case 'courses_pass':
-                        controller.queryDataset(query.GET[i]);
-                        break;
-                    case 'courses_fail':
-                        controller.queryDataset(query.GET[i]);
-                        break;
-                    case 'courses_audit':
-                        controller.queryDataset(query.GET[i]);
-                        break;
-                    default:
-                        console.log("Uh oh, you sent an invalid key");
-                        break;
-                }
-            }
+            let queryResult:Array<any> = controller.queryDataset(query.GET);
         }
-        //if (query.add) {
-        //    let res = 0;
-        //    for(var n of query.add) {
-        //        res += n;
-        //    }
-        //    resp.result = res;
-        //} else if (query.multiply) {
-        //    let res = 1;
-        //    for(var n of query.add) {
-        //        res += n;
-        //    }
-        //    resp.result = res;
-        //
-        //} else {
-        //    resp.error = 'bad name';
-        //}
-        //return {status: 'received', ts: new Date().getTime()};
         return {result: 123};
     }
 }

@@ -176,21 +176,126 @@ export default class DatasetController {
 
     // FIRST DRAFT: SPENCER DID THIS
 
-    public queryDataset(searchID:string) {
-        console.log("I received this " + searchID);
+    public queryDataset(queryIDs:any) : Array<any> {
         this.getDatasets();
-        let dataID = searchID.split("_")[0];
-        switch (dataID) {
-            case 'courses':
-                var coursesDataset = this.getDataset(dataID);
-                var parsedCDB = JSON.parse(coursesDataset);
-                for (var i = 0; i < parsedCDB.length; i++) {
-                    //console.log(JSON.parse(coursesDataset)[i].length);
+        let coursesDataset = this.getDataset(queryIDs[0].split("_")[0]);
+        let parsedCDB = JSON.parse(coursesDataset);
+        let currentSearchArray:Array<any> = [];
+        for (var x = 0; x < parsedCDB.length; x++ ) {
+            if (parsedCDB[x].info === undefined) {
+                console.log("Skipped");
+                continue;
+            }
+            for (var z = 0; z < parsedCDB[x].info.length; z++) {
+                let currentResult = {};
+                for (var i = 0; i < queryIDs.length; i++) {
+                    let datasetID = queryIDs[i].split("_")[0];
+                    let dataID = queryIDs[i].split("_")[1];
+                    switch (datasetID) {
+                        case 'courses':
+                            switch (dataID) {
+                                case 'dept':
+                                    currentResult["courses_dept"] = parsedCDB[11].dept;
+                                    break;
+                                case 'id':
+                                    currentResult["courses_id"] = parsedCDB[x].id;
+                                    break;
+                                case 'avg':
+                                    currentResult["courses_avg"] = parsedCDB[x].info[z].Avg;
+                                    break;
+                                case 'instructor':
+                                    currentResult["courses_instructor"] = parsedCDB[x].info[z].Professor;
+                                    break;
+                                case 'title':
+                                    currentResult["courses_title"] = parsedCDB[x].info[z].Title;
+                                    break;
+                                case 'pass':
+                                    currentResult["courses_pass"] = parsedCDB[x].info[z].Pass;
+                                    break;
+                                case 'fail':
+                                    currentResult["courses_fail"] = parsedCDB[x].info[z].Fail;
+                                    break;
+                                case 'audit':
+                                    currentResult["courses_audit"] = parsedCDB[x].info[z].Audit;
+                                    break;
+                                default:
+                                    console.log("Uh oh, you sent an invalid key");
+                                    break;
+                            }
+                            break;
+                        default:
+                            break;
+                    }
+                    currentSearchArray.push(currentResult);
                 }
-                console.log("DB length is " + JSON.parse(coursesDataset).length);
-                console.log("this is " + JSON.stringify(JSON.parse(coursesDataset).dept));
+            }
+        }
+        return currentSearchArray;
+    }
+
+    // FIRST DRAFT: SPENCER DID THIS
+    public searchForKey(key:string, parsedData:any) {
+        switch (key) {
+            case 'dept':
+                console.log("Looking for dept");
+                for (var i = 0; i < parsedData.length; i++) {
+                    console.log(parsedData[i].dept);
+                }
+                break;
+            case 'id':
+                for (var i = 0; i < parsedCDB.length; i++) {
+                    console.log(parsedCDB[i].id);
+                }
+                break;
+            case 'avg':
+                let count = 0;
+                for (var i = 0; i < parsedCDB.length; i++) {
+                    // If this course has no offerings, skip it.
+                    if (parsedCDB[i].info.length == 0)
+                        continue;
+                    let courseAvg = 0;
+                    // handle undefined
+                    //console.log(parsedCDB[i].info.length);
+                    for (var x = 0; x < parsedCDB[i].info.length; x++) {
+                        courseAvg = parsedCDB[i].info[x].Avg;
+                        if (courseAvg > 90) {
+                            count++;
+                            //console.log("Average is " + parsedCDB[i].info[x].Avg + " for " + parsedCDB[i].dept);
+                        }
+                        //  console.log(x);
+                    }
+                    //   if ((x != 0) && ((avgSum/x) > 90 ))
+                    //    console.log("Average is " + (avgSum/x) + " for " + parsedCDB[i].dept);
+                }
+                //   console.log("Count is " + count);
+                break;
+            case 'instructor':
+                for (var i = 0; i < parsedCDB.length; i++) {
+                    console.log(parsedCDB[i].info[0].professor);
+                }
+                break;
+            case 'title':
+                for (var i = 0; i < parsedCDB.length; i++) {
+                    console.log(parsedCDB[i].info[0].title);
+                }
+                break;
+            case 'pass':
+                for (var i = 0; i < parsedCDB.length; i++) {
+                    console.log(parsedCDB[i].info[0].pass);
+                }
+                break;
+            case 'fail':
+                for (var i = 0; i < parsedCDB.length; i++) {
+                    console.log(parsedCDB[i].info[0].fail);
+                }
+                break;
+            case 'audit':
+                for (var i = 0; i < parsedCDB.length; i++) {
+                    console.log(parsedCDB[i].info[0].audit);
+                }
                 break;
             default:
+                console.log("Uh oh, you sent an invalid key");
                 break;
         }
     }
