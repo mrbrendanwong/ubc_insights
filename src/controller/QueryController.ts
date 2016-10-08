@@ -78,15 +78,21 @@ export default class QueryController {
         Log.trace('QueryController::query( ' + JSON.stringify(query) + ' )');
 
         // TODO: implement this (where we handle get, where, etc.)
-
+        let testObject = {};
         var resp: QueryResponse;
+        let queryResult:Array<any>;
         let controller = QueryController.datasetController;
         console.log("hello" + JSON.stringify(query));
         // For the get query
         if (query.GET){
             console.log("inside : " + query.GET);
-            let queryResult:Array<any> = controller.queryDataset(query.GET);
+            queryResult = controller.queryDataset(query.GET);
+            let object = {};
+
+          //  testObject['result'] = queryResult;
+           // testObject['render'] = 'TABLE';
+            //console.log(object);
         }
-        return {result: 123};
+        return {result: queryResult};
     }
 }
