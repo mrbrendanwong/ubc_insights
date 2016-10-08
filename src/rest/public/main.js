@@ -25,13 +25,11 @@ $(function () {
         e.preventDefault();
         var query = $("#query").val();
         try {
-            query = JSON.parse(query);
-
-            $.post("/query", query, function (data) {
-                if (data["render"] === "table") {
+            $.ajax("/query", {type:"POST", data: query, contentType: "application/json", dataType: "json", success: function(data) {
+                if (data["render"] === "TABLE") {
                     generateTable(data["result"]);
                 }
-            }).fail(function (e) {
+            }}).fail(function (e) {
                 spawnHttpErrorModal(e)
             });
         } catch (err) {
