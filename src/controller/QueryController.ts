@@ -16,7 +16,6 @@ export interface QueryRequest {
 }
 
 export interface QueryResponse {
-    result?: number;
 }
 
 export default class QueryController {
@@ -46,7 +45,80 @@ export default class QueryController {
     // Do a for loop for all elements in the array, only adding elements to a new array if they meet conditions
     // In case of MCOMPARATORs, we should handle case where data is not numbers by just ignoring the filter (tentative)
     // Return new array
-    private queryWhere(): any {}
+    private queryWhere(whereRequests:any ,rawData : Array<any>, dataset1 : Array<any> = [], dataset2: Array<any> = []): any {
+        let whereID: Array<string>;
+        let restriction: Array<string>;
+        if (whereRequests.length == 0)
+            return rawData;
+        else {
+            switch(Object.keys(whereRequests)[0]) {
+                case 'GT':
+                    restriction = Object.keys(whereRequests.GT);
+                    whereID = whereRequests.GT[restriction.toString()];
+                    return this.processWhere(rawData, 'GT', restriction, whereID);
+                case 'LT':
+                    restriction = Object.keys(whereRequests.LT);
+                    whereID = whereRequests.LT[restriction.toString()];
+                    return this.processWhere(rawData, 'LT', restriction, whereID);
+                case 'EQ':
+                    restriction = Object.keys(whereRequests.EQ);
+                    whereID = whereRequests.EQ[restriction.toString()];
+                    return this.processWhere(rawData, 'EQ', restriction, whereID);
+                case 'IS':
+                    restriction = Object.keys(whereRequests['IS']);
+                    whereID = whereRequests['IS'][restriction.toString()];
+                    return this.processWhere(rawData, 'IS', restriction, whereID);
+                case 'AND':
+                    dataset1 = this.queryWhere(whereRequests.AND[0], rawData);
+                    dataset2 = this.queryWhere(whereRequests.AND[1], dataset1);
+                    return dataset2;
+                case 'OR':
+                    dataset1 = this.queryWhere(whereRequests.OR[0], rawData);
+                    dataset2 = this.queryWhere(whereRequests.OR[1], rawData);
+                    let combinedDataset:Array<any> = dataset1.concat(dataset2);
+                    return combinedDataset;
+                default:
+                    console.log("Unsupported WHERE request");
+                    break;
+            }
+        }
+
+    }
+
+    private processWhere(data: Array<any>, whereCondition:string, restriction:any, restrictionValue:any):any {
+        let processedData: Array<any> = [];
+        switch(whereCondition) {
+            case 'GT':
+                for (var i = 0; i < data.length; i++) {
+                    if (data[i][restriction] > restrictionValue)
+                        processedData.push(data[i]);
+                }
+                break;
+            case 'LT':
+                for (var i = 0; i < data.length; i++) {
+                    if (data[i][restriction] < restrictionValue)
+                        processedData.push(data[i]);
+                }
+                break;
+            case 'EQ':
+                for (var i = 0; i < data.length; i++) {
+                    if (data[i][restriction] === restrictionValue) {
+                        processedData.push(data[i]);
+                    }
+                }
+                break;
+            case 'IS':
+                for (var i = 0; i < data.length; i++) {
+                    if ((restrictionValue.localeCompare(data[i][restriction].toLowerCase())) == 0)
+                        processedData.push(data[i]);
+                }
+                break;
+            default:
+                console.log("Attempting to process unsupported WHERE query");
+                break;
+        }
+        return processedData
+    }
 
     // TODO: Recieves the key (eg. courses_avg) we order by and the result array from GET; sort if key is in array
     // BY BRENDON
@@ -58,13 +130,30 @@ export default class QueryController {
     // Else convert to string array, check if first letters of two elements, switch
     // If first letters are the same, move on to second letters and so on
     // If number, just straight up compare them; order from least to greatest
-    private queryOrder(): any {}
+    private queryOrder(query: QueryRequest, unsortedData: Array<any>): any {
+        var orderKey = query.ORDER;
+        console.log(query.ORDER);
+        var sortedData = unsortedData.sort(
+            function(a,b): any {
+                return a[orderKey] - b[orderKey];
+            });
+        console.log('we are in queryOrder')
+        console.log(sortedData);
+        return sortedData;
+    }
 
     // TODO: Read AS from query, returns what we should set "render" in data obj to
     // BY BRENDON
     // Checks what view we want, if table, returns data in some table format
     // set render as table element as table
-    private queryAs(): any {}
+    private queryAs(query: QueryRequest, resultArray: Array<any>): any {
+        if (query.AS === "TABLE") {
+            var dataObject: any = {};
+            dataObject['render'] = "TABLE";
+            dataObject['result'] = resultArray;
+        }
+        return dataObject;
+    }
 
     // TODO: Create basic template to return full data object
     // BY BRENDON
@@ -79,20 +168,29 @@ export default class QueryController {
 
         // TODO: implement this (where we handle get, where, etc.)
         let testObject = {};
-        var resp: QueryResponse;
         let queryResult:Array<any>;
+        let asdf:any;
+        let fdsa:any;
+        let dataset1:Array<any> = [];
+        let dataset2:Array<any> = [];
         let controller = QueryController.datasetController;
         console.log("hello" + JSON.stringify(query));
         // For the get query
         if (query.GET){
             console.log("inside : " + query.GET);
             queryResult = controller.queryDataset(query.GET);
-            let object = {};
-
-          //  testObject['result'] = queryResult;
-           // testObject['render'] = 'TABLE';
+            if (query.WHERE) {
+                fdsa = this.queryWhere(query.WHERE, queryResult, dataset1, dataset2);
+                //console.log(queryResult);
+                asdf = this.queryOrder(query, fdsa);
+              //  console.log(asdf);
+            }
+            //  testObject['result'] = queryResult;
+            // testObject['render'] = 'TABLE';
             //console.log(object);
         }
-        return {result: queryResult};
+        var qqqq = this.queryAs(query,asdf);
+        console.log(JSON.stringify(qqqq));
+        return qqqq;
     }
 }
