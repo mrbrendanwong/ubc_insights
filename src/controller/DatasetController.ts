@@ -104,63 +104,82 @@ export default class DatasetController {
                     // some zips will contain .html files, some will contain .json files.
                     // You can depend on 'id' to differentiate how the zip should be handled,
                     // although you should still be tolerant to errors.
-
+                    let tempDataset = {
+                        courses: <Array<any>> [],
+                    };
 
                     //  processedDataset['courses'] = [];
                     // for future reference if (id == "courses") then do this for loop
                     var i = 0;
+                    var x = 0;
                     zip.folder(id).forEach(function (relativePath, file) {
                         // check for dir
                         if (!file.dir) {
                             if (id == 'courses') {
-                                var currentCourse = {
-                                    dept: <string> null,
-                                    cid:<string> null,
-                                    info:<string> null,
-                                };
+                              //  var currentCourse = {
+                               //     dept: <string> null,
+                                //    cid:<string> null,
+                                 //   info:<string> null,
+                               // };
                                 var rawID = relativePath;
                                 var rawDept = relativePath;
                                 rawDept = rawDept.substring(0,4);
                                 rawDept = rawDept.replace(/[0-9]/g, '');
-                                currentCourse.dept = rawDept;
-                                currentCourse.cid = relativePath.substring(rawDept.length, relativePath.length);
+                                //currentCourse.dept = rawDept;
+                                //currentCourse.cid = relativePath.substring(rawDept.length, relativePath.length);
                                 //currentCourse.info = "";
-                             //   console.log(currentCourse);
-                                processedDataset.courses.push(currentCourse);
+                                //   console.log(currentCourse);
+                               // tempDataset.courses.push(currentCourse);
+                               // processedDataset.courses.push(currentCourse);
                             }
                             else {
                                 fulfill(false);
                             }
+                            // file size?
+                            //   if (file['_data']['uncompressedSize'] > 500) {
                             file.async("string").then(function success(contents) {
+                             //   console.log(processedDataset.courses);
                                 if (id == 'courses') {
-                                //    var test = JSON.stringify(contents);
+                                    //    var test = JSON.stringify(contents);
                                     var test2 = JSON.parse(contents);
-                                    if (test2.result != null || test2.reult != undefined || test2.result.trim() != "") {
-                                     //   console.log(processedDataset.courses[0]);
-                                       //if (i == 11){
-                                      //     console.log(processedDataset.courses[i]);
-                                     //      console.log(test2.result);
-                                    //   }
-                                        // console.log("HI");
-                                      //  if (i == 5816) {
-                                      //      console.log(JSON.stringify(processedDataset.courses[i]));
-                                       //     console.log(test2.result);
-                                        //}
-                                        processedDataset.courses[i].info = test2.result;
+                                  //  console.log(test2.result.length);
+
+                                    if (test2.result.length != 0) {
+                                        processedDataset.courses.push(test2.result);
                                     }
-                                    else {
-                                        console.log("BRENDON");
-                                    }
-                                    if (i == (processedDataset.courses.length - 1)) {
+
+                                    if (i == 5943) {
                                         fulfill(true);
                                         that.save(id, processedDataset);
                                     }
+                                //    if (test2.result != null || test2.reult != undefined || test2.result.trim() != "") {
+                                        //   console.log(processedDataset.courses[0]);
+                                        //if (i == 11){
+                                        //     console.log(processedDataset.courses[i]);
+                                        //      console.log(test2.result);
+                                        //   }
+                                        // console.log("HI");
+                                        //  if (i == 5816) {
+                                        //      console.log(JSON.stringify(processedDataset.courses[i]));
+                                        //     console.log(test2.result);
+                                        //}
+                                     //   processedDataset.courses[i].info = test2.result;
+                                 //   }
+                                //    else {
+                                 //       console.log("BRENDON");
+                                  //  }
+                                //    console.log(i);
+                                //    if (i == (processedDataset.courses.length - 1)) {
+                                 //       fulfill(true);
+                                  //      that.save(id, processedDataset);
+                                  //  }
                                     //    } else
                                     //        console.log("SDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD");
                                     i++;
                                 }
 
                             });
+                            // }
                         }
                     });
 
@@ -204,10 +223,10 @@ export default class DatasetController {
         for (var x = 0; x < parsedCDB.length; x++ ) {
 
             //console.log(parsedCDB[x].info);
-            if (parsedCDB[x].info[0] != null) {
-               // console.log("x is " + x);
-             //   if (parsedCDB[x].dept == "THTR")
-              //      console.log(parsedCDB[x]);
+            if (parsedCDB[x] != null) {
+                // console.log("x is " + x);
+                //   if (parsedCDB[x].dept == "THTR")
+                //      console.log(parsedCDB[x]);
                 // console.log(x);
                 //console.log(parsedCDB[x].info);
                 // /  console.log("Skipped");
@@ -216,53 +235,53 @@ export default class DatasetController {
 
                 //   console.log(x);
                 //  console.log(parsedCDB[x].info);
-                for (var z = 0; z < parsedCDB[x].info.length; z++) {
+                for (var z = 0; z < parsedCDB[x].length; z++) {
                     let currentResult:any = {};
-                    for (var i = 0; i < queryIDs.length; i++) {
-                        let datasetID = queryIDs[i].split("_")[0];
-                        let dataID = queryIDs[i].split("_")[1];
-                        switch (datasetID) {
-                            case 'courses':
-                                switch (dataID) {
-                                    case 'dept':
-                                        currentResult["courses_dept"] = parsedCDB[x].info[z].Subject;
-                                        break;
-                                    case 'id':
-                                        // console.log(parsedCDB[x].cid);
-                                        currentResult["courses_id"] = parsedCDB[x].cid;
-                                        break;
-                                    case 'avg':
-                                        currentResult["courses_avg"] = parsedCDB[x].info[z].Avg;
-                                        break;
-                                    case 'instructor':
-                                        currentResult["courses_instructor"] = parsedCDB[x].info[z].Professor;
-                                        break;
-                                    case 'title':
-                                        currentResult["courses_title"] = parsedCDB[x].info[z].Title;
-                                        break;
-                                    case 'pass':
-                                        currentResult["courses_pass"] = parsedCDB[x].info[z].Pass;
-                                        break;
-                                    case 'fail':
-                                        currentResult["courses_fail"] = parsedCDB[x].info[z].Fail;
-                                        break;
-                                    case 'audit':
-                                        currentResult["courses_audit"] = parsedCDB[x].info[z].Audit;
-                                        break;
-                                    default:
-                                        console.log("Uh oh, you sent an invalid key");
-                                        break;
-                                }
-                                break;
-                            default:
-                                break;
-                        }
-                    }
+                    // for (var i = 0; i < queryIDs.length; i++) {
+                    //let datasetID = queryIDs[i].split("_")[0];
+                    //let dataID = queryIDs[i].split("_")[1];
+                    //switch (datasetID) {
+                    //    case 'courses':
+                    //        switch (dataID) {
+                    //            case 'dept':
+                                    currentResult["courses_dept"] = parsedCDB[x][z].Subject;
+                    //                break;
+                    //            case 'id':
+                    //                // console.log(parsedCDB[x].cid);
+                                    currentResult["courses_id"] = parsedCDB[x][z].Course;
+                    //                break;
+                    //            case 'avg':
+                                    currentResult["courses_avg"] = parsedCDB[x][z].Avg;
+                    //                break;
+                    //            case 'instructor':
+                                    currentResult["courses_instructor"] = parsedCDB[x][z].Professor;
+                    //                break;
+                    //            case 'title':
+                                    currentResult["courses_title"] = parsedCDB[x][z].Title;
+                    //                break;
+                    //            case 'pass':
+                                    currentResult["courses_pass"] = parsedCDB[x][z].Pass;
+                    //                break;
+                    //            case 'fail':
+                                    currentResult["courses_fail"] = parsedCDB[x][z].Fail;
+                    //                break;
+                    //            case 'audit':
+                                    currentResult["courses_audit"] = parsedCDB[x][z].Audit;
+                    //                break;
+                    //            default:
+                    //                console.log("Uh oh, you sent an invalid key");
+                    //                break;
+                    //        }
+                    //        break;
+                    //    default:
+                    //        break;
+                    //}
+                    // }
                     currentSearchArray.push(currentResult);
                 }
             }
             //else
-              //  console.log("y is " + parsedCDB[x].dept + parsedCDB[x].cid);
+            //  console.log("y is " + parsedCDB[x].dept + parsedCDB[x].cid);
         }
         return currentSearchArray;
     }
