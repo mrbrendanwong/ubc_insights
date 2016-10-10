@@ -48,6 +48,7 @@ export default class QueryController {
     private queryWhere(whereRequests:any, getRequests:any, rawData : Array<any>, notFlag:boolean,  dataset1 : Array<any> = [], dataset2: Array<any> = []): any {
         let whereID: Array<string>;
         let restriction: Array<string>;
+        console.log(notFlag + " AND " + JSON.stringify(whereRequests));
         if (whereRequests.length == 0)
             return rawData;
         else {
@@ -84,8 +85,8 @@ export default class QueryController {
                     //let combinedDataset:Array<any> = dataset1.concat(dataset2);
                     return this.unionArrays(dataset1,dataset2, getRequests);
                 case 'NOT':
-                    notFlag = true;
-                    return this.queryWhere(whereRequests.NOT, getRequests, rawData, notFlag);
+                    //notFlag = true;
+                    return this.queryWhere(whereRequests.NOT, getRequests, rawData, !notFlag);
                 default:
                     console.log("Unsupported WHERE request");
                     break;
