@@ -45,7 +45,7 @@ export default class QueryController {
     // Do a for loop for all elements in the array, only adding elements to a new array if they meet conditions
     // In case of MCOMPARATORs, we should handle case where data is not numbers by just ignoring the filter (tentative)
     // Return new array
-    private queryWhere(whereRequests:any, getRequests:any, rawData : Array<any>, notFlag,  dataset1 : Array<any> = [], dataset2: Array<any> = []): any {
+    private queryWhere(whereRequests:any, getRequests:any, rawData : Array<any>, notFlag:boolean,  dataset1 : Array<any> = [], dataset2: Array<any> = []): any {
         let whereID: Array<string>;
         let restriction: Array<string>;
         console.log("what is notflag " + notFlag);
@@ -196,13 +196,13 @@ export default class QueryController {
     }
 
     private filterByGET(unfinishedDataset: any, getRequests:any ) : any {
-        var finalizedArray = [];
+        var finalizedArray:any = [];
         //console.log("DOG " + getRequests);
         for (var x = 0; x < unfinishedDataset.length; x++) {
             //   if (x == 0)
             //     console.log(unfinishedDataset[0].courses_dept);
             // console.log(unfinishedDataset[0]);
-            var currentResult = {};
+            var currentResult: any = {};
             for (var z = 0; z < getRequests.length; z++) {
                 //   console.log(getRequests[z]);
                 let datasetID = getRequests[z].split("_")[0];
@@ -211,7 +211,7 @@ export default class QueryController {
                     case 'courses':
                         switch (dataID) {
                             case 'dept':
-                                //  console.log(" HELLO " +  unfinishedDataset[x]);
+                                  //  console.log(" HELLO " +  unfinishedDataset[x]);
                                 currentResult["courses_dept"] = unfinishedDataset[x].courses_dept;
                                 break;
                             case 'id':
@@ -262,7 +262,7 @@ export default class QueryController {
 // If first letters are the same, move on to second letters and so on
 // If number, just straight up compare them; order from least to greatest
     private queryOrder(query: QueryRequest, unsortedData: Array<any>): any {
-        var orderKey;
+        var orderKey:any;
         if (query.ORDER == undefined)
             orderKey = "courses_dept";
         else
