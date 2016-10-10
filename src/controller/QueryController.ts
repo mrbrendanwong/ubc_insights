@@ -83,8 +83,8 @@ export default class QueryController {
                 case 'OR':
                     dataset1 = this.queryWhere(whereRequests.OR[0], getRequests, rawData, notFlag);
                     dataset2 = this.queryWhere(whereRequests.OR[1], getRequests, rawData, notFlag);
-                    let combinedDataset:Array<any> = dataset1.concat(dataset2);
-                    return combinedDataset;
+                    //let combinedDataset:Array<any> = dataset1.concat(dataset2);
+                    return this.unionArrays(dataset1,dataset2, getRequests);
                 case 'NOT':
                     notFlag = true;
                     console.log("FIRST TIME IS " + JSON.stringify(whereRequests.NOT));
@@ -95,6 +95,28 @@ export default class QueryController {
             }
         }
 
+    }
+
+    private unionArrays(a1:any, a2:any, getRequests:any) :any {
+        var finalArray:any;
+        var b1:any = a1;
+        var b2:any = a2;
+        var c1:any;
+        var allIdentical = true;
+        for (var i = 0; i < b1.length; i++) {
+            for (var x = 0; x < b2.length; x++) {
+                allIdentical = true;
+                for (var y = 0; y < getRequests.length; y++){
+                    if (b1[i][getRequests[y]] != b2[x][getRequests[y]])
+                        allIdentical = false;
+                }
+                if (allIdentical) {
+                    c1 = b2.splice(x, 1);
+                }
+            }
+        }
+        finalArray = b1.concat(b2);
+        return finalArray;
     }
 
     private processWhere(data: Array<any>, whereCondition:string, restriction:any, restrictionValue:any, notFlag : boolean = false, getRequests:any):any {
