@@ -111,26 +111,12 @@ export default class DatasetController {
                     //  processedDataset['courses'] = [];
                     // for future reference if (id == "courses") then do this for loop
                     var i = 0;
-                    var x = 0;
+                    var fileCount:number = 0;
                     zip.folder(id).forEach(function (relativePath, file) {
                         // check for dir
                         if (!file.dir) {
                             if (id == 'courses') {
-                              //  var currentCourse = {
-                               //     dept: <string> null,
-                                //    cid:<string> null,
-                                 //   info:<string> null,
-                               // };
-                                var rawID = relativePath;
-                                var rawDept = relativePath;
-                                rawDept = rawDept.substring(0,4);
-                                rawDept = rawDept.replace(/[0-9]/g, '');
-                                //currentCourse.dept = rawDept;
-                                //currentCourse.cid = relativePath.substring(rawDept.length, relativePath.length);
-                                //currentCourse.info = "";
-                                //   console.log(currentCourse);
-                               // tempDataset.courses.push(currentCourse);
-                               // processedDataset.courses.push(currentCourse);
+                                fileCount++;
                             }
                             else {
                                 fulfill(false);
@@ -138,48 +124,20 @@ export default class DatasetController {
                             // file size?
                             //   if (file['_data']['uncompressedSize'] > 500) {
                             file.async("string").then(function success(contents) {
-                             //   console.log(processedDataset.courses);
                                 if (id == 'courses') {
-                                    //    var test = JSON.stringify(contents);
                                     var test2 = JSON.parse(contents);
-                                  //  console.log(test2.result.length);
 
                                     if (test2.result.length != 0) {
                                         processedDataset.courses.push(test2.result);
                                     }
-
-                                    if (i == 5943) {
+                                    if (i == (fileCount - 1)) {
                                         fulfill(true);
                                         that.save(id, processedDataset);
                                     }
-                                //    if (test2.result != null || test2.reult != undefined || test2.result.trim() != "") {
-                                        //   console.log(processedDataset.courses[0]);
-                                        //if (i == 11){
-                                        //     console.log(processedDataset.courses[i]);
-                                        //      console.log(test2.result);
-                                        //   }
-                                        // console.log("HI");
-                                        //  if (i == 5816) {
-                                        //      console.log(JSON.stringify(processedDataset.courses[i]));
-                                        //     console.log(test2.result);
-                                        //}
-                                     //   processedDataset.courses[i].info = test2.result;
-                                 //   }
-                                //    else {
-                                 //       console.log("BRENDON");
-                                  //  }
-                                //    console.log(i);
-                                //    if (i == (processedDataset.courses.length - 1)) {
-                                 //       fulfill(true);
-                                  //      that.save(id, processedDataset);
-                                  //  }
-                                    //    } else
-                                    //        console.log("SDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD");
                                     i++;
                                 }
 
                             });
-                            // }
                         }
                     });
 
@@ -224,134 +182,22 @@ export default class DatasetController {
 
             //console.log(parsedCDB[x].info);
             if (parsedCDB[x] != null) {
-                // console.log("x is " + x);
-                //   if (parsedCDB[x].dept == "THTR")
-                //      console.log(parsedCDB[x]);
-                // console.log(x);
-                //console.log(parsedCDB[x].info);
-                // /  console.log("Skipped");
-                // continue;
-                //  console.log("asdf");
-
-                //   console.log(x);
-                //  console.log(parsedCDB[x].info);
                 for (var z = 0; z < parsedCDB[x].length; z++) {
                     let currentResult:any = {};
-                    // for (var i = 0; i < queryIDs.length; i++) {
-                    //let datasetID = queryIDs[i].split("_")[0];
-                    //let dataID = queryIDs[i].split("_")[1];
-                    //switch (datasetID) {
-                    //    case 'courses':
-                    //        switch (dataID) {
-                    //            case 'dept':
                                     currentResult["courses_dept"] = parsedCDB[x][z].Subject;
-                    //                break;
-                    //            case 'id':
-                    //                // console.log(parsedCDB[x].cid);
                                     currentResult["courses_id"] = parsedCDB[x][z].Course;
-                    //                break;
-                    //            case 'avg':
                                     currentResult["courses_avg"] = parsedCDB[x][z].Avg;
-                    //                break;
-                    //            case 'instructor':
                                     currentResult["courses_instructor"] = parsedCDB[x][z].Professor;
-                    //                break;
-                    //            case 'title':
                                     currentResult["courses_title"] = parsedCDB[x][z].Title;
-                    //                break;
-                    //            case 'pass':
                                     currentResult["courses_pass"] = parsedCDB[x][z].Pass;
-                    //                break;
-                    //            case 'fail':
                                     currentResult["courses_fail"] = parsedCDB[x][z].Fail;
-                    //                break;
-                    //            case 'audit':
                                     currentResult["courses_audit"] = parsedCDB[x][z].Audit;
-                    //                break;
-                    //            default:
-                    //                console.log("Uh oh, you sent an invalid key");
-                    //                break;
-                    //        }
-                    //        break;
-                    //    default:
-                    //        break;
-                    //}
-                    // }
                     currentSearchArray.push(currentResult);
                 }
             }
-            //else
-            //  console.log("y is " + parsedCDB[x].dept + parsedCDB[x].cid);
         }
         return currentSearchArray;
     }
-
-    // FIRST DRAFT: SPENCER DID THIS
-    //public searchForKey(key:string, parsedData:any) {
-    //    switch (key) {
-    //        case 'dept':
-    //            console.log("Looking for dept");
-    //            for (var i = 0; i < parsedData.length; i++) {
-    //                console.log(parsedData[i].dept);
-    //            }
-    //            break;
-    //        case 'id':
-    //            for (var i = 0; i < parsedCDB.length; i++) {
-    //                console.log(parsedCDB[i].id);
-    //            }
-    //            break;
-    //        case 'avg':
-    //            let count = 0;
-    //            for (var i = 0; i < parsedCDB.length; i++) {
-    //                // If this course has no offerings, skip it.
-    //                if (parsedCDB[i].info.length == 0)
-    //                    continue;
-    //                let courseAvg = 0;
-    //                // handle undefined
-    //                //console.log(parsedCDB[i].info.length);
-    //                for (var x = 0; x < parsedCDB[i].info.length; x++) {
-    //                    courseAvg = parsedCDB[i].info[x].Avg;
-    //                    if (courseAvg > 90) {
-    //                        count++;
-    //                        //console.log("Average is " + parsedCDB[i].info[x].Avg + " for " + parsedCDB[i].dept);
-    //                    }
-    //                    //  console.log(x);
-    //                }
-    //                //   if ((x != 0) && ((avgSum/x) > 90 ))
-    //                //    console.log("Average is " + (avgSum/x) + " for " + parsedCDB[i].dept);
-    //            }
-    //            //   console.log("Count is " + count);
-    //            break;
-    //        case 'instructor':
-    //            for (var i = 0; i < parsedCDB.length; i++) {
-    //                console.log(parsedCDB[i].info[0].professor);
-    //            }
-    //            break;
-    //        case 'title':
-    //            for (var i = 0; i < parsedCDB.length; i++) {
-    //                console.log(parsedCDB[i].info[0].title);
-    //            }
-    //            break;
-    //        case 'pass':
-    //            for (var i = 0; i < parsedCDB.length; i++) {
-    //                console.log(parsedCDB[i].info[0].pass);
-    //            }
-    //            break;
-    //        case 'fail':
-    //            for (var i = 0; i < parsedCDB.length; i++) {
-    //                console.log(parsedCDB[i].info[0].fail);
-    //            }
-    //            break;
-    //        case 'audit':
-    //            for (var i = 0; i < parsedCDB.length; i++) {
-    //                console.log(parsedCDB[i].info[0].audit);
-    //            }
-    //            break;
-    //        default:
-    //            console.log("Uh oh, you sent an invalid key");
-    //            break;
-    //    }
-    //}
 
     // FIRST DRAFT: BRENDON DID THIS
     public deleteDataset(id:string) {

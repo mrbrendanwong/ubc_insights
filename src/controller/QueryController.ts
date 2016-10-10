@@ -48,7 +48,6 @@ export default class QueryController {
     private queryWhere(whereRequests:any, getRequests:any, rawData : Array<any>, notFlag:boolean,  dataset1 : Array<any> = [], dataset2: Array<any> = []): any {
         let whereID: Array<string>;
         let restriction: Array<string>;
-        console.log("what is notflag " + notFlag);
         if (whereRequests.length == 0)
             return rawData;
         else {
@@ -73,7 +72,6 @@ export default class QueryController {
                     // no not flag for AND or OR
                     dataset1 = this.queryWhere(whereRequests.AND[0], getRequests, rawData, notFlag);
                     dataset2 = this.queryWhere(whereRequests.AND[1], getRequests, dataset1, notFlag);
-                    console.log("YO");
                     if (whereRequests.AND.length == 3) {
                         dataset1 = this.queryWhere(whereRequests.AND[2], getRequests, dataset2, notFlag);
                         return dataset1;
@@ -87,7 +85,6 @@ export default class QueryController {
                     return this.unionArrays(dataset1,dataset2, getRequests);
                 case 'NOT':
                     notFlag = true;
-                    console.log("FIRST TIME IS " + JSON.stringify(whereRequests.NOT));
                     return this.queryWhere(whereRequests.NOT, getRequests, rawData, notFlag);
                 default:
                     console.log("Unsupported WHERE request");
@@ -126,20 +123,17 @@ export default class QueryController {
         switch(whereCondition) {
             case 'GT':
                 if (notFlag){
-                    console.log("hi");
                     for (var i = 0; i < data.length; i++) {
                         if (data[i][restriction] <= restrictionValue)
                             processedData.push(data[i]);
                     }
                 } else {
-                    console.log("bye");
                     for (var i = 0; i < data.length; i++) {
                         if (data[i][restriction] > restrictionValue) {
                             processedData.push(data[i]);
                         }
                     }
                 }
-               // console.log(data.length);
                 break;
             case 'LT':
                 if (notFlag) {
@@ -180,7 +174,6 @@ export default class QueryController {
                         restrictionValue = restrictionValue.replace(/\*/g, '');
                         for (var i = 0; i < data.length; i++) {
                             if ((data[i][restriction].toLowerCase()).startsWith(restrictionValue)) {
-                                //  console.log("hi");
                                 processedData.push(data[i]);
                             }
                         }
@@ -188,16 +181,13 @@ export default class QueryController {
                         restrictionValue = restrictionValue.replace(/\*/g, '');
                         for (var i = 0; i < data.length; i++) {
                             if ((data[i][restriction].toLowerCase()).endsWith(restrictionValue)) {
-                                //  console.log("hi");
                                 processedData.push(data[i]);
                             }
                         }
                     } else if (restrictionValue[0] == "*" && restrictionValue[restrictionValue.length - 1] == "*" ) {
                         restrictionValue = restrictionValue.replace(/\*/g, '');
-                     //   console.log("new value " + restrictionValue);
                         for (var i = 0; i < data.length; i++) {
                             if ((data[i][restriction].toLowerCase()).indexOf(restrictionValue) >= 0) {
-                                //  console.log("hi");
                                 processedData.push(data[i]);
                             }
                         }
@@ -219,25 +209,18 @@ export default class QueryController {
 
     private filterByGET(unfinishedDataset: any, getRequests:any ) : any {
         var finalizedArray:any = [];
-        //console.log("DOG " + getRequests);
         for (var x = 0; x < unfinishedDataset.length; x++) {
-            //   if (x == 0)
-            //     console.log(unfinishedDataset[0].courses_dept);
-            // console.log(unfinishedDataset[0]);
             var currentResult: any = {};
             for (var z = 0; z < getRequests.length; z++) {
-                //   console.log(getRequests[z]);
                 let datasetID = getRequests[z].split("_")[0];
                 let dataID = getRequests[z].split("_")[1];
                 switch (datasetID) {
                     case 'courses':
                         switch (dataID) {
                             case 'dept':
-                                  //  console.log(" HELLO " +  unfinishedDataset[x]);
                                 currentResult["courses_dept"] = unfinishedDataset[x].courses_dept;
                                 break;
                             case 'id':
-                                // console.log(parsedCDB[x].cid);
                                 currentResult["courses_id"] = unfinishedDataset[x].courses_id;
                                 break;
                             case 'avg':
@@ -289,14 +272,13 @@ export default class QueryController {
             orderKey = "courses_dept";
         else
             orderKey = query.ORDER;
-          console.log(JSON.stringify(unsortedData));
         var sortedData = unsortedData.sort(
             function(a,b): any {
                 if (a[orderKey] < b[orderKey]) return -1;
                 if (a[orderKey] > b[orderKey]) return 1;
                 return 0;
             });
-        console.log('we are in queryOrder')
+       // console.log('we are in queryOrder')
         // console.log(sortedData);
         return sortedData;
     }
@@ -334,24 +316,17 @@ export default class QueryController {
         let dataset2:Array<any> = [];
         let notFlag: boolean;
         let controller = QueryController.datasetController;
-        console.log("hello" + JSON.stringify(query));
         // For the get query
         if (query.GET){
-            console.log("inside : " + query.GET);
+           // console.log("inside : " + query.GET);
             queryResult = controller.queryDataset(query.GET);
             if (query.WHERE) {
                 fdsa = this.queryWhere(query.WHERE, query.GET, queryResult, false, dataset1, dataset2);
 
-                //console.log(queryResult);
                 asdf = this.queryOrder(query, fdsa);
-                //  console.log(asdf);
             }
-            //  testObject['result'] = queryResult;
-            // testObject['render'] = 'TABLE';
-            //console.log(object);
         }
         var qqqq = this.queryAs(query,asdf);
-        console.log(JSON.stringify(qqqq));
         return qqqq;
     }
 }
