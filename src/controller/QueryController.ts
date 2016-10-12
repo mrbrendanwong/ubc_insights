@@ -81,11 +81,9 @@ export default class QueryController {
                 case 'OR':
                     dataset1 = this.queryWhere(whereRequests.OR[0], getRequests, rawData, notFlag);
                     dataset2 = this.queryWhere(whereRequests.OR[1], getRequests, rawData, notFlag);
-                    //let combinedDataset:Array<any> = dataset1.concat(dataset2);
                     return this.unionArrays(dataset1,dataset2, getRequests);
                 case 'NOT':
-                    notFlag = true;
-                    return this.queryWhere(whereRequests.NOT, getRequests, rawData, notFlag);
+                    return this.queryWhere(whereRequests.NOT, getRequests, rawData, !notFlag);
                 default:
                     console.log("Unsupported WHERE request");
                     break;
@@ -119,7 +117,6 @@ export default class QueryController {
     private processWhere(data: Array<any>, whereCondition:string, restriction:any, restrictionValue:any, notFlag : boolean = false, getRequests:any):any {
         let processedData: Array<any> = [];
 
-      //  console.log("current process " + (notFlag[0] == ""));
         switch(whereCondition) {
             case 'GT':
                 if (notFlag){
@@ -314,7 +311,6 @@ export default class QueryController {
         let fdsa:any;
         let dataset1:Array<any> = [];
         let dataset2:Array<any> = [];
-        let notFlag: boolean;
         let controller = QueryController.datasetController;
         // For the get query
         if (query.GET){
@@ -326,7 +322,7 @@ export default class QueryController {
                 asdf = this.queryOrder(query, fdsa);
             }
         }
-        var qqqq = this.queryAs(query,asdf);
-        return qqqq;
+        var resultToBeRendered = this.queryAs(query,asdf);
+        return resultToBeRendered;
     }
 }

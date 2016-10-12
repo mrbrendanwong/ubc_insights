@@ -39,7 +39,6 @@ export default class DatasetController {
             switch (id) {
                 case 'courses':
                     if (fs.existsSync('data/' + id + ".json")) {
-                        //this.datasets[id] = fs.readFileSync('data/' + id + '.json', 'utf8');
                         return this.datasets[id];
                     }
                     else
@@ -56,7 +55,6 @@ export default class DatasetController {
     public getDatasets():Datasets {
         //TODO: if datasets is empty, load all dataset files in ./data from disk
         if (Object.keys(this.datasets).length == 0 || this.datasets == null || this.datasets == undefined) {
-            //  //console.log(fs.existsSync('data'));
             if (fs.existsSync('data')) {
                 let fileArray = fs.readdirSync('data');
                 for (var i = 0; i < fileArray.length; i++) {
@@ -121,14 +119,12 @@ export default class DatasetController {
                             else {
                                 fulfill(false);
                             }
-                            // file size?
-                            //   if (file['_data']['uncompressedSize'] > 500) {
                             file.async("string").then(function success(contents) {
                                 if (id == 'courses') {
-                                    var test2 = JSON.parse(contents);
+                                    var parsedData = JSON.parse(contents);
 
-                                    if (test2.result.length != 0) {
-                                        processedDataset.courses.push(test2.result);
+                                    if (parsedData.result.length != 0) {
+                                        processedDataset.courses.push(parsedData.result);
                                     }
                                     if (i == (fileCount - 1)) {
                                         fulfill(true);
@@ -177,21 +173,18 @@ export default class DatasetController {
         let coursesDataset = this.getDataset(queryIDs[0].split("_")[0]);
         let parsedCDB = JSON.parse(coursesDataset);
         let currentSearchArray:Array<any> = [];
-        // console.log(parsedCDB.length);
         for (var x = 0; x < parsedCDB.length; x++ ) {
-
-            //console.log(parsedCDB[x].info);
             if (parsedCDB[x] != null) {
                 for (var z = 0; z < parsedCDB[x].length; z++) {
                     let currentResult:any = {};
-                                    currentResult["courses_dept"] = parsedCDB[x][z].Subject;
-                                    currentResult["courses_id"] = parsedCDB[x][z].Course;
-                                    currentResult["courses_avg"] = parsedCDB[x][z].Avg;
-                                    currentResult["courses_instructor"] = parsedCDB[x][z].Professor;
-                                    currentResult["courses_title"] = parsedCDB[x][z].Title;
-                                    currentResult["courses_pass"] = parsedCDB[x][z].Pass;
-                                    currentResult["courses_fail"] = parsedCDB[x][z].Fail;
-                                    currentResult["courses_audit"] = parsedCDB[x][z].Audit;
+                    currentResult["courses_dept"] = parsedCDB[x][z].Subject;
+                    currentResult["courses_id"] = parsedCDB[x][z].Course;
+                    currentResult["courses_avg"] = parsedCDB[x][z].Avg;
+                    currentResult["courses_instructor"] = parsedCDB[x][z].Professor;
+                    currentResult["courses_title"] = parsedCDB[x][z].Title;
+                    currentResult["courses_pass"] = parsedCDB[x][z].Pass;
+                    currentResult["courses_fail"] = parsedCDB[x][z].Fail;
+                    currentResult["courses_audit"] = parsedCDB[x][z].Audit;
                     currentSearchArray.push(currentResult);
                 }
             }
