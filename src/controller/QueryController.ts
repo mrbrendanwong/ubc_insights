@@ -27,6 +27,8 @@ export default class QueryController {
     }
 
     public isValid(query: QueryRequest): boolean {
+        if (query.GET == undefined || query.GET == null || query.AS == undefined || query.AS == null)
+            return false;
         if (typeof query !== 'undefined' && query !== null && Object.keys(query).length > 0) {
             console.log('QueryController.isValid: Object.keys(query) is ' + Object.keys(query));
             return true;
@@ -267,15 +269,19 @@ export default class QueryController {
         var orderKey:any;
         if (query.ORDER == undefined)
             orderKey = "courses_dept";
-        else
-            orderKey = query.ORDER;
+        else {
+            if (query.GET.indexOf(query.ORDER) >= 0)
+                orderKey = query.ORDER;
+            else
+                return null;
+        }
         var sortedData = unsortedData.sort(
             function(a,b): any {
                 if (a[orderKey] < b[orderKey]) return -1;
                 if (a[orderKey] > b[orderKey]) return 1;
                 return 0;
             });
-       // console.log('we are in queryOrder')
+        // console.log('we are in queryOrder')
         // console.log(sortedData);
         return sortedData;
     }
@@ -285,6 +291,8 @@ export default class QueryController {
 // Checks what view we want, if table, returns data in some table format
 // set render as table element as table
     private queryAs(query: QueryRequest, resultArray: Array<any>): any {
+        if (resultArray == null)
+            return null;
         if (query.AS === "TABLE") {
             var dataObject: any = {};
             dataObject['render'] = "TABLE";
@@ -305,24 +313,23 @@ export default class QueryController {
         Log.trace('QueryController::query( ' + JSON.stringify(query) + ' )');
 
         // TODO: implement this (where we handle get, where, etc.)
-        let testObject = {};
         let queryResult:Array<any>;
-        let asdf:any;
-        let fdsa:any;
+        let completedWhereQuery:any;
+        let completedOrderQuery:any;
         let dataset1:Array<any> = [];
         let dataset2:Array<any> = [];
         let controller = QueryController.datasetController;
         // For the get query
         if (query.GET){
-           // console.log("inside : " + query.GET);
+            // console.log("inside : " + query.GET);
             queryResult = controller.queryDataset(query.GET);
             if (query.WHERE) {
-                fdsa = this.queryWhere(query.WHERE, query.GET, queryResult, false, dataset1, dataset2);
+                completedWhereQuery = this.queryWhere(query.WHERE, query.GET, queryResult, false, dataset1, dataset2);
 
-                asdf = this.queryOrder(query, fdsa);
+                completedOrderQuery = this.queryOrder(query, completedWhereQuery);
             }
         }
-        var resultToBeRendered = this.queryAs(query,asdf);
+        var resultToBeRendered = this.queryAs(query,completedOrderQuery);
         return resultToBeRendered;
     }
 }
