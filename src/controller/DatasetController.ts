@@ -185,6 +185,7 @@ export default class DatasetController {
                     currentResult["courses_pass"] = parsedCDB[x][z].Pass;
                     currentResult["courses_fail"] = parsedCDB[x][z].Fail;
                     currentResult["courses_audit"] = parsedCDB[x][z].Audit;
+                    // currentResult["courses_uuid"] = parsedCDB[x][z].id;
                     currentSearchArray.push(currentResult);
                 }
             }
