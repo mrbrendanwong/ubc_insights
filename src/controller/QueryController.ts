@@ -71,24 +71,42 @@ export default class QueryController {
                     whereID = whereRequests['IS'][restriction.toString()];
                     return this.processWhere(rawData, 'IS', restriction, whereID, notFlag, getRequests);
                 case 'AND':
-                    // no not flag for AND or OR
-                    dataset1 = this.queryWhere(whereRequests.AND[0], getRequests, rawData, notFlag);
-                    dataset2 = this.queryWhere(whereRequests.AND[1], getRequests, dataset1, notFlag);
-                    if (whereRequests.AND.length == 3) {
-                        dataset1 = this.queryWhere(whereRequests.AND[2], getRequests, dataset2, notFlag);
-                        return dataset1;
+                    var previousData = rawData;
+                    var currentData:any;
+                    for (var i = 0; i < whereRequests.AND.length; i++) {
+                        currentData = this.queryWhere(whereRequests.AND[i], getRequests, previousData, notFlag);
+                        previousData = currentData;
                     }
-                    else
-                        return dataset2;
+                    return currentData;
+                // dataset1 = this.queryWhere(whereRequests.AND[0], getRequests, rawData, notFlag);
+                // dataset2 = this.queryWhere(whereRequests.AND[1], getRequests, dataset1, notFlag);
+                //  if (whereRequests.AND.length == 3) {
+                //      dataset1 = this.queryWhere(whereRequests.AND[2], getRequests, dataset2, notFlag);
+                //     return dataset1;
+                //    else
+                //       return dataset2;
                 case 'OR':
-                    dataset1 = this.queryWhere(whereRequests.OR[0], getRequests, rawData, notFlag);
-                    dataset2 = this.queryWhere(whereRequests.OR[1], getRequests, rawData, notFlag);
-                    return this.unionArrays(dataset1,dataset2, getRequests);
+                    //dataset1 = this.queryWhere(whereRequests.OR[0], getRequests, rawData, notFlag);
+                    //dataset2 = this.queryWhere(whereRequests.OR[1], getRequests, rawData, notFlag);
+                    var datasetArray:any = [];
+                    for (var i = 0; i < whereRequests.OR.length; i++) {
+                        dataset1 = this.queryWhere(whereRequests.OR[i], getRequests, rawData, notFlag);
+                        datasetArray.push(dataset1);
+                    }
+                    var oldDataset = {};
+                    for (var z = 0; z < datasetArray.length; z++) {
+                        if (z == 0){
+                            oldDataset = datasetArray[z];
+                        } else {
+                            oldDataset = this.unionArrays(oldDataset, datasetArray[z], getRequests);
+                        }
+                    }
+                    return oldDataset;
                 case 'NOT':
                     return this.queryWhere(whereRequests.NOT, getRequests, rawData, !notFlag);
                 default:
                     console.log("Unsupported WHERE request");
-                    break;
+                    return null;
             }
         }
 
@@ -109,6 +127,7 @@ export default class QueryController {
                 }
                 if (allIdentical) {
                     c1 = b2.splice(x, 1);
+                    break;
                 }
             }
         }
@@ -240,6 +259,9 @@ export default class QueryController {
                             case 'audit':
                                 currentResult["courses_audit"] = unfinishedDataset[x].courses_audit;
                                 break;
+                            //
+                            // case 'uuid':
+                            //  currentResult["courses_uuid"] = unfinishedDataset[x].courses_uuid;
                             default:
                                 console.log("Uh oh, you sent an invalid key");
                                 break;

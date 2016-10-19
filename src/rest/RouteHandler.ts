@@ -138,7 +138,7 @@ export default class RouteHandler {
                     if (dsController.getDataset(query_id) || fs.existsSync("data/" + query_id + '.json')) {
                         continue;
                     } else {
-                        console.log('RouteHandler.postQuery: subtring to get id from GET keys: ' + query_id);
+                        console.log('RouteHandler.postQuery: substring to get id from GET keys: ' + query_id);
                         if (invalid_ids.indexOf(query_id) < 0)
                             invalid_ids[i] = query_id;
                         console.log("logged invalid ids: " + invalid_ids);
