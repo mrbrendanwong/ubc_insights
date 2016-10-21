@@ -9,7 +9,7 @@ import DatasetController from '../controller/DatasetController';
 export interface QueryRequest {
     GET: string|string[];
     WHERE: {};
-    ORDER: string;
+    ORDER: any;
     AS: string;
     add?: number[];
     multiply?: number[];
@@ -36,17 +36,6 @@ export default class QueryController {
         return false;
     }
 
-    // TODO: Basic implementation of comparators. Phase 1: LT GT EQ
-    // BY BRENDON
-    // Handles key conditions of LT, GT, EQ comparators; OR, AND logic; IS, NOT
-    // Take elements from result array. If meets filter requirements, add to a new array
-    // If WHERE does not contain a filter, just skip and return original array
-    // Cases for GT, LT, EQ, which involves {key : number}, refer to Deliverable1.md
-    // In the case of GT, for each element in array, check key specified by comparator
-    // Then check number. Assign to a variable
-    // Do a for loop for all elements in the array, only adding elements to a new array if they meet conditions
-    // In case of MCOMPARATORs, we should handle case where data is not numbers by just ignoring the filter (tentative)
-    // Return new array
     private queryWhere(whereRequests:any, getRequests:any, rawData : Array<any>, notFlag:boolean,  dataset1 : Array<any> = [], dataset2: Array<any> = []): any {
         let whereID: Array<string>;
         let restriction: Array<string>;
@@ -259,9 +248,9 @@ export default class QueryController {
                             case 'audit':
                                 currentResult["courses_audit"] = unfinishedDataset[x].courses_audit;
                                 break;
-                            //
-                            // case 'uuid':
-                            //  currentResult["courses_uuid"] = unfinishedDataset[x].courses_uuid;
+                            case 'uuid':
+                                currentResult["courses_uuid"] = unfinishedDataset[x].courses_uuid;
+                                break;
                             default:
                                 console.log("Uh oh, you sent an invalid key");
                                 break;
@@ -276,42 +265,83 @@ export default class QueryController {
         return finalizedArray;
     }
 
+    // private queryOrder(query: QueryRequest, unsortedData: Array<any>): any {
+    //     var orderKey:any;
+    //     if (query.ORDER == undefined)
+    //         orderKey = "courses_dept";
+    //     else {
+    //         if (query.GET.indexOf(query.ORDER) >= 0)
+    //             orderKey = query.ORDER;
+    //         else
+    //             return null;
+    //     }
+    //     var sortedData = unsortedData.sort(
+    //         function(a,b): any {
+    //             if (a[orderKey] < b[orderKey]) return -1;
+    //             if (a[orderKey] > b[orderKey]) return 1;
+    //             return 0;
+    //         });
+    //     // console.log('we are in queryOrder')
+    //     // console.log(sortedData);
+    //     return sortedData;
+    // }
 
-// TODO: Recieves the key (eg. courses_avg) we order by and the result array from GET; sort if key is in array
-// BY BRENDON
-// checks if key we're ordering by has data as string or number matching regex
-// string ::= [a-zA-Z0-9,_-]+
-// number ::= [1-9]*[0-9]+ ('.' [0-9]+ )?
-//
-// If string, first, check if string is exact same; if so, move on
-// Else convert to string array, check if first letters of two elements, switch
-// If first letters are the same, move on to second letters and so on
-// If number, just straight up compare them; order from least to greatest
+
+    // UP means lowest first
+    // Down means highest first
     private queryOrder(query: QueryRequest, unsortedData: Array<any>): any {
-        var orderKey:any;
-        if (query.ORDER == undefined)
-            orderKey = "courses_dept";
-        else {
+        var orderKeys: any;
+        var downDir: boolean = false;
+        console.log("in query order")
+
+        if (query.ORDER == undefined) {
+            orderKeys = "courses_dept";
+        }
+        else if (typeof query.ORDER === 'string') {
             if (query.GET.indexOf(query.ORDER) >= 0)
-                orderKey = query.ORDER;
+                orderKeys = query.ORDER;
             else
                 return null;
         }
+        else if (typeof query.ORDER === 'object') {
+            console.log(query.ORDER['dir']);
+            if (query.ORDER['dir'] == 'DOWN')
+                downDir = true;
+            orderKeys = query.ORDER.keys;
+            console.log(orderKeys);
+            for (var key in orderKeys) {
+                if (query.GET.indexOf(key))
+                    continue;
+                else
+                    return null;
+            }
+        }
         var sortedData = unsortedData.sort(
-            function(a,b): any {
-                if (a[orderKey] < b[orderKey]) return -1;
-                if (a[orderKey] > b[orderKey]) return 1;
-                return 0;
+            function comparator(a,b): any {
+                var property: any;
+                if (typeof orderKeys === 'string')
+                    property = orderKeys;
+                else
+                    property = orderKeys[0];
+                if (a[property] < b[property]) return -1;
+                if (a[property] > b[property]) return 1;
+                if (a[property] == b[property]){
+                    for (var i = 1; i < orderKeys.length; i++) {
+                        if (a[orderKeys[i]] < b[orderKeys[i]]) return -1;
+                        if (a[orderKeys[i]] > b[orderKeys[i]]) return 1;
+                        if (a[orderKeys[i]] == b[orderKeys[i]]) continue;
+                    }
+                    return 0;
+                }
             });
-        // console.log('we are in queryOrder')
+        // console.log('We are in queryOrder')
         // console.log(sortedData);
+        if (downDir)
+            sortedData = sortedData.reverse();
+
         return sortedData;
     }
 
-// TODO: Read AS from query, returns what we should set "render" in data obj to
-// BY BRENDON
-// Checks what view we want, if table, returns data in some table format
-// set render as table element as table
     private queryAs(query: QueryRequest, resultArray: Array<any>): any {
         if (resultArray == null)
             return null;
@@ -323,14 +353,6 @@ export default class QueryController {
         return dataObject;
     }
 
-// TODO: Create basic template to return full data object
-// BY BRENDON
-// Will perform the GET, call other parts of query (WHERE, ORDER, AS)
-// Create full data object consisting of render:string and result:array
-// Do GET, get our array with data specified with GET keys
-// Pass array to WHERE so we can get filtered array
-// Pass array to ORDER so we can sort by a key (eg. sort by courses_avg)
-// Pass QueryRequest to AS, so we can set "render" in full object to "table" if matches query
     public query(query: QueryRequest): QueryResponse {
         Log.trace('QueryController::query( ' + JSON.stringify(query) + ' )');
 
@@ -347,7 +369,6 @@ export default class QueryController {
             queryResult = controller.queryDataset(query.GET);
             if (query.WHERE) {
                 completedWhereQuery = this.queryWhere(query.WHERE, query.GET, queryResult, false, dataset1, dataset2);
-
                 completedOrderQuery = this.queryOrder(query, completedWhereQuery);
             }
         }
