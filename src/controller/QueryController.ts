@@ -9,7 +9,7 @@ import DatasetController from '../controller/DatasetController';
 export interface QueryRequest {
     GET: string|string[];
     WHERE: {};
-    ORDER: string;
+    ORDER: any;
     AS: string;
     GROUP: string[];
     APPLY: any[];
@@ -38,17 +38,6 @@ export default class QueryController {
         return false;
     }
 
-    // TODO: Basic implementation of comparators. Phase 1: LT GT EQ
-    // BY BRENDON
-    // Handles key conditions of LT, GT, EQ comparators; OR, AND logic; IS, NOT
-    // Take elements from result array. If meets filter requirements, add to a new array
-    // If WHERE does not contain a filter, just skip and return original array
-    // Cases for GT, LT, EQ, which involves {key : number}, refer to Deliverable1.md
-    // In the case of GT, for each element in array, check key specified by comparator
-    // Then check number. Assign to a variable
-    // Do a for loop for all elements in the array, only adding elements to a new array if they meet conditions
-    // In case of MCOMPARATORs, we should handle case where data is not numbers by just ignoring the filter (tentative)
-    // Return new array
     private queryWhere(whereRequests:any, getRequests:any, rawData:Array<any>, notFlag:boolean, dataset1:Array<any> = [], dataset2:Array<any> = []):any {
         let whereID:Array<string>;
         let restriction:Array<string>;
@@ -80,16 +69,7 @@ export default class QueryController {
                         previousData = currentData;
                     }
                     return currentData;
-                // dataset1 = this.queryWhere(whereRequests.AND[0], getRequests, rawData, notFlag);
-                // dataset2 = this.queryWhere(whereRequests.AND[1], getRequests, dataset1, notFlag);
-                //  if (whereRequests.AND.length == 3) {
-                //      dataset1 = this.queryWhere(whereRequests.AND[2], getRequests, dataset2, notFlag);
-                //     return dataset1;
-                //    else
-                //       return dataset2;
                 case 'OR':
-                    //dataset1 = this.queryWhere(whereRequests.OR[0], getRequests, rawData, notFlag);
-                    //dataset2 = this.queryWhere(whereRequests.OR[1], getRequests, rawData, notFlag);
                     var datasetArray:any = [];
                     for (var i = 0; i < whereRequests.OR.length; i++) {
                         dataset1 = this.queryWhere(whereRequests.OR[i], getRequests, rawData, notFlag);
@@ -279,48 +259,93 @@ export default class QueryController {
         return finalizedArray;
     }
 
+    //
+    //private queryOrder(query:QueryRequest, tobeSortedData:Array<any>):any {
+    //    console.log(tobeSortedData);
+    //    var orderKey:any;
+    //    let unsortedData:any;
+    //    if (query.ORDER == undefined)
+    //        orderKey = "courses_dept";
+    //    else {
+    //        if (query.GET.indexOf(query.ORDER) >= 0)
+    //            orderKey = query.ORDER;
+    //        else
+    //            return null;
+    //    }
+    //    if (query.GROUP == undefined)
+    //        unsortedData = this.filterByGET(tobeSortedData, query.GET);
+    //    else
+    //        unsortedData = tobeSortedData;
+    //    var sortedData = unsortedData.sort(
+    //        function (a:any, b:any):any {
+    //            if (a[orderKey] < b[orderKey]) return -1;
+    //            if (a[orderKey] > b[orderKey]) return 1;
+    //            return 0;
+    //        });
+    //    // console.log('we are in queryOrder')
+    //    // console.log(sortedData);
+    //    return sortedData;
+    //}
 
-// TODO: Recieves the key (eg. courses_avg) we order by and the result array from GET; sort if key is in array
-// BY BRENDON
-// checks if key we're ordering by has data as string or number matching regex
-// string ::= [a-zA-Z0-9,_-]+
-// number ::= [1-9]*[0-9]+ ('.' [0-9]+ )?
-//
-// If string, first, check if string is exact same; if so, move on
-// Else convert to string array, check if first letters of two elements, switch
-// If first letters are the same, move on to second letters and so on
-// If number, just straight up compare them; order from least to greatest
-    private queryOrder(query:QueryRequest, tobeSortedData:Array<any>):any {
-        console.log(tobeSortedData);
-        var orderKey:any;
-        let unsortedData:any;
-        if (query.ORDER == undefined)
-            orderKey = "courses_dept";
-        else {
+    // UP means lowest first
+    // Down means highest first
+    private queryOrder(query: QueryRequest, unsortedData: Array<any>): any {
+        var orderKeys: any;
+        var downDir: boolean = false;
+        console.log("in query order")
+
+        if (query.ORDER == undefined) {
+            unsortedData = this.filterByGET(unsortedData, query.GET);
+            orderKeys = "courses_dept";
+        }
+        else if (typeof query.ORDER === 'string') {
+            unsortedData = this.filterByGET(unsortedData, query.GET);
             if (query.GET.indexOf(query.ORDER) >= 0)
-                orderKey = query.ORDER;
+                orderKeys = query.ORDER;
             else
                 return null;
         }
-        if (query.GROUP == undefined)
-            unsortedData = this.filterByGET(tobeSortedData, query.GET);
-        else
-            unsortedData = tobeSortedData;
+        else if (typeof query.ORDER === 'object') {
+            // unsortedData = this.filterByGET(unsortedData, query.GET);
+            console.log(query.ORDER['dir']);
+            if (query.ORDER['dir'] == 'DOWN')
+                downDir = true;
+            orderKeys = query.ORDER.keys;
+            console.log(orderKeys);
+            for (var key in orderKeys) {
+                if (query.GET.indexOf(key))
+                    continue;
+                else
+                    return null;
+            }
+        }
         var sortedData = unsortedData.sort(
-            function (a:any, b:any):any {
-                if (a[orderKey] < b[orderKey]) return -1;
-                if (a[orderKey] > b[orderKey]) return 1;
-                return 0;
+            function comparator(a,b): any {
+                var property: any;
+                if (typeof orderKeys === 'string')
+                    property = orderKeys;
+                else
+                    property = orderKeys[0];
+                if (a[property] < b[property]) return -1;
+                if (a[property] > b[property]) return 1;
+                if (a[property] == b[property]){
+                    for (var i = 1; i < orderKeys.length; i++) {
+                        if (a[orderKeys[i]] < b[orderKeys[i]]) return -1;
+                        if (a[orderKeys[i]] > b[orderKeys[i]]) return 1;
+                        if (a[orderKeys[i]] == b[orderKeys[i]]) continue;
+                    }
+                    return 0;
+                }
             });
-        // console.log('we are in queryOrder')
+        // console.log('We are in queryOrder')
         // console.log(sortedData);
+        if (downDir)
+            sortedData = sortedData.reverse();
+
         return sortedData;
     }
 
-// TODO: Read AS from query, returns what we should set "render" in data obj to
-// BY BRENDON
-// Checks what view we want, if table, returns data in some table format
-// set render as table element as table
+
     private queryAs(query:QueryRequest, resultArray:Array<any>):any {
         if (resultArray == null)
             return null;
@@ -341,12 +366,20 @@ export default class QueryController {
         for (var x = 0; x < dataset.length; x++) {
             if (x == 0)
                 continue;
+            else if (dataset[x+1] == undefined){ // for last course
+                tempGroup.push(dataset[x-1]);
+                // might break something
+                tempGroup.push(dataset[x]);
+                groupedDataset.push(tempGroup);
+                tempGroup = [];
+            }
             if (this.shouldBeGrouped(dataset[x - 1], dataset[x], groupRequests))
                 tempGroup.push(dataset[x - 1]);
             else {
                 tempGroup.push(dataset[x - 1]);
                 groupedDataset.push(tempGroup);
                 tempGroup = [];
+
             }
 
         }
@@ -387,77 +420,84 @@ export default class QueryController {
     private queryApply(applyRequests:any, groupRequests:any, groupedDataset:any):any {
         // Go through each set of applications
         let appliedDataset:any = [];
-        for (var i = 0; i < applyRequests.length; i++) {
-            for (var x = 0; x < groupedDataset.length; x++)
-                appliedDataset.push(this.applyComputations(applyRequests[i], groupRequests, groupedDataset[x]));
+        //     for (var i = 0; i < applyRequests.length; i++) {
+        //         console.log(applyRequests[i]);
+        for (var x = 0; x < groupedDataset.length; x++) {
+            //     console.log(applyRequests[i]);
+            appliedDataset.push(this.applyComputations(applyRequests, groupRequests, groupedDataset[x]));
             // Send each group to the computation helper
         }
+        //    }
         //   console.log(appliedDataset);
 
         return appliedDataset;
 
     }
 
-    private applyComputations(applyKey:any, groupRequests:any, dataInstance:any):any {
+    private applyComputations(applyKeys:any, groupRequests:any, dataInstance:any):any {
         // datainstance is an array of offerings (corresponding to a group)
-        var trueApplyKey = applyKey[Object.keys(applyKey)[0]];
-        //  console.log(JSON.stringify(Object.keys(applyKey)[0]));
+        //  console.log(JSON.stringify(Object.keys(applyKey)[0]))
         let computatedObject:any = {};
         let desiredID:any = "";
         for (var i = 0; i < groupRequests.length; i++) {
             computatedObject[groupRequests[i]] = dataInstance[0][groupRequests[i]];
+            //     console.log(computatedObject);
         }
-        //  console.log("HELLO " + JSON.stringify(applyKey[Object.keys(applyKey)[0]]));
-        if (applyKey.length == 0)
-            return dataInstance;
-        switch (Object.keys(trueApplyKey)[0]) {
-            case 'AVG':
-                let sum = 0;
-                let count = dataInstance.length - 1;
-                for (var x = 0; x < dataInstance.length; x++) {
-                    sum += dataInstance[x].courses_avg;
-                }
-                let result = sum / count;
-                //  console.log("AVERAGE IS " + result.toFixed(2));
-                computatedObject[Object.keys(applyKey)[0]] = result.toFixed(2);
-                break;
-            case 'COUNT':
-                // figure something out
-                computatedObject[Object.keys(applyKey)[0]] = dataInstance.length - 1;
-                break;
-            case 'MAX':
-                let maxValue = 0;
-                desiredID = applyKey['MAX'];
-                for (var x = 0; x < dataInstance.length; x++) {
-                    if (dataInstance[x][desiredID] > maxValue)
-                        maxValue = dataInstance[x][desiredID];
-                }
-                computatedObject[Object.keys(applyKey)[0]] = maxValue;
-                break;
-            case 'MIN':
-                let minValue = 1000;
-                desiredID = applyKey['MIN'];
-                for (var x = 0; x < dataInstance.length; x++) {
-                    if (dataInstance[x][desiredID] < minValue)
-                        minValue = dataInstance[x][desiredID];
-                }
-                computatedObject[Object.keys(applyKey)[0]] = minValue;
-                break;
-            default:
-                console.log("Uh oh, this method received an unsupported APPLY key");
-                break;
+        for (var z = 0; z < applyKeys.length; z++) {
+            let trueApplyKey:any = applyKeys[z];
+            //console.log(trueApplyKey);
+
+            let applicationID:any = Object.keys(applyKeys[z])[0];
+            let finalApplyKey:any = Object.keys(trueApplyKey[Object.keys(trueApplyKey)[0]])[0];
+
+            if (applyKeys.length == 0)
+                return dataInstance;
+            switch (finalApplyKey) {
+                case 'AVG':
+                    let sum = 0;
+                    let count = dataInstance.length - 1;
+                    //      console.log(dataInstance[0].courses_avg + " AND " + dataInstance[0].courses_dept);
+                    for (var x = 0; x < dataInstance.length; x++) {
+                        sum += dataInstance[x].courses_avg;
+                    }
+                    let result = sum / x;
+                    //  console.log("AVERAGE IS " + result.toFixed(2));
+                    computatedObject[applicationID] = result.toFixed(2);
+                    break;
+                case 'COUNT':
+                    // figure something out
+
+                    computatedObject[applicationID] = dataInstance.length;
+                    //  console.log(dataInstance[0].courses_dept + );
+                    break;
+                case 'MAX':
+                    let maxValue = 0;
+                    desiredID = trueApplyKey[applicationID][finalApplyKey];
+                    for (var x = 0; x < dataInstance.length; x++) {
+                        if (dataInstance[x][desiredID] > maxValue)
+                            maxValue = dataInstance[x][desiredID];
+                    }
+                    computatedObject[applicationID] = maxValue;
+                    break;
+                case 'MIN':
+                    let minValue = 1000;
+                    desiredID = trueApplyKey[applicationID][finalApplyKey];
+                    for (var x = 0; x < dataInstance.length; x++) {
+                        if (dataInstance[x][desiredID] < minValue)
+                            minValue = dataInstance[x][desiredID];
+                    }
+                    computatedObject[applicationID] = minValue;
+                    break;
+                default:
+                    console.log("Uh oh, this method received an unsupported APPLY key");
+                    break;
+            }
+            //    console.log(computatedObject);
         }
+        //  console.log(computatedObject);
         return computatedObject;
     }
 
-// TODO: Create basic template to return full data object
-// BY BRENDON
-// Will perform the GET, call other parts of query (WHERE, ORDER, AS)
-// Create full data object consisting of render:string and result:array
-// Do GET, get our array with data specified with GET keys
-// Pass array to WHERE so we can get filtered array
-// Pass array to ORDER so we can sort by a key (eg. sort by courses_avg)
-// Pass QueryRequest to AS, so we can set "render" in full object to "table" if matches query
     public query(query:QueryRequest):QueryResponse {
         Log.trace('QueryController::query( ' + JSON.stringify(query) + ' )');
 
@@ -488,9 +528,13 @@ export default class QueryController {
                 resultToBeRendered = this.queryAs(query, completedOrderQuery);
                 return resultToBeRendered;
             } else {
-                if (query.WHERE) {
+                if (Object.keys(query.WHERE).length != 0) {
                     completedWhereQuery = this.queryWhere(query.WHERE, query.GET, queryResult, false, dataset1, dataset2);
                     completedGroupQuery = this.queryGroup(query.GROUP, completedWhereQuery, query.GET);
+                    completedApplyQuery = this.queryApply(query.APPLY, query.GROUP, completedGroupQuery);
+                    completedOrderQuery = this.queryOrder(query, completedApplyQuery);
+                } else {
+                    completedGroupQuery = this.queryGroup(query.GROUP, queryResult, query.GET);
                     completedApplyQuery = this.queryApply(query.APPLY, query.GROUP, completedGroupQuery);
                     completedOrderQuery = this.queryOrder(query, completedApplyQuery);
                 }
