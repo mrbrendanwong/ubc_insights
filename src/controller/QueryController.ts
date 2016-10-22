@@ -11,6 +11,8 @@ export interface QueryRequest {
     WHERE: {};
     ORDER: string;
     AS: string;
+    GROUP: string[];
+    APPLY: any[];
     add?: number[];
     multiply?: number[];
 }
@@ -20,13 +22,13 @@ export interface QueryResponse {
 
 export default class QueryController {
     private static datasetController = new DatasetController();
-    private datasets: Datasets = null;
+    private datasets:Datasets = null;
 
-    constructor(datasets: Datasets) {
+    constructor(datasets:Datasets) {
         this.datasets = datasets;
     }
 
-    public isValid(query: QueryRequest): boolean {
+    public isValid(query:QueryRequest):boolean {
         if (query.GET == undefined || query.GET == null || query.AS == undefined || query.AS == null)
             return false;
         if (typeof query !== 'undefined' && query !== null && Object.keys(query).length > 0) {
@@ -47,13 +49,13 @@ export default class QueryController {
     // Do a for loop for all elements in the array, only adding elements to a new array if they meet conditions
     // In case of MCOMPARATORs, we should handle case where data is not numbers by just ignoring the filter (tentative)
     // Return new array
-    private queryWhere(whereRequests:any, getRequests:any, rawData : Array<any>, notFlag:boolean,  dataset1 : Array<any> = [], dataset2: Array<any> = []): any {
-        let whereID: Array<string>;
-        let restriction: Array<string>;
+    private queryWhere(whereRequests:any, getRequests:any, rawData:Array<any>, notFlag:boolean, dataset1:Array<any> = [], dataset2:Array<any> = []):any {
+        let whereID:Array<string>;
+        let restriction:Array<string>;
         if (whereRequests.length == 0)
             return rawData;
         else {
-            switch(Object.keys(whereRequests)[0]) {
+            switch (Object.keys(whereRequests)[0]) {
                 case 'GT':
                     restriction = Object.keys(whereRequests.GT);
                     whereID = whereRequests.GT[restriction.toString()];
@@ -95,7 +97,7 @@ export default class QueryController {
                     }
                     var oldDataset = {};
                     for (var z = 0; z < datasetArray.length; z++) {
-                        if (z == 0){
+                        if (z == 0) {
                             oldDataset = datasetArray[z];
                         } else {
                             oldDataset = this.unionArrays(oldDataset, datasetArray[z], getRequests);
@@ -112,7 +114,7 @@ export default class QueryController {
 
     }
 
-    private unionArrays(a1:any, a2:any, getRequests:any) :any {
+    private unionArrays(a1:any, a2:any, getRequests:any):any {
         var finalArray:any;
         var b1:any = a1;
         var b2:any = a2;
@@ -121,7 +123,7 @@ export default class QueryController {
         for (var i = 0; i < b1.length; i++) {
             for (var x = 0; x < b2.length; x++) {
                 allIdentical = true;
-                for (var y = 0; y < getRequests.length; y++){
+                for (var y = 0; y < getRequests.length; y++) {
                     if (b1[i][getRequests[y]] != b2[x][getRequests[y]])
                         allIdentical = false;
                 }
@@ -135,12 +137,12 @@ export default class QueryController {
         return finalArray;
     }
 
-    private processWhere(data: Array<any>, whereCondition:string, restriction:any, restrictionValue:any, notFlag : boolean = false, getRequests:any):any {
-        let processedData: Array<any> = [];
+    private processWhere(data:Array<any>, whereCondition:string, restriction:any, restrictionValue:any, notFlag:boolean = false, getRequests:any):any {
+        let processedData:Array<any> = [];
 
-        switch(whereCondition) {
+        switch (whereCondition) {
             case 'GT':
-                if (notFlag){
+                if (notFlag) {
                     for (var i = 0; i < data.length; i++) {
                         if (data[i][restriction] <= restrictionValue)
                             processedData.push(data[i]);
@@ -202,14 +204,14 @@ export default class QueryController {
                                 processedData.push(data[i]);
                             }
                         }
-                    } else if (restrictionValue[0] == "*" && restrictionValue[restrictionValue.length - 1] == "*" ) {
+                    } else if (restrictionValue[0] == "*" && restrictionValue[restrictionValue.length - 1] == "*") {
                         restrictionValue = restrictionValue.replace(/\*/g, '');
                         for (var i = 0; i < data.length; i++) {
                             if ((data[i][restriction].toLowerCase()).indexOf(restrictionValue) >= 0) {
                                 processedData.push(data[i]);
                             }
                         }
-                    }else {
+                    } else {
                         for (var i = 0; i < data.length; i++) {
                             if (restrictionValue == (data[i][restriction].toLowerCase()))
                                 processedData.push(data[i]);
@@ -221,14 +223,15 @@ export default class QueryController {
                 console.log("Attempting to process unsupported WHERE query");
                 break;
         }
-        var filteredData = this.filterByGET(processedData, getRequests);
-        return filteredData;
+        // call this later
+        //  var filteredData = this.filterByGET(processedData, getRequests);
+        return processedData;
     }
 
-    private filterByGET(unfinishedDataset: any, getRequests:any ) : any {
+    private filterByGET(unfinishedDataset:any, getRequests:any, applyRequests:any = []):any {
         var finalizedArray:any = [];
         for (var x = 0; x < unfinishedDataset.length; x++) {
-            var currentResult: any = {};
+            var currentResult:any = {};
             for (var z = 0; z < getRequests.length; z++) {
                 let datasetID = getRequests[z].split("_")[0];
                 let dataID = getRequests[z].split("_")[1];
@@ -259,9 +262,9 @@ export default class QueryController {
                             case 'audit':
                                 currentResult["courses_audit"] = unfinishedDataset[x].courses_audit;
                                 break;
-                            //
-                            // case 'uuid':
-                            //  currentResult["courses_uuid"] = unfinishedDataset[x].courses_uuid;
+                            case 'uuid':
+                                currentResult["courses_uuid"] = unfinishedDataset[x].courses_uuid;
+                                break;
                             default:
                                 console.log("Uh oh, you sent an invalid key");
                                 break;
@@ -287,8 +290,10 @@ export default class QueryController {
 // Else convert to string array, check if first letters of two elements, switch
 // If first letters are the same, move on to second letters and so on
 // If number, just straight up compare them; order from least to greatest
-    private queryOrder(query: QueryRequest, unsortedData: Array<any>): any {
+    private queryOrder(query:QueryRequest, tobeSortedData:Array<any>):any {
+        console.log(tobeSortedData);
         var orderKey:any;
+        let unsortedData:any;
         if (query.ORDER == undefined)
             orderKey = "courses_dept";
         else {
@@ -297,8 +302,12 @@ export default class QueryController {
             else
                 return null;
         }
+        if (query.GROUP == undefined)
+            unsortedData = this.filterByGET(tobeSortedData, query.GET);
+        else
+            unsortedData = tobeSortedData;
         var sortedData = unsortedData.sort(
-            function(a,b): any {
+            function (a:any, b:any):any {
                 if (a[orderKey] < b[orderKey]) return -1;
                 if (a[orderKey] > b[orderKey]) return 1;
                 return 0;
@@ -312,15 +321,133 @@ export default class QueryController {
 // BY BRENDON
 // Checks what view we want, if table, returns data in some table format
 // set render as table element as table
-    private queryAs(query: QueryRequest, resultArray: Array<any>): any {
+    private queryAs(query:QueryRequest, resultArray:Array<any>):any {
         if (resultArray == null)
             return null;
         if (query.AS === "TABLE") {
-            var dataObject: any = {};
+            var dataObject:any = {};
             dataObject['render'] = "TABLE";
             dataObject['result'] = resultArray;
         }
         return dataObject;
+    }
+
+// TODO: Finish GROUP
+    private queryGroup(groupRequests:any, dataset:any, getRequests:any):any {
+
+        let groupedDataset:any = [];
+        let tempGroup:any = [];
+        // For every offering
+        for (var x = 0; x < dataset.length; x++) {
+            if (x == 0)
+                continue;
+            if (this.shouldBeGrouped(dataset[x - 1], dataset[x], groupRequests))
+                tempGroup.push(dataset[x - 1]);
+            else {
+                tempGroup.push(dataset[x - 1]);
+                groupedDataset.push(tempGroup);
+                tempGroup = [];
+            }
+
+        }
+        return groupedDataset;
+
+    }
+
+    //private assembleOfferings(dataset:any):any {
+    //    let combinedCourseArray:any = [];
+    //    let tempArray:any = [];
+    //    for (var i = 0; i < dataset.length; i++){
+    //        if (i == 0)
+    //            continue;
+    //        if ((dataset[i].courses_dept == dataset[i-1].courses_dept) && (dataset[i].courses_id == dataset[i-1].courses_id))
+    //            tempArray.push(dataset[i-1]);
+    //        else {
+    //            let tempObject:any = {};
+    //            tempObject['courses_dept'] = tempArray[0].courses_dept;
+    //            tempObject['courses_id'] =  tempArray[0].courses_id;
+    //
+    //            for (var x = 0; x < tempArray.length; x++) {
+    //
+    //            }
+    //        }
+    //    }
+    //}
+    // Verifies if two course offerings should be grouped together
+    private shouldBeGrouped(offering1:any, offering2:any, groupRequests:any):boolean {
+        let groupWorthy:boolean = true;
+        for (var x = 0; x < groupRequests.length; x++) {
+            if (offering1[groupRequests[x]] != offering2[groupRequests[x]])
+                groupWorthy = false;
+        }
+        return groupWorthy;
+    }
+
+// TODO: Handle apply calls
+    private queryApply(applyRequests:any, groupRequests:any, groupedDataset:any):any {
+        // Go through each set of applications
+        let appliedDataset:any = [];
+        for (var i = 0; i < applyRequests.length; i++) {
+            for (var x = 0; x < groupedDataset.length; x++)
+                appliedDataset.push(this.applyComputations(applyRequests[i], groupRequests, groupedDataset[x]));
+            // Send each group to the computation helper
+        }
+        //   console.log(appliedDataset);
+
+        return appliedDataset;
+
+    }
+
+    private applyComputations(applyKey:any, groupRequests:any, dataInstance:any):any {
+        // datainstance is an array of offerings (corresponding to a group)
+        var trueApplyKey = applyKey[Object.keys(applyKey)[0]];
+        //  console.log(JSON.stringify(Object.keys(applyKey)[0]));
+        let computatedObject:any = {};
+        let desiredID:any = "";
+        for (var i = 0; i < groupRequests.length; i++) {
+            computatedObject[groupRequests[i]] = dataInstance[0][groupRequests[i]];
+        }
+        //  console.log("HELLO " + JSON.stringify(applyKey[Object.keys(applyKey)[0]]));
+        if (applyKey.length == 0)
+            return dataInstance;
+        switch (Object.keys(trueApplyKey)[0]) {
+            case 'AVG':
+                let sum = 0;
+                let count = dataInstance.length - 1;
+                for (var x = 0; x < dataInstance.length; x++) {
+                    sum += dataInstance[x].courses_avg;
+                }
+                let result = sum / count;
+                //  console.log("AVERAGE IS " + result.toFixed(2));
+                computatedObject[Object.keys(applyKey)[0]] = result.toFixed(2);
+                break;
+            case 'COUNT':
+                // figure something out
+                computatedObject[Object.keys(applyKey)[0]] = dataInstance.length - 1;
+                break;
+            case 'MAX':
+                let maxValue = 0;
+                desiredID = applyKey['MAX'];
+                for (var x = 0; x < dataInstance.length; x++) {
+                    if (dataInstance[x][desiredID] > maxValue)
+                        maxValue = dataInstance[x][desiredID];
+                }
+                computatedObject[Object.keys(applyKey)[0]] = maxValue;
+                break;
+            case 'MIN':
+                let minValue = 1000;
+                desiredID = applyKey['MIN'];
+                for (var x = 0; x < dataInstance.length; x++) {
+                    if (dataInstance[x][desiredID] < minValue)
+                        minValue = dataInstance[x][desiredID];
+                }
+                computatedObject[Object.keys(applyKey)[0]] = minValue;
+                break;
+            default:
+                console.log("Uh oh, this method received an unsupported APPLY key");
+                break;
+        }
+        return computatedObject;
     }
 
 // TODO: Create basic template to return full data object
@@ -331,27 +458,46 @@ export default class QueryController {
 // Pass array to WHERE so we can get filtered array
 // Pass array to ORDER so we can sort by a key (eg. sort by courses_avg)
 // Pass QueryRequest to AS, so we can set "render" in full object to "table" if matches query
-    public query(query: QueryRequest): QueryResponse {
+    public query(query:QueryRequest):QueryResponse {
         Log.trace('QueryController::query( ' + JSON.stringify(query) + ' )');
 
         // TODO: implement this (where we handle get, where, etc.)
         let queryResult:Array<any>;
         let completedWhereQuery:any;
         let completedOrderQuery:any;
+        let completedGroupQuery:any;
+        let completedApplyQuery:any;
         let dataset1:Array<any> = [];
         let dataset2:Array<any> = [];
         let controller = QueryController.datasetController;
-        // For the get query
-        if (query.GET){
-            // console.log("inside : " + query.GET);
-            queryResult = controller.queryDataset(query.GET);
-            if (query.WHERE) {
-                completedWhereQuery = this.queryWhere(query.WHERE, query.GET, queryResult, false, dataset1, dataset2);
+        var resultToBeRendered:any;
+        //if (query.GROUP.length == 0)
+        // return something bad
+        // else
+        // controll.queryGroup();
 
-                completedOrderQuery = this.queryOrder(query, completedWhereQuery);
+        // For the get query
+        if (query.GET) {
+            // #D1 support
+            queryResult = controller.queryDataset(query.GET);
+            if (query.GROUP == undefined || query.GROUP.length == 0) {
+                if (query.WHERE) {
+                    completedWhereQuery = this.queryWhere(query.WHERE, query.GET, queryResult, false, dataset1, dataset2);
+                    completedOrderQuery = this.queryOrder(query, completedWhereQuery);
+                }
+                resultToBeRendered = this.queryAs(query, completedOrderQuery);
+                return resultToBeRendered;
+            } else {
+                if (query.WHERE) {
+                    completedWhereQuery = this.queryWhere(query.WHERE, query.GET, queryResult, false, dataset1, dataset2);
+                    completedGroupQuery = this.queryGroup(query.GROUP, completedWhereQuery, query.GET);
+                    completedApplyQuery = this.queryApply(query.APPLY, query.GROUP, completedGroupQuery);
+                    completedOrderQuery = this.queryOrder(query, completedApplyQuery);
+                }
+                resultToBeRendered = this.queryAs(query, completedOrderQuery);
+                return resultToBeRendered;
             }
         }
-        var resultToBeRendered = this.queryAs(query,completedOrderQuery);
-        return resultToBeRendered;
     }
 }
+// TODO: Fix for D1 and talk about D2
