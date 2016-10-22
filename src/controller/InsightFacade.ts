@@ -71,7 +71,7 @@ export default class InsightFacade implements IInsightFacade {
                     // if file in path deleted, res 204
                     // else file in path has not been deleted for whatever reason, return an res 400 (?)
                     if (fs.existsSync("data/" + id + '.json'))
-                        reject({code: 400, body: 'delete did not delete for some reason!'});
+                        reject({code: 404, body: 'delete did not delete for some reason!'});
                     else
                         fulfill({code: 204, body: 'the operation was successful.'});
                 } else {
