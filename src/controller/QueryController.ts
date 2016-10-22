@@ -536,7 +536,6 @@ export default class QueryController {
                     completedApplyQuery = this.queryApply(query.APPLY, query.GROUP, completedGroupQuery);
                     completedOrderQuery = this.queryOrder(query, completedApplyQuery);
                 }
-                console.log(JSON.stringify(completedOrderQuery));
                 resultToBeRendered = this.queryAs(query, completedOrderQuery);
                 return resultToBeRendered;
             }
