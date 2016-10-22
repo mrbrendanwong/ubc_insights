@@ -295,18 +295,15 @@ export default class QueryController {
         console.log("in query order")
 
         if (query.ORDER == undefined) {
-            unsortedData = this.filterByGET(unsortedData, query.GET);
             orderKeys = "courses_dept";
         }
         else if (typeof query.ORDER === 'string') {
-            unsortedData = this.filterByGET(unsortedData, query.GET);
             if (query.GET.indexOf(query.ORDER) >= 0)
                 orderKeys = query.ORDER;
             else
                 return null;
         }
         else if (typeof query.ORDER === 'object') {
-            // unsortedData = this.filterByGET(unsortedData, query.GET);
             console.log(query.ORDER['dir']);
             if (query.ORDER['dir'] == 'DOWN')
                 downDir = true;
@@ -523,7 +520,8 @@ export default class QueryController {
             if (query.GROUP == undefined || query.GROUP.length == 0) {
                 if (query.WHERE) {
                     completedWhereQuery = this.queryWhere(query.WHERE, query.GET, queryResult, false, dataset1, dataset2);
-                    completedOrderQuery = this.queryOrder(query, completedWhereQuery);
+                    var filteredData:any = this.filterByGET(completedWhereQuery, query.GET);
+                    completedOrderQuery = this.queryOrder(query, filteredData);
                 }
                 resultToBeRendered = this.queryAs(query, completedOrderQuery);
                 return resultToBeRendered;
