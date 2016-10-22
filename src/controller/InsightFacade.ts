@@ -97,36 +97,36 @@ export default class InsightFacade implements IInsightFacade {
                 let isValid = controller.isValid(query);
                 let missing_resource = false;
                 if (isValid === true) {
-                    var invalid_ids: any[] = [];
+                    //        var invalid_ids: any[] = [];
                     for (var i = 0; i < query.GET.length; i++){
                         var us_index = query.GET[i].indexOf('_');
                         var query_id = query.GET[i].substring(0, us_index);
 
-                        if (dsController.getDataset(query_id) || fs.existsSync("data/" + query_id + '.json')) {
+                        if (dsController.getDataset(query_id) || fs.existsSync("data/" + query_id + '.json'))
                             continue;
-                        } else {
-                            console.log('RouteHandler.postQuery: substring to get id from GET keys: ' + query_id);
-                            if (invalid_ids.indexOf(query_id) < 0)
-                                invalid_ids[i] = query_id;
-                            console.log("logged invalid ids: " + invalid_ids);
-                            missing_resource = true;
-                        }
+                        //            } else {
+                        //               console.log('RouteHandler.postQuery: substring to get id from GET keys: ' + query_id);
+                        //              if (invalid_ids.indexOf(query_id) < 0)
+                        //                 invalid_ids[i] = query_id;
+                        //            console.log("logged invalid ids: " + invalid_ids);
+                        //           missing_resource = true;
+                        //       }
                     }
 
-                    if (missing_resource) {
-                        reject({code: 424, body: 'missing ' + invalid_ids});
-                    } else {
-                        let result = controller.query(query);
-                        console.log('RouteHandler.postQuery: result of controller.query(query)' + result);
-                        //Brendon: unsure if "if else" required. will need QueryController.query to be completed first
-                        if (result !== null){
-                            fulfill({code: 200, body: result});
-                            console.log("RouteHandler.postQuery: post query is a success!");
-                        }
-                        else {
-                            reject({code: 400, body: 'result = controller.query(query) did not return valid result?'});
-                        }
+                    //   if (missing_resource) {
+                    //       reject({code: 424, body: 'missing ' + invalid_ids});
+                    //   } else {
+                    let result = controller.query(query);
+                    console.log('RouteHandler.postQuery: result of controller.query(query)' + result);
+                    //Brendon: unsure if "if else" required. will need QueryController.query to be completed first
+                    if (result !== null){
+                        fulfill({code: 200, body: result});
+                        console.log("RouteHandler.postQuery: post query is a success!");
                     }
+                    else {
+                        reject({code: 400, body: 'result = controller.query(query) did not return valid result?'});
+                    }
+                    //   }
                 } else {
                     reject({code: 400, body: 'invalid query. query should contain GET, WHERE, ORDER, AS'});
                 }
