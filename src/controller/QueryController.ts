@@ -459,7 +459,7 @@ export default class QueryController {
                     }
                     let result = sum / x;
                     //  console.log("AVERAGE IS " + result.toFixed(2));
-                    computatedObject[applicationID] = result.toFixed(2);
+                    computatedObject[applicationID] = Number(result.toFixed(2));
                     break;
                 case 'COUNT':
                     // figure something out
@@ -536,6 +536,7 @@ export default class QueryController {
                     completedApplyQuery = this.queryApply(query.APPLY, query.GROUP, completedGroupQuery);
                     completedOrderQuery = this.queryOrder(query, completedApplyQuery);
                 }
+                console.log(JSON.stringify(completedOrderQuery));
                 resultToBeRendered = this.queryAs(query, completedOrderQuery);
                 return resultToBeRendered;
             }
