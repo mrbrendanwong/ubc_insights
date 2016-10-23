@@ -70,7 +70,7 @@ export default class InsightFacade implements IInsightFacade {
                     if (fs.existsSync("data/" + id + '.json'))
                         reject({code: 400, body: {error: 'delete did not delete for some reason!'}});
                     else
-                        fulfill({code: 204, body: {'the operation was successful.'}});
+                        fulfill({code: 204, body: 'the operation was successful.'});
                 } else {
                     reject({code:404, body: {error: 'the operation was unsuccessful because the ' +
                     'delete was for a resource that was not previously PUT.'}});
