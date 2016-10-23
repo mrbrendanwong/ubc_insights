@@ -27,7 +27,7 @@ export default class InsightFacade implements IInsightFacade {
                         Log.trace("sending 201");
                         Log.trace("this is the result " + result);
                         if (result) {
-                            fulfill({code: 201, body: result});
+                            fulfill({code: 201, body: {result}});
                         }
                         else {
                             reject({code: 400, body: {error: "Incorrect dataset"}});
@@ -42,7 +42,7 @@ export default class InsightFacade implements IInsightFacade {
                         Log.trace("sending 204");
                         Log.trace("this is the result " + result);
                         if (result) {
-                            fulfill({code: 204, body: result});
+                            fulfill({code: 204, body: {result}});
                         }
                         else {
                             reject({code: 400, body: {error: "Incorrect dataset"}});
@@ -68,11 +68,11 @@ export default class InsightFacade implements IInsightFacade {
                     controller.deleteDataset(id);
                     console.log('delete done in RouteHandler');
                     if (fs.existsSync("data/" + id + '.json'))
-                        reject({code: 400, body: {err: 'delete did not delete for some reason!'}});
+                        reject({code: 400, body: {error: 'delete did not delete for some reason!'}});
                     else
-                        fulfill({code: 204, body: 'the operation was successful.'});
+                        fulfill({code: 204, body: {'the operation was successful.'}});
                 } else {
-                    reject({code:404, body: {err: 'the operation was unsuccessful because the ' +
+                    reject({code:404, body: {error: 'the operation was unsuccessful because the ' +
                     'delete was for a resource that was not previously PUT.'}});
                     console.log('tripped the DELETE 404');
                 }
@@ -144,7 +144,7 @@ export default class InsightFacade implements IInsightFacade {
                         let result = controller.query(query);
                         console.log('RouteHandler.postQuery: result of controller.query(query)' + result);
                         if (result !== null){
-                            fulfill({code: 200, body: result});
+                            fulfill({code: 200, body: {result}});
                             console.log("RouteHandler.postQuery: post query is a success!");
                         } else {
                             reject({code: 400,
@@ -155,7 +155,6 @@ export default class InsightFacade implements IInsightFacade {
                     reject({code: 400, body: {error: 'invalid query. please fix query formatting'}});
                 }
             } catch (err) {
-                console.log("triggered")
                 Log.trace('DatasetController::process(..) - ERROR: ' + err);
                 reject({code: 400,  body: {error: 'invalid query. please fix query formatting'}});
             }
