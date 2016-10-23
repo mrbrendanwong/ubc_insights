@@ -29,6 +29,20 @@ export default class QueryController {
     }
 
     public isValid(query:QueryRequest):boolean {
+        // Empty Group && non-empty Apply
+        if ((query.APPLY != undefined && query.APPLY.length != 0) && (query.GROUP == undefined || query.GROUP.length == 0))
+            return false;
+        else if ((query.GROUP != undefined && query.GROUP.length != 0) && (query.APPLY == undefined || query.APPLY.length == 0))
+            return false;
+        else if (query.GROUP != undefined && query.GROUP.length == 0)
+            return false;
+        else if (query.GROUP != undefined && query.APPLY != undefined) {
+            if (!this.applyGroupValidation(query)) {
+                console.log("FAIL");
+                return false;
+            }
+        }
+
         if (query.GET == undefined || query.GET == null || query.AS == undefined || query.AS == null)
             return false;
         if (typeof query !== 'undefined' && query !== null && Object.keys(query).length > 0) {
@@ -37,6 +51,60 @@ export default class QueryController {
         }
         return false;
     }
+
+    private applyGroupValidation(query:any):boolean {
+
+        // Check if each apply element is unique
+        for (var i = 0; i < query.APPLY.length; i++) {
+            if (i == 0)
+                continue;
+            if (Object.keys(query.APPLY[i-1])[0] == Object.keys(query.APPLY[i])[0]) {
+                console.log("APPLY keys not all unique");
+                return false;
+            }
+        }
+
+        // Make sure no "_" in Group keys
+        for (var x = 0; x < query.GROUP.length; x++) {
+            if (query.GROUP[x].indexOf("_") == -1) {
+                console.log("Invalid key in Group");
+                return false;
+            }
+        }
+
+
+        //Makes sure any non "_" keys in GET are in APPLY
+        for (var y = 0; y < query.GET.length; y++) {
+            // Find non-"_" Keys
+            if (query.GET[y].indexOf("_") == -1) {
+                for (var z = 0; z < query.APPLY.length; z++) {
+                    if (query.GET[y] == Object.keys(query.APPLY[z])[0])
+                        break;
+                    else if (query.APPLY[z + 1] == undefined) {
+                        console.log("Non _ keys in GET isn't in APPLY");
+                        return false;
+                    }
+                }
+            }
+        }
+
+        // Make sure key does not appear in both APPLY and GROUP
+        for (var j = 0; j < query.GROUP.length; j++){
+            for (var k = 0; k < query.APPLY.length; k++){
+                let outmostKey:any = query.APPLY[k];
+                let outerKey:any = Object.keys(query.APPLY[k])[0];
+                let innerKey:any = Object.keys(outmostKey[Object.keys(outmostKey)[0]])[0];
+                let desiredID = outmostKey[outerKey][innerKey];
+                if (query.GROUP[j] == desiredID) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+
 
     private queryWhere(whereRequests:any, getRequests:any, rawData:Array<any>, notFlag:boolean, dataset1:Array<any> = [], dataset2:Array<any> = []):any {
         let whereID:Array<string>;
@@ -334,8 +402,6 @@ export default class QueryController {
                     return 0;
                 }
             });
-        // console.log('We are in queryOrder')
-        // console.log(sortedData);
         if (downDir)
             sortedData = sortedData.reverse();
 
@@ -417,16 +483,11 @@ export default class QueryController {
     private queryApply(applyRequests:any, groupRequests:any, groupedDataset:any):any {
         // Go through each set of applications
         let appliedDataset:any = [];
-        //     for (var i = 0; i < applyRequests.length; i++) {
-        //         console.log(applyRequests[i]);
         for (var x = 0; x < groupedDataset.length; x++) {
             //     console.log(applyRequests[i]);
             appliedDataset.push(this.applyComputations(applyRequests, groupRequests, groupedDataset[x]));
             // Send each group to the computation helper
         }
-        //    }
-        //   console.log(appliedDataset);
-
         return appliedDataset;
 
     }
@@ -438,11 +499,9 @@ export default class QueryController {
         let desiredID:any = "";
         for (var i = 0; i < groupRequests.length; i++) {
             computatedObject[groupRequests[i]] = dataInstance[0][groupRequests[i]];
-            //     console.log(computatedObject);
-        }
+         }
         for (var z = 0; z < applyKeys.length; z++) {
             let trueApplyKey:any = applyKeys[z];
-            //console.log(trueApplyKey);
 
             let applicationID:any = Object.keys(applyKeys[z])[0];
             let finalApplyKey:any = Object.keys(trueApplyKey[Object.keys(trueApplyKey)[0]])[0];
@@ -458,7 +517,6 @@ export default class QueryController {
                         sum += dataInstance[x].courses_avg;
                     }
                     let result = sum / x;
-                    //  console.log("AVERAGE IS " + result.toFixed(2));
                     computatedObject[applicationID] = Number(result.toFixed(2));
                     break;
                 case 'COUNT':
@@ -508,10 +566,6 @@ export default class QueryController {
         let dataset2:Array<any> = [];
         let controller = QueryController.datasetController;
         var resultToBeRendered:any;
-        //if (query.GROUP.length == 0)
-        // return something bad
-        // else
-        // controll.queryGroup();
 
         // For the get query
         if (query.GET) {

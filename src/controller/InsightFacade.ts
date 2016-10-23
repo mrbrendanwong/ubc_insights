@@ -34,7 +34,7 @@ export default class InsightFacade implements IInsightFacade {
                         }
                     }).catch(function (err:Error) {
                         Log.trace('InsightFacade::postDataset(..) - ERROR: ' + err.message);
-                        reject({code: 400, body: err.message});
+                        reject({code: 400, body: {error: err.message}});
                     });
                 } else {
                     controller.process(id, content).then(function (result) {
@@ -50,7 +50,7 @@ export default class InsightFacade implements IInsightFacade {
 
                     }).catch(function (err:Error) {
                         Log.trace('InsightFacade::postDataset(..) - ERROR: ' + err.message);
-                        reject({code: 400, body: err.message});
+                        reject({code: 400, body: {error: err.message}});
                     });
                 }
             } catch (err) {
