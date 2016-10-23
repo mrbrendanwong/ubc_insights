@@ -15,7 +15,7 @@ describe("InsightFacade", function () {
     before(function () {
         Log.info('InsightController::before() - start');
         // this zip might be in a different spot for you
-        zipFileContents = new Buffer(fs.readFileSync('310courses.1.0.zip')).toString('base64');
+        zipFileContents = new Buffer(fs.readFileSync('../cpsc310d1public/310courses.1.0.zip')).toString('base64');
         try {
             // what you delete here is going to depend on your impl, just make sure
             // all of your temporary files and directories are deleted
