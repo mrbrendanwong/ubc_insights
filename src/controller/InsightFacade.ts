@@ -27,10 +27,10 @@ export default class InsightFacade implements IInsightFacade {
                         Log.trace("sending 201");
                         Log.trace("this is the result " + result);
                         if (result) {
-                            fulfill({code: 201, body: result});
+                            fulfill({code: 201, body: {success: result}});
                         }
                         else {
-                            reject({code: 400, body: "Incorrect dataset"});
+                            reject({code: 400, body: {error: "Incorrect dataset"}});
                         }
                     }).catch(function (err:Error) {
                         Log.trace('InsightFacade::postDataset(..) - ERROR: ' + err.message);
@@ -42,10 +42,10 @@ export default class InsightFacade implements IInsightFacade {
                         Log.trace("sending 204");
                         Log.trace("this is the result " + result);
                         if (result) {
-                            fulfill({code: 204, body: result});
+                            fulfill({code: 204, body: {success: result}});
                         }
                         else {
-                            reject({code: 400, body: "Incorrect dataset"});
+                            reject({code: 400, body: {error: "Incorrect dataset"}});
                         }
 
                     }).catch(function (err:Error) {
@@ -67,17 +67,13 @@ export default class InsightFacade implements IInsightFacade {
                 if (controller.getDataset(id) || fs.existsSync("data/" + id + '.json')) {
                     controller.deleteDataset(id);
                     console.log('delete done in RouteHandler');
-                    // check if file in path has been deleted
-                    // if file in path deleted, res 204
-                    // else file in path has not been deleted for whatever reason, return an res 400 (?)
                     if (fs.existsSync("data/" + id + '.json'))
-                        reject({code: 400, body: 'delete did not delete for some reason!'});
+                        reject({code: 400, body: {err: 'delete did not delete for some reason!'}});
                     else
-                        fulfill({code: 204, body: 'the operation was successful.'});
+                        fulfill({code: 204, body: {success: 'the operation was successful.'}});
                 } else {
-                    // was not previously put, or has been deleted already, so 404
-                    reject({code:404, body: 'the operation was unsuccessful because the ' +
-                    ' delete was for a resource that was not previously PUT.'});
+                    reject({code:404, body: {err: 'the operation was unsuccessful because the ' +
+                    'delete was for a resource that was not previously PUT.'}});
                     console.log('tripped the DELETE 404');
                 }
             } catch (err) {
@@ -97,40 +93,66 @@ export default class InsightFacade implements IInsightFacade {
                 let isValid = controller.isValid(query);
                 let missing_resource = false;
                 if (isValid === true) {
-                    //        var invalid_ids: any[] = [];
+                    var invalid_ids: any[] = [];
+                    if (query.APPLY != (undefined || null)) {
+                        var applyKeys: any[] = [];
+                        for (var j = 0; j < query.APPLY.length; j++) {
+                            console.log(Object.keys(query.APPLY[j])[0]);
+                            applyKeys[j] = Object.keys(query.APPLY[j])[0];
+                        }
+                    }
+
                     for (var i = 0; i < query.GET.length; i++){
-                        var us_index = query.GET[i].indexOf('_');
-                        var query_id = query.GET[i].substring(0, us_index);
-
-                        if (dsController.getDataset(query_id) || fs.existsSync("data/" + query_id + '.json'))
+                        var getDatasetID: string = query.GET[i];
+                        if (getDatasetID.indexOf('_') !== -1)
+                            getDatasetID = getDatasetID.split('_')[0];
+                        if (dsController.getDataset(getDatasetID)
+                            || fs.existsSync("data/" + getDatasetID + '.json')
+                            || query.GROUP.indexOf(getDatasetID) > -1
+                            || applyKeys.indexOf(getDatasetID) > -1) {
                             continue;
-                        //            } else {
-                        //               console.log('RouteHandler.postQuery: substring to get id from GET keys: ' + query_id);
-                        //              if (invalid_ids.indexOf(query_id) < 0)
-                        //                 invalid_ids[i] = query_id;
-                        //            console.log("logged invalid ids: " + invalid_ids);
-                        //           missing_resource = true;
-                        //       }
+                        } else {
+                            console.log('RouteHandler.postQuery: substring to get id from GET keys: ' + getDatasetID);
+                            if (invalid_ids.indexOf(getDatasetID) < 0)
+                                invalid_ids.push(getDatasetID);
+                            console.log("logged invalid ids: " + invalid_ids);
+                            missing_resource = true;
+                        }
                     }
 
-                    //   if (missing_resource) {
-                    //       reject({code: 424, body: 'missing ' + invalid_ids});
-                    //   } else {
-                    let result = controller.query(query);
-                    console.log('RouteHandler.postQuery: result of controller.query(query)' + result);
-                    //Brendon: unsure if "if else" required. will need QueryController.query to be completed first
-                    if (result !== null){
-                        fulfill({code: 200, body: result});
-                        console.log("RouteHandler.postQuery: post query is a success!");
+                    //Check GROUP keys
+                    for (var k = 0; k < query.GROUP.length; k++){
+                        console.log(query.GROUP[k]);
+                        var groupDatasetID: string = query.GROUP[k];
+                        if (groupDatasetID.indexOf('_') !== -1)
+                            groupDatasetID = groupDatasetID.split('_')[0];
+                        if (query.GET.indexOf(groupDatasetID) > -1)
+                            continue;
+                        else {
+                            if (invalid_ids.indexOf(groupDatasetID) < 0)
+                                invalid_ids.push(groupDatasetID);
+                            missing_resource = true;
+                        }
                     }
-                    else {
-                        reject({code: 400, body: 'result = controller.query(query) did not return valid result?'});
+
+                    if (missing_resource) {
+                        reject({code: 424, body: {missing: invalid_ids}});
+                    } else {
+                        let result = controller.query(query);
+                        console.log('RouteHandler.postQuery: result of controller.query(query)' + result);
+                        if (result !== null){
+                            fulfill({code: 200, body: result});
+                            console.log("RouteHandler.postQuery: post query is a success!");
+                        } else {
+                            reject({code: 400,
+                                body: {error: 'result = controller.query(query) did not return valid result?'}});
+                        }
                     }
-                    //   }
                 } else {
-                    reject({code: 400, body: 'invalid query. query should contain GET, WHERE, ORDER, AS'});
+                    reject({code: 400, body: {error: 'invalid query. query should contain GET, WHERE, ORDER, AS'}});
                 }
             } catch (err) {
+                console.log("triggered")
                 Log.trace('DatasetController::process(..) - ERROR: ' + err);
                 reject(err);
             }
