@@ -27,7 +27,7 @@ export default class InsightFacade implements IInsightFacade {
                         Log.trace("sending 201");
                         Log.trace("this is the result " + result);
                         if (result) {
-                            fulfill({code: 201, body: {result}});
+                            fulfill({code: 201, body: result});
                         }
                         else {
                             reject({code: 400, body: {error: "Incorrect dataset"}});
@@ -42,7 +42,7 @@ export default class InsightFacade implements IInsightFacade {
                         Log.trace("sending 204");
                         Log.trace("this is the result " + result);
                         if (result) {
-                            fulfill({code: 204, body: {result}});
+                            fulfill({code: 204, body: result});
                         }
                         else {
                             reject({code: 400, body: {error: "Incorrect dataset"}});
@@ -144,7 +144,7 @@ export default class InsightFacade implements IInsightFacade {
                         let result = controller.query(query);
                         console.log('RouteHandler.postQuery: result of controller.query(query)' + result);
                         if (result !== null){
-                            fulfill({code: 200, body: {result}});
+                            fulfill({code: 200, body: result});
                             console.log("RouteHandler.postQuery: post query is a success!");
                         } else {
                             reject({code: 400,
