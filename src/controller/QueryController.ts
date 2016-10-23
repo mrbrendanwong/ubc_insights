@@ -34,8 +34,8 @@ export default class QueryController {
         // Empty Group && non-empty Apply
         if ((query.APPLY != undefined && query.APPLY.length != 0) && (query.GROUP == undefined || query.GROUP.length == 0))
             return false;
-        //    else if ((query.GROUP != undefined && query.GROUP.length != 0) && (query.APPLY == undefined || query.APPLY.length == 0))
-        //        return false;
+            else if ((query.GROUP != undefined && query.GROUP.length != 0) && (query.APPLY == undefined || query.APPLY.length == 0))
+                return false;
         else if (query.GROUP != undefined && query.GROUP.length == 0)
             return false;
         else if (query.GROUP != undefined && query.APPLY != undefined) {
@@ -68,7 +68,7 @@ export default class QueryController {
 
         // Make sure no "_" in Group keys
         for (var x = 0; x < query.GROUP.length; x++) {
-            if (query.GROUP[x].indexOf("_") == -1) {
+            if (query.GROUP[x].indexOf("_") == -1 || query.GET.indexOf(query.GROUP[x]) < 0) {
                 console.log("Invalid key in Group");
                 return false;
             }
@@ -529,21 +529,35 @@ export default class QueryController {
                 case 'AVG':
                     let sum = 0;
                     let count = dataInstance.length - 1;
+
+                    desiredID = trueApplyKey[applicationID][finalApplyKey];
                     //      console.log(dataInstance[0].courses_avg + " AND " + dataInstance[0].courses_dept);
                     for (var x = 0; x < dataInstance.length; x++) {
-                        sum += dataInstance[x].courses_avg;
+                        sum += dataInstance[x][desiredID];
                     }
                     let result = sum / x;
                     computatedObject[applicationID] = Number(result.toFixed(2));
                     break;
                 case 'COUNT':
                     // figure something out
-
-                    computatedObject[applicationID] = dataInstance.length;
-                    //  console.log(dataInstance[0].courses_dept + );
+                    let uniqueArray:any = [];
+                    desiredID = trueApplyKey[applicationID][finalApplyKey];
+                    for (var q = 0; q < dataInstance.length; q++){
+                        if (q == 0)
+                            uniqueArray.push(dataInstance[q][desiredID]);
+                        else {
+                            for (var t = 0; t < uniqueArray.length; t++){
+                                if (dataInstance[q][desiredID] == uniqueArray[t])
+                                    break;
+                                else if (uniqueArray[t+1] == undefined || uniqueArray[t+1] == null)
+                                    uniqueArray.push(dataInstance[q][desiredID]);
+                            }
+                        }
+                    }
+                    computatedObject[applicationID] = uniqueArray.length;
                     break;
                 case 'MAX':
-                    let maxValue = 0;
+                    let maxValue = -10000;
                     desiredID = trueApplyKey[applicationID][finalApplyKey];
                     for (var x = 0; x < dataInstance.length; x++) {
                         if (dataInstance[x][desiredID] > maxValue)
@@ -552,7 +566,7 @@ export default class QueryController {
                     computatedObject[applicationID] = maxValue;
                     break;
                 case 'MIN':
-                    let minValue = 1000;
+                    let minValue = 1000000000;
                     desiredID = trueApplyKey[applicationID][finalApplyKey];
                     for (var x = 0; x < dataInstance.length; x++) {
                         if (dataInstance[x][desiredID] < minValue)
@@ -616,6 +630,7 @@ export default class QueryController {
                         completedOrderQuery = this.queryOrder(query, completedGroupQuery);
                 }
                 resultToBeRendered = this.queryAs(query, completedOrderQuery);
+                console.log(JSON.stringify(resultToBeRendered));
                 return resultToBeRendered;
             }
         }
