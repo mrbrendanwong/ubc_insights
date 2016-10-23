@@ -55,7 +55,7 @@ export default class InsightFacade implements IInsightFacade {
                 }
             } catch (err) {
                 Log.trace('DatasetController::process(..) - ERROR: ' + err);
-                reject(err);
+                reject({code: 400, body: {error: err.message}});
             }
         });
     }
@@ -78,7 +78,7 @@ export default class InsightFacade implements IInsightFacade {
                 }
             } catch (err) {
                 Log.trace('DatasetController::process(..) - ERROR: ' + err);
-                reject(err);
+                reject({code: 400, body: {error: err.message}});
             }
         });
     }
@@ -157,7 +157,7 @@ export default class InsightFacade implements IInsightFacade {
             } catch (err) {
                 console.log("triggered")
                 Log.trace('DatasetController::process(..) - ERROR: ' + err);
-                reject(err);
+                reject({code: 400,  body: {error: 'invalid query. please fix query formatting'}});
             }
         });
     }
