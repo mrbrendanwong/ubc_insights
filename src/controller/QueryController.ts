@@ -619,7 +619,7 @@ export default class QueryController {
                         completedOrderQuery = this.queryOrder(query, completedApplyQuery);
                     } else {
                         // Fix this for jaguar
-                        completedOrderQuery = this.queryOrder(query, filteredData);
+                        completedOrderQuery = this.queryOrder(query, completedGroupQuery);
                     }
                 } else {
                     completedGroupQuery = this.queryGroup(query.GROUP, queryResult, query.GET);
