@@ -595,12 +595,9 @@ export default class QueryController {
                     completedOrderQuery = this.queryOrder(query, filteredData);
                 }
                 resultToBeRendered = this.queryAs(query, completedOrderQuery);
-
-                console.log(JSON.stringify(resultToBeRendered));
                 return resultToBeRendered;
             } else {
                 if (Object.keys(query.WHERE).length != 0) {
-                    console.log("HELLO " + query.APPLY.length);
                     completedWhereQuery = this.queryWhere(query.WHERE, query.GET, queryResult, false, dataset1, dataset2);
                     completedGroupQuery = this.queryGroup(query.GROUP, completedWhereQuery, query.GET);
                     if (query.APPLY.length != 0) {
