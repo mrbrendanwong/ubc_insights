@@ -34,8 +34,8 @@ export default class QueryController {
         // Empty Group && non-empty Apply
         if ((query.APPLY != undefined && query.APPLY.length != 0) && (query.GROUP == undefined || query.GROUP.length == 0))
             return false;
-        else if ((query.GROUP != undefined && query.GROUP.length != 0) && (query.APPLY == undefined || query.APPLY.length == 0))
-            return false;
+        //    else if ((query.GROUP != undefined && query.GROUP.length != 0) && (query.APPLY == undefined || query.APPLY.length == 0))
+        //        return false;
         else if (query.GROUP != undefined && query.GROUP.length == 0)
             return false;
         else if (query.GROUP != undefined && query.APPLY != undefined) {
@@ -98,6 +98,21 @@ export default class QueryController {
                 let innerKey:any = Object.keys(outmostKey[Object.keys(outmostKey)[0]])[0];
                 let desiredID = outmostKey[outerKey][innerKey];
                 if (query.GROUP[j] == desiredID) {
+                    return false;
+                }
+            }
+        }
+
+        // Check if GET key is contained in either GROUP or APPLY
+        if (query.APPLY.length > 0) {
+            var applyKeys:any[] = [];
+            for (var j = 0; j < query.APPLY.length; j++) {
+                applyKeys[j] = Object.keys(query.APPLY[j])[0];
+            }
+
+            for (var i = 0; i < query.GET.length; i++) {
+                var getDatasetID:string = query.GET[i];
+                if (query.GROUP.indexOf(getDatasetID) < 0 && applyKeys.indexOf(getDatasetID) < 0) {
                     return false;
                 }
             }
@@ -501,7 +516,7 @@ export default class QueryController {
         let desiredID:any = "";
         for (var i = 0; i < groupRequests.length; i++) {
             computatedObject[groupRequests[i]] = dataInstance[0][groupRequests[i]];
-         }
+        }
         for (var z = 0; z < applyKeys.length; z++) {
             let trueApplyKey:any = applyKeys[z];
 
@@ -585,12 +600,20 @@ export default class QueryController {
                 if (Object.keys(query.WHERE).length != 0) {
                     completedWhereQuery = this.queryWhere(query.WHERE, query.GET, queryResult, false, dataset1, dataset2);
                     completedGroupQuery = this.queryGroup(query.GROUP, completedWhereQuery, query.GET);
-                    completedApplyQuery = this.queryApply(query.APPLY, query.GROUP, completedGroupQuery);
-                    completedOrderQuery = this.queryOrder(query, completedApplyQuery);
+                    if (query.APPLY.length != 0) {
+                        completedApplyQuery = this.queryApply(query.APPLY, query.GROUP, completedGroupQuery);
+                        completedOrderQuery = this.queryOrder(query, completedApplyQuery);
+                    } else {
+                        // Fix this for jaguar
+                        completedOrderQuery = this.queryOrder(query, filteredData);
+                    }
                 } else {
                     completedGroupQuery = this.queryGroup(query.GROUP, queryResult, query.GET);
-                    completedApplyQuery = this.queryApply(query.APPLY, query.GROUP, completedGroupQuery);
-                    completedOrderQuery = this.queryOrder(query, completedApplyQuery);
+                    if (query.APPLY.length != 0) {
+                        completedApplyQuery = this.queryApply(query.APPLY, query.GROUP, completedGroupQuery);
+                        completedOrderQuery = this.queryOrder(query, completedApplyQuery);
+                    }else
+                        completedOrderQuery = this.queryOrder(query, completedGroupQuery);
                 }
                 resultToBeRendered = this.queryAs(query, completedOrderQuery);
                 return resultToBeRendered;
