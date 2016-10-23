@@ -27,7 +27,7 @@ export default class InsightFacade implements IInsightFacade {
                         Log.trace("sending 201");
                         Log.trace("this is the result " + result);
                         if (result) {
-                            fulfill({code: 201, body: {success: result}});
+                            fulfill({code: 201, body: result});
                         }
                         else {
                             reject({code: 400, body: {error: "Incorrect dataset"}});
@@ -42,7 +42,7 @@ export default class InsightFacade implements IInsightFacade {
                         Log.trace("sending 204");
                         Log.trace("this is the result " + result);
                         if (result) {
-                            fulfill({code: 204, body: {success: result}});
+                            fulfill({code: 204, body: result});
                         }
                         else {
                             reject({code: 400, body: {error: "Incorrect dataset"}});
@@ -70,7 +70,7 @@ export default class InsightFacade implements IInsightFacade {
                     if (fs.existsSync("data/" + id + '.json'))
                         reject({code: 400, body: {err: 'delete did not delete for some reason!'}});
                     else
-                        fulfill({code: 204, body: {success: 'the operation was successful.'}});
+                        fulfill({code: 204, body: 'the operation was successful.'});
                 } else {
                     reject({code:404, body: {err: 'the operation was unsuccessful because the ' +
                     'delete was for a resource that was not previously PUT.'}});
