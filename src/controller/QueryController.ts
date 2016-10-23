@@ -29,6 +29,8 @@ export default class QueryController {
     }
 
     public isValid(query:QueryRequest):boolean {
+        if (query == null)
+            return false;
         // Empty Group && non-empty Apply
         if ((query.APPLY != undefined && query.APPLY.length != 0) && (query.GROUP == undefined || query.GROUP.length == 0))
             return false;

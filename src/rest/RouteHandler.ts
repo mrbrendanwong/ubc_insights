@@ -74,6 +74,7 @@ export default class RouteHandler {
                 res.json(result.code,result.body);
             }).catch(function (err: InsightResponse) {
                 res.json(err.code, err.body);
+                console.log(res);
             });
         } catch (err) {
             Log.error('RouteHandler::deleteDataset(..) - ERROR: ' + err.message);
