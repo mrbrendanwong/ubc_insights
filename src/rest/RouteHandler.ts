@@ -11,6 +11,7 @@ import {QueryRequest} from "../controller/QueryController";
 import Log from '../Util';
 import QueryController from "../controller/QueryController";
 import InsightFacade from "../controller/InsightFacade";
+import {InsightResponse} from "../controller/IInsightFacade";
 
 export default class RouteHandler {
 
@@ -89,8 +90,8 @@ export default class RouteHandler {
             let iController = RouteHandler.insightFacade;
             iController.performQuery(query).then(function (result) {
                 res.json(result.code,result.body);
-            }).catch(function (err:Error) {
-                res.json(400, {err: err.message});
+            }).catch(function (err: InsightResponse) {
+                res.json(err.code, err.body);
             });
         } catch (err) {
             Log.error('RouteHandler::postQuery(..) - ERROR: ' + err);
