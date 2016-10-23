@@ -67,15 +67,11 @@ export default class InsightFacade implements IInsightFacade {
                 if (controller.getDataset(id) || fs.existsSync("data/" + id + '.json')) {
                     controller.deleteDataset(id);
                     console.log('delete done in RouteHandler');
-                    // check if file in path has been deleted
-                    // if file in path deleted, res 204
-                    // else file in path has not been deleted for whatever reason, return an res 400 (?)
                     if (fs.existsSync("data/" + id + '.json'))
                         reject({code: 404, body: 'delete did not delete for some reason!'});
                     else
                         fulfill({code: 204, body: 'the operation was successful.'});
                 } else {
-                    // was not previously put, or has been deleted already, so 404
                     reject({code:404, body: 'the operation was unsuccessful because the ' +
                     ' delete was for a resource that was not previously PUT.'});
                     console.log('tripped the DELETE 404');
