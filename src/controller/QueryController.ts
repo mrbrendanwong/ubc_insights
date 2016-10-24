@@ -34,9 +34,6 @@ export default class QueryController {
         if (query.GROUP != undefined && query.GROUP.length == 0)
             return false;
 
-        if ((query.GROUP != undefined && query.GROUP.length != 0) && (query.APPLY != undefined && query.APPLY.length == 0))
-            return true;
-
         if (query.GROUP != undefined && query.APPLY != undefined) {
             if (!this.applyGroupValidation(query)) {
                 console.log("FAIL");
