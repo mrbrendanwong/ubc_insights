@@ -445,7 +445,6 @@ export default class QueryController {
         let groupedDataset:any = [];
         let tempGroup:any = [];
         // For every offering
-        console.log(dataset[0]);
         for (var x = 0; x < dataset.length; x++) {
             if (x == 0)
                 continue;
@@ -628,7 +627,6 @@ export default class QueryController {
                     var filteredData:any = this.filterByGET(completedWhereQuery, query.GET);
                     completedOrderQuery = this.queryOrder(query, filteredData);
                 }
-                console.log(JSON.stringify(completedOrderQuery));
                 resultToBeRendered = this.queryAs(query, completedOrderQuery);
                 return resultToBeRendered;
             } else {
@@ -642,7 +640,7 @@ export default class QueryController {
                     } else {
                         // Fix this for jaguar
                         fixedArray = this.fixDoubleArray(completedGroupQuery);
-                        console.log(fixedArray);
+                     //   console.log(fixedArray);
                         completedOrderQuery = this.queryOrder(query, fixedArray);
                         //    console.log(completedOrderQuery);
                     }
