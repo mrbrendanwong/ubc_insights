@@ -144,7 +144,7 @@ export default class InsightFacade implements IInsightFacade {
                         let result = controller.query(query);
                         console.log('RouteHandler.postQuery: result of controller.query(query)' + result);
                         if (result !== null){
-                            fulfill({code: 200, body: {result}});
+                            fulfill({code: 200, body: result});
                             console.log("RouteHandler.postQuery: post query is a success!");
                         } else {
                             reject({code: 400,
