@@ -121,22 +121,22 @@ export default class InsightFacade implements IInsightFacade {
                         }
                     }
 
-                    if (query.GROUP != (undefined || null)) {
-                        for (var k = 0; k < query.GROUP.length; k++){
-                            console.log("In InsightFacade" + query.GROUP[k]);
-                            var groupDatasetID: string = query.GROUP[k];
-                            if (query.GET.indexOf(groupDatasetID) > -1)
-                                continue;
-                            else {
-                                if (invalid_ids.indexOf(groupDatasetID) < 0) {
-                                    if (groupDatasetID.indexOf('_') !== -1)
-                                        groupDatasetID = groupDatasetID.split('_')[0];
-                                    invalid_ids.push(groupDatasetID);
-                                }
-                                missing_resource = true;
-                            }
-                        }
-                    }
+                    //if (query.GROUP != (undefined || null)) {
+                    //    for (var k = 0; k < query.GROUP.length; k++){
+                    //        console.log("In InsightFacade" + query.GROUP[k]);
+                    //        var groupDatasetID: string = query.GROUP[k];
+                    //        if (query.GET.indexOf(groupDatasetID) > -1)
+                    //            continue;
+                    //        else {
+                    //            if (invalid_ids.indexOf(groupDatasetID) < 0) {
+                    //                if (groupDatasetID.indexOf('_') !== -1)
+                    //                    groupDatasetID = groupDatasetID.split('_')[0];
+                    //                invalid_ids.push(groupDatasetID);
+                    //            }
+                    //            missing_resource = true;
+                    //        }
+                    //    }
+                    //}
 
                     if (missing_resource) {
                         reject({code: 424, body: {missing: invalid_ids}});
