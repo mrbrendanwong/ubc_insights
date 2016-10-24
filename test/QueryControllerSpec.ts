@@ -18,16 +18,34 @@ describe("QueryController", function () {
 
     it("Should be able to validate a valid query", function () {
         // NOTE: this is not actually a valid query for D1
-        //let query: QueryRequest = {GET: ['courses_dept'], WHERE: {IS: 'cpsc'}, ORDER: {'courses_dept', AS: 'table'};
-        //let dataset: Datasets = {};
-        //let controller = new QueryController(dataset);
-        //let isValid = controller.isValid(query);
-        //
-        //expect(isValid).to.equal(true);
+        let query:QueryRequest = {
+            GET: ['courses_dept', 'courses_id', 'courses_instructor', 'courses_avg', 'courses_title', 'courses_pass', 'courses_fail', 'courses_audit', 'courses_uuid'],
+            GROUP:['courses_dept', 'courses_id', 'courses_instructor', 'courses_avg', 'courses_title', 'courses_pass', 'courses_fail', 'courses_audit', 'courses_uuid'],
+            APPLY:[],
+            WHERE: {IS: {"courses_dept": "cpsc"}},
+            ORDER: {"dir": "UP", "keys": ["courses_id"]},
+            AS: 'table'
+        };
+        let dataset: Datasets = {};
+        let controller = new QueryController(dataset);
+        let isValid = controller.isValid(query);
+
+        expect(isValid).to.equal(true);
     });
 
+    //it("Should be able to validate a valid query", function () {
+    //    // NOTE: this is not actually a valid query for D1
+    //    let query: QueryRequest = {GET: ['courses_dept'], WHERE: {IS: {"courses_dept": 'cpsc'}}, ORDER: 'courses_dept', AS: 'table'};
+    //    let dataset: Datasets = {};
+    //    let controller = new QueryController(dataset);
+    //    let isValid = controller.isValid(query);
+    //
+    //    expect(isValid).to.equal(true);
+    //});
+
+
     it("Should be able to validate a valid D2 query", function () {
-        let query: QueryRequest = {GET: ['courses_id', 'courseAverage'], WHERE: {IS: {"courses_dept": "cpsc"}} , GROUP: ["courses_id"], APPLY: [ {"courseAverage": {"AVG": "courses_avg"}} ], ORDER: { "dir": "UP", "keys": ["courseAverage", "courses_id"]}, AS: 'table'}
+        let query: QueryRequest = {GET: ['courses_id', 'courseAverage'], WHERE: {IS: {"courses_dept": "cpsc"}} , GROUP: ["courses_id"], APPLY: [ {"courseAverage": {"AVG": "courses_avg"}} ], ORDER: { "dir": "UP", "keys": ["courseAverage", "courses_id"]}, AS: 'table'};
         let dataset: Datasets = {};
         let controller = new QueryController(dataset);
         let isValid = controller.isValid(query);
