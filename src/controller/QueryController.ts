@@ -101,7 +101,7 @@ export default class QueryController {
                 let innerKey:any = Object.keys(outmostKey[Object.keys(outmostKey)[0]])[0];
                 let desiredID = outmostKey[outerKey][innerKey];
                 if ((innerKey == 'MAX') || (innerKey == 'MIN') || (innerKey == 'AVG')) {
-                    if ((desiredID != "courses_avg") || (desiredID != "courses_pass") || (desiredID != "courses_fail") || (desiredID != "courses_audit"))
+                    if ((desiredID != "courses_avg") && (desiredID != "courses_pass") &&  (desiredID != "courses_fail") && (desiredID != "courses_audit"))
                         return false;
                 }
                 if (query.GROUP[j] == desiredID) {
