@@ -34,6 +34,9 @@ export default class QueryController {
         if (query.GROUP != undefined && query.GROUP.length == 0)
             return false;
 
+        if ((query.GROUP != undefined && query.GROUP.length != 0) && (query.APPLY != undefined && query.APPLY.length == 0))
+            return true;
+
         if (query.GROUP != undefined && query.APPLY != undefined) {
             if (!this.applyGroupValidation(query)) {
                 console.log("FAIL");
@@ -646,7 +649,8 @@ export default class QueryController {
                         // Fix this for jaguar
                         fixedArray = this.fixDoubleArray(completedGroupQuery);
                         //   console.log(fixedArray);
-                        completedOrderQuery = this.queryOrder(query, fixedArray);
+                        var filteredData:any = this.filterByGET(fixedArray, query.GET);
+                        completedOrderQuery = this.queryOrder(query, filteredData);
                         //    console.log(completedOrderQuery);
                     }
                 } else {
@@ -657,7 +661,8 @@ export default class QueryController {
                         //  console.log(completedOrderQuery);
                     }else {
                         fixedArray = this.fixDoubleArray(completedGroupQuery);
-                        completedOrderQuery = this.queryOrder(query, fixedArray);
+                        var filteredData:any = this.filterByGET(fixedArray, query.GET);
+                        completedOrderQuery = this.queryOrder(query, filteredData);
                     }
                 }
                 //  console.log(completedApplyQuery);
