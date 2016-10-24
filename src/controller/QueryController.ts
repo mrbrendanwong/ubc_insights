@@ -34,10 +34,10 @@ export default class QueryController {
         if (query.GROUP != undefined && query.GROUP.length == 0)
             return false;
         // Empty Group && non-empty Apply
-        if ((query.APPLY != undefined && query.APPLY.length != 0) && (query.GROUP == undefined || query.GROUP.length == 0))
+        if ((query.APPLY != undefined) && (query.GROUP == undefined || (query.GROUP != undefined && query.GROUP.length == 0)))
             return false;
-            else if ((query.GROUP != undefined && query.GROUP.length != 0) && (query.APPLY == undefined || query.APPLY.length == 0))
-                return false;
+        else if ((query.GROUP != undefined) && (query.APPLY == undefined))
+            return false;
         else if (query.GROUP != undefined && query.GROUP.length == 0)
             return false;
         else if (query.GROUP != undefined && query.APPLY != undefined) {
@@ -592,6 +592,16 @@ export default class QueryController {
         return computatedObject;
     }
 
+    private fixDoubleArray(doubleArray:Array<any>) {
+        let singleArray:Array<any> = [];
+        for (var i = 0; i < doubleArray.length; i++) {
+            for (var j = 0; j < doubleArray[i].length; j++) {
+                singleArray.push(doubleArray[i][j]);
+            }
+        }
+        return singleArray;
+    }
+
     public query(query:QueryRequest):QueryResponse {
         Log.trace('QueryController::query( ' + JSON.stringify(query) + ' )');
 
@@ -603,6 +613,7 @@ export default class QueryController {
         let completedApplyQuery:any;
         let dataset1:Array<any> = [];
         let dataset2:Array<any> = [];
+        let fixedArray:any = [];
         let controller = QueryController.datasetController;
         var resultToBeRendered:any;
 
@@ -623,22 +634,30 @@ export default class QueryController {
                     completedWhereQuery = this.queryWhere(query.WHERE, query.GET, queryResult, false, dataset1, dataset2);
                     completedGroupQuery = this.queryGroup(query.GROUP, completedWhereQuery, query.GET);
                     if (query.APPLY.length != 0) {
+                        //console.log(completedWhereQuery);
                         completedApplyQuery = this.queryApply(query.APPLY, query.GROUP, completedGroupQuery);
                         completedOrderQuery = this.queryOrder(query, completedApplyQuery);
                     } else {
                         // Fix this for jaguar
-                        completedOrderQuery = this.queryOrder(query, completedGroupQuery);
+                        fixedArray = this.fixDoubleArray(completedGroupQuery);
+                     //   console.log(fixedArray);
+                        completedOrderQuery = this.queryOrder(query, fixedArray);
+                        //    console.log(completedOrderQuery);
                     }
                 } else {
                     completedGroupQuery = this.queryGroup(query.GROUP, queryResult, query.GET);
                     if (query.APPLY.length != 0) {
                         completedApplyQuery = this.queryApply(query.APPLY, query.GROUP, completedGroupQuery);
                         completedOrderQuery = this.queryOrder(query, completedApplyQuery);
-                    }else
-                        completedOrderQuery = this.queryOrder(query, completedGroupQuery);
+                    }else {
+                        fixedArray = this.fixDoubleArray(completedGroupQuery);
+                        completedOrderQuery = this.queryOrder(query, fixedArray);
+                    }
                 }
-                console.log(JSON.stringify(completedOrderQuery));
+                //  console.log(completedApplyQuery);
+                //  console.log(completedOrderQuery);
                 resultToBeRendered = this.queryAs(query, completedOrderQuery);
+                // console.log(resultToBeRendered);
                 return resultToBeRendered;
             }
         }
