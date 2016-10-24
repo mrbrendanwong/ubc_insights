@@ -31,6 +31,8 @@ export default class QueryController {
     public isValid(query:QueryRequest):boolean {
         if (query == null)
             return false;
+        if (query.GROUP != undefined && query.GROUP.length == 0)
+            return false;
         // Empty Group && non-empty Apply
         if ((query.APPLY != undefined && query.APPLY.length != 0) && (query.GROUP == undefined || query.GROUP.length == 0))
             return false;
@@ -531,6 +533,8 @@ export default class QueryController {
                     let count = dataInstance.length - 1;
 
                     desiredID = trueApplyKey[applicationID][finalApplyKey];
+                    if (typeof dataInstance[0][desiredID] !== 'number')
+                        break;
                     //      console.log(dataInstance[0].courses_avg + " AND " + dataInstance[0].courses_dept);
                     for (var x = 0; x < dataInstance.length; x++) {
                         sum += dataInstance[x][desiredID];
@@ -559,6 +563,8 @@ export default class QueryController {
                 case 'MAX':
                     let maxValue = -10000;
                     desiredID = trueApplyKey[applicationID][finalApplyKey];
+                    if (typeof dataInstance[0][desiredID] !== 'number')
+                        break;
                     for (var x = 0; x < dataInstance.length; x++) {
                         if (dataInstance[x][desiredID] > maxValue)
                             maxValue = dataInstance[x][desiredID];
@@ -568,6 +574,8 @@ export default class QueryController {
                 case 'MIN':
                     let minValue = 1000000000;
                     desiredID = trueApplyKey[applicationID][finalApplyKey];
+                    if (typeof dataInstance[0][desiredID] !== 'number')
+                        break;
                     for (var x = 0; x < dataInstance.length; x++) {
                         if (dataInstance[x][desiredID] < minValue)
                             minValue = dataInstance[x][desiredID];
@@ -629,8 +637,8 @@ export default class QueryController {
                     }else
                         completedOrderQuery = this.queryOrder(query, completedGroupQuery);
                 }
+                console.log(JSON.stringify(completedOrderQuery));
                 resultToBeRendered = this.queryAs(query, completedOrderQuery);
-                console.log(JSON.stringify(resultToBeRendered));
                 return resultToBeRendered;
             }
         }
