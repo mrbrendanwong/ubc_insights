@@ -33,6 +33,13 @@ export default class QueryController {
             return false;
         if (query.GROUP != undefined && query.GROUP.length == 0)
             return false;
+
+        if (query.GROUP != undefined && query.APPLY != undefined) {
+            if (!this.applyGroupValidation(query)) {
+                console.log("FAIL");
+                return false;
+            }
+        }
         // Empty Group && non-empty Apply
         if ((query.APPLY != undefined) && (query.GROUP == undefined || (query.GROUP != undefined && query.GROUP.length == 0)))
             return false;
@@ -40,12 +47,6 @@ export default class QueryController {
             return false;
         else if (query.GROUP != undefined && query.GROUP.length == 0)
             return false;
-        else if (query.GROUP != undefined && query.APPLY != undefined) {
-            if (!this.applyGroupValidation(query)) {
-                console.log("FAIL");
-                return false;
-            }
-        }
 
         if (query.GET == undefined || query.GET == null || query.AS == undefined || query.AS == null)
             return false;
@@ -99,6 +100,10 @@ export default class QueryController {
                 let outerKey:any = Object.keys(query.APPLY[k])[0];
                 let innerKey:any = Object.keys(outmostKey[Object.keys(outmostKey)[0]])[0];
                 let desiredID = outmostKey[outerKey][innerKey];
+                if ((innerKey == 'MAX') || (innerKey == 'MIN') || (innerKey == 'AVG')) {
+                    if ((desiredID != "courses_avg") || (desiredID != "courses_pass") || (desiredID != "courses_fail") || (desiredID != "courses_audit"))
+                        return false;
+                }
                 if (query.GROUP[j] == desiredID) {
                     return false;
                 }
@@ -640,7 +645,7 @@ export default class QueryController {
                     } else {
                         // Fix this for jaguar
                         fixedArray = this.fixDoubleArray(completedGroupQuery);
-                     //   console.log(fixedArray);
+                        //   console.log(fixedArray);
                         completedOrderQuery = this.queryOrder(query, fixedArray);
                         //    console.log(completedOrderQuery);
                     }
@@ -649,6 +654,7 @@ export default class QueryController {
                     if (query.APPLY.length != 0) {
                         completedApplyQuery = this.queryApply(query.APPLY, query.GROUP, completedGroupQuery);
                         completedOrderQuery = this.queryOrder(query, completedApplyQuery);
+                        //  console.log(completedOrderQuery);
                     }else {
                         fixedArray = this.fixDoubleArray(completedGroupQuery);
                         completedOrderQuery = this.queryOrder(query, fixedArray);
@@ -658,6 +664,7 @@ export default class QueryController {
                 //  console.log(completedOrderQuery);
                 resultToBeRendered = this.queryAs(query, completedOrderQuery);
                 // console.log(resultToBeRendered);
+                //  console.log(resultToBeRendered);
                 return resultToBeRendered;
             }
         }
