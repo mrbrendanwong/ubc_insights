@@ -51,7 +51,7 @@ export default class QueryController {
             return false;
 
         // Special handling for Group and Apply
-        if (query.GROUP != undefined && (query.APPLY != undefined && query.APPLY.length != 0)) {
+        if (query.GROUP != undefined && (query.APPLY != undefined)) {
             return this.applyGroupValidation(query);
         }
         // Should catch whatever made it through to this point
@@ -449,6 +449,7 @@ export default class QueryController {
                 tempGroup.push(dataset[x]);
                 groupedDataset.push(tempGroup);
                 tempGroup = [];
+                break;
             }
             if (this.shouldBeGrouped(dataset[x - 1], dataset[x], groupRequests))
                 tempGroup.push(dataset[x - 1]);
