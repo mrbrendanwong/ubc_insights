@@ -75,6 +75,17 @@ export default class QueryController {
             }
         }
 
+        // Check if all keys in group are in GET
+        for (var q = 0; q < query.GROUP.length; q++) {
+            let matchFlag:boolean = false;
+            for (var w = 0; w < query.GET.length; w++) {
+                if (query.GET[w] == query.GROUP[q])
+                    matchFlag = true;
+            }
+            if (!matchFlag)
+                return false;
+        }
+
         // Make sure no "_" in Group keys
         for (var x = 0; x < query.GROUP.length; x++) {
             if (query.GROUP[x].indexOf("_") == -1 || query.GET.indexOf(query.GROUP[x]) < 0) {
@@ -92,13 +103,9 @@ export default class QueryController {
                 for (var z = 0; z < query.APPLY.length; z++) {
                     console.log("This is" + query.GET[y] + "  " +  Object.keys(query.APPLY[z])[0]);
                     if (query.GET[y] == Object.keys(query.APPLY[z])[0])
-                        break;
-                    else if (query.APPLY[z + 1] == undefined) {
                         matchFlag = true;
-                        console.log("Non _ keys in GET isn't in APPLY");
-                    }
                 }
-                if (matchFlag)
+                if (!matchFlag)
                     return false;
             }
         }
