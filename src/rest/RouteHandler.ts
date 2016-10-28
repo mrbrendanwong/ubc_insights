@@ -89,7 +89,7 @@ export default class RouteHandler {
         try {
             let query: QueryRequest = req.params;
             let iController = RouteHandler.insightFacade;
-            iController.performQuery(query).then(function (result) {
+            iController.performQuery(query).then(function (result:InsightResponse) {
                 res.json(result.code,result.body);
             }).catch(function (err: InsightResponse) {
                 res.json(err.code, err.body);

@@ -170,23 +170,49 @@ export default class DatasetController {
 
     public queryDataset(queryIDs:any) : Array<any> {
         this.getDatasets();
-        let coursesDataset = this.getDataset(queryIDs[0].split("_")[0]);
+        let mainID:any = queryIDs[0].split("_")[0];
+        let coursesDataset = this.getDataset(mainID);
         let parsedCDB = JSON.parse(coursesDataset);
         let currentSearchArray:Array<any> = [];
         for (var x = 0; x < parsedCDB.length; x++ ) {
             if (parsedCDB[x] != null) {
-                for (var z = 0; z < parsedCDB[x].length; z++) {
-                    let currentResult:any = {};
-                    currentResult["courses_dept"] = parsedCDB[x][z].Subject;
-                    currentResult["courses_id"] = parsedCDB[x][z].Course;
-                    currentResult["courses_avg"] = parsedCDB[x][z].Avg;
-                    currentResult["courses_instructor"] = parsedCDB[x][z].Professor;
-                    currentResult["courses_title"] = parsedCDB[x][z].Title;
-                    currentResult["courses_pass"] = parsedCDB[x][z].Pass;
-                    currentResult["courses_fail"] = parsedCDB[x][z].Fail;
-                    currentResult["courses_audit"] = parsedCDB[x][z].Audit;
-                    currentResult["courses_uuid"] = parsedCDB[x][z].id;
-                    currentSearchArray.push(currentResult);
+                switch (mainID) {
+                    case 'courses':
+                        for (var z = 0; z < parsedCDB[x].length; z++) {
+                            let currentResult:any = {};
+                            currentResult["courses_dept"] = parsedCDB[x][z].Subject;
+                            currentResult["courses_id"] = parsedCDB[x][z].Course;
+                            currentResult["courses_avg"] = parsedCDB[x][z].Avg;
+                            currentResult["courses_instructor"] = parsedCDB[x][z].Professor;
+                            currentResult["courses_title"] = parsedCDB[x][z].Title;
+                            currentResult["courses_pass"] = parsedCDB[x][z].Pass;
+                            currentResult["courses_fail"] = parsedCDB[x][z].Fail;
+                            currentResult["courses_audit"] = parsedCDB[x][z].Audit;
+                            currentResult["courses_uuid"] = parsedCDB[x][z].id;
+                            // currentResult["courses_year"] = parsedCDB[x][z].Year unless section = overall
+                            currentSearchArray.push(currentResult);
+                        }
+                        break;
+                    case 'rooms':
+                        for (var z = 0; z < parsedCDB[x].length; z++) {
+                            let currentResult:any = {};
+                            currentResult["rooms_fullname"] = parsedCDB[x][z].Subject;
+                            currentResult["rooms_shortname"] = parsedCDB[x][z].Course;
+                            currentResult["rooms_number"] = parsedCDB[x][z].Avg;
+                            currentResult["rooms_name"] = parsedCDB[x][z].Professor;
+                            currentResult["rooms_address"] = parsedCDB[x][z].Title;
+                            currentResult["rooms_lat"] = parsedCDB[x][z].Pass;
+                            currentResult["rooms_lon"] = parsedCDB[x][z].Fail;
+                            currentResult["rooms_seats"] = parsedCDB[x][z].Audit;
+                            currentResult["rooms_type"] = parsedCDB[x][z].id;
+                            currentResult["rooms_furniture"] = parsedCDB[x][z].id;
+                            currentResult["rooms_href"] = parsedCDB[x][z].id;
+                            currentSearchArray.push(currentResult);
+                        }
+
+                        break;
+                    default:
+                        break;
                 }
             }
         }

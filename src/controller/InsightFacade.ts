@@ -105,7 +105,7 @@ export default class InsightFacade implements IInsightFacade {
 
                     for (var i = 0; i < query.GET.length; i++){
                         var getDatasetID: string = query.GET[i];
-                        if (getDatasetID.indexOf('_') !== -1)
+                        if (getDatasetID.indexOf('_') != -1)
                             getDatasetID = getDatasetID.split('_')[0];
                         if (dsController.getDataset(getDatasetID)
                             || fs.existsSync("data/" + getDatasetID + '.json')

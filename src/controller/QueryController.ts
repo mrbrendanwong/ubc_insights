@@ -79,18 +79,19 @@ export default class QueryController {
             }
         }
 
-
-        // Check if all keys in group are in GET
-        for (var q = 0; q < query.GROUP.length; q++) {
-            matchFlag = false;
-            for (var w = 0; w < query.GET.length; w++) {
-                if (query.GET[w] == query.GROUP[q])
-                    matchFlag = true;
-            }
-            if (!matchFlag) {
-                return false;
-            }
-        }
+        // As per piazza, this causes Hades to fail
+        //
+        //// Check if all keys in group are in GET
+        //for (var q = 0; q < query.GROUP.length; q++) {
+        //    matchFlag = false;
+        //    for (var w = 0; w < query.GET.length; w++) {
+        //        if (query.GET[w] == query.GROUP[q])
+        //            matchFlag = true;
+        //    }
+        //    if (!matchFlag) {
+        //        return false;
+        //    }
+        //}
 
         // Make sure no "_" in Group keys not sure what second or-statement does
         for (var x = 0; x < query.GROUP.length; x++) {
@@ -131,8 +132,6 @@ export default class QueryController {
             }
         }
 
-
-        //TODO: Fix this method
         // Check if GET key is contained in either GROUP or APPLY
         var applyKeys:any[] = [];
         for (var t = 0; t < query.APPLY.length; t++) {
@@ -570,6 +569,7 @@ export default class QueryController {
                             }
                         }
                     }
+               //     console.log("HOW MANY " + uniqueArray.length);
                     computatedObject[applicationID] = uniqueArray.length;
                     break;
                 case 'MAX':
@@ -667,7 +667,6 @@ export default class QueryController {
         // TODO: implement this (where we handle get, where, etc.)
         let queryResult:Array<any>;
         let controller = QueryController.datasetController;
-
         // For the get query
         if (query.GET) {
             // #D1 support
