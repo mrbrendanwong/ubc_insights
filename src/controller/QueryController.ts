@@ -604,6 +604,18 @@ export default class QueryController {
         return computatedObject;
     }
 
+    public applyKeyExtraction(query: QueryRequest): any {
+        let queryApply = query.APPLY;
+        console.log("this is" + queryApply);
+        if (queryApply != undefined || queryApply != null) {
+            var applyKeys: any[] = [];
+            for (var i = 0; i < queryApply.length; i++) {
+                applyKeys[i] = Object.keys(queryApply[i])[0];
+            }
+        }
+        return applyKeys;
+    }
+
     private fixDoubleArray(doubleArray:Array<any>) {
         let singleArray:Array<any> = [];
         for (var i = 0; i < doubleArray.length; i++) {

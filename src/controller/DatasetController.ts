@@ -63,7 +63,7 @@ export default class DatasetController {
                             console.log("Loading time");
                             this.datasets["courses"] = fs.readFileSync('data/courses.json', 'utf8');
                         }
-                        console.log("Found one!");
+                        console.log("Found one!" + this.datasets);
                         return this.datasets;
                     }
                 }
@@ -219,15 +219,14 @@ export default class DatasetController {
         return currentSearchArray;
     }
 
-    // FIRST DRAFT: BRENDON DID THIS
     public deleteDataset(id:string) {
         if (fs.existsSync("data/" + id + '.json')) {
             fs.unlinkSync("data/" + id + '.json');
-            console.log('done unlinkSync in DatasetController.ts');
+            console.log('Done unlinkSync in DatasetController.ts');
         }
         if (this.datasets[id] !== undefined) { // NEED TO UPDATE
             this.datasets[id] = undefined; // NEED TO UPDATE
-            console.log('done setting cache (this.datasets) to undefined');
+            console.log('Done setting cache (this.datasets) to undefined');
             console.log(this.datasets[id]);
         }
     }
