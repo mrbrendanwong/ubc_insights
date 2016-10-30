@@ -95,7 +95,7 @@ export default class QueryController {
 
         // Make sure no "_" in Group keys not sure what second or-statement does
         for (var x = 0; x < query.GROUP.length; x++) {
-            if (query.GROUP[x].indexOf("_") == -1 || query.GET.indexOf(query.GROUP[x]) < 0) {
+            if (query.GROUP[x].indexOf("_") == -1) {
                 console.log("Invalid key in Group");
                 return false;
             }

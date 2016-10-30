@@ -95,18 +95,20 @@ export default class InsightFacade implements IInsightFacade {
                 if (isValid === true) {
                     var invalid_ids: any[] = [];
 
-                    if (query.APPLY != (undefined || null)) {
-                        var applyKeys: any[] = [];
+                    var applyKeys: any[] = [];
+                    if (query.APPLY) {
                         for (var j = 0; j < query.APPLY.length; j++) {
                             console.log(Object.keys(query.APPLY[j])[0]);
                             applyKeys[j] = Object.keys(query.APPLY[j])[0];
                         }
                     }
 
+
                     for (var i = 0; i < query.GET.length; i++){
                         var getDatasetID: string = query.GET[i];
-                        if (getDatasetID.indexOf('_') != -1)
+                        if (getDatasetID.indexOf('_') != -1) {
                             getDatasetID = getDatasetID.split('_')[0];
+                        }
                         if (dsController.getDataset(getDatasetID)
                             || fs.existsSync("data/" + getDatasetID + '.json')
                             || query.GROUP.indexOf(getDatasetID) > -1
