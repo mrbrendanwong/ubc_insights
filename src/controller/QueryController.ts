@@ -477,8 +477,8 @@ export default class QueryController {
                     tempGroup.push(dataset[x]);
                     groupedDataset.push(tempGroup);
                     tempGroup = [];
+                    break;
                 }
-                 break;
             }
             if (this.shouldBeGrouped(dataset[x - 1], dataset[x], groupRequests))
                 tempGroup.push(dataset[x - 1]);
@@ -517,7 +517,7 @@ export default class QueryController {
 
     }
 
-    private applyComputations(query, applyKeys:any, groupRequests:any, dataInstance:any):any {
+    private applyComputations(query:any, applyKeys:any, groupRequests:any, dataInstance:any):any {
         // datainstance is an array of offerings (corresponding to a group)
         // order back to OG form
         dataInstance = this.queryOrder(query, dataInstance, true);
