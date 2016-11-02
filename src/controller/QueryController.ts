@@ -95,7 +95,7 @@ export default class QueryController {
 
         // Make sure no "_" in Group keys not sure what second or-statement does
         for (var x = 0; x < query.GROUP.length; x++) {
-            if (query.GROUP[x].indexOf("_") == -1 || query.GET.indexOf(query.GROUP[x]) < 0) {
+            if (query.GROUP[x].indexOf("_") == -1) {
                 console.log("Invalid key in Group");
                 return false;
             }
@@ -604,14 +604,13 @@ export default class QueryController {
         return computatedObject;
     }
 
-    public applyKeyExtraction(query: QueryRequest): any {
+    public applyKeyExtraction(query: QueryRequest): any[] {
         let queryApply = query.APPLY;
-        console.log("this is" + queryApply);
+        let applyKeys: any[] = [];
+        console.log("Apply keys are " + queryApply);
         if (queryApply != undefined || queryApply != null) {
-            var applyKeys: any[] = [];
-            for (var i = 0; i < queryApply.length; i++) {
+            for (var i = 0; i < queryApply.length; i++)
                 applyKeys[i] = Object.keys(queryApply[i])[0];
-            }
         }
         return applyKeys;
     }

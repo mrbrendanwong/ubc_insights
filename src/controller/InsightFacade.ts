@@ -11,7 +11,6 @@ import {Datasets} from '../controller/DatasetController';
 import {QueryRequest} from "../controller/QueryController";
 
 export default class InsightFacade implements IInsightFacade {
-
     // TODO: need to implement this
     //private static iinsightFacade = new IInsightFacade();
 
@@ -81,7 +80,31 @@ export default class InsightFacade implements IInsightFacade {
         });
     }
 
+    // Check if id belongs to a PUT resource on disk or in cache
+    isValidResourceID(id: string) : boolean {
+        let controller = InsightFacade.datasetController;
+        if (fs.existsSync('data/' + id + '.json') || controller.getDataset(id))
+            return true;
+        else
+            return false;
+    }
+
+    // Check if id belongs to key defined in APPLY
+    isValidDefinedID(id: string, applyKeys: any[]) : boolean {
+        if (applyKeys.indexOf(id) > -1)
+            return true;
+        else
+            return false;
+    }
+
+    logInvalidID(id: string, invalidIDs: any[]): any {
+        if (invalidIDs.indexOf(id) < 0)
+            invalidIDs.push(id);
+        return invalidIDs;
+    }
+
     performQuery(query: QueryRequest): Promise<InsightResponse> {
+        let that = this;
         let controller = InsightFacade.datasetController;
         return new Promise(function (fulfill, reject) {
             try {
@@ -89,30 +112,39 @@ export default class InsightFacade implements IInsightFacade {
                 let qController = new QueryController(datasets);
                 let isValid = qController.isValid(query);
                 let missingResource = false;
+
                 if (isValid === true) {
-                    let invalidIds: any[] = [];
+                    let invalidIDs: any[] = [];
                     let applyKeys = qController.applyKeyExtraction(query);
 
-                    for (var i = 0; i < query.GET.length; i++){
-                        var getDatasetID: string = query.GET[i];
-                        if (getDatasetID.indexOf('_') != -1)
-                            getDatasetID = getDatasetID.split('_')[0];
-                        if (controller.getDataset(getDatasetID)
-                            || fs.existsSync("data/" + getDatasetID + '.json')
-                            || query.GROUP.indexOf(getDatasetID) > -1
-                            || applyKeys.indexOf(getDatasetID) > -1) {
+                    // Check if GET keys are valid
+                    for (var i = 0; i < query.GET.length; i++) {
+                        var getKey: string = query.GET[i];
+                        console.log(getKey);
+                        var getKeyID: string;
+
+                        // If get key is a part of a PUT resource (eg. courses_avg from courses.json),
+                        // extract resource ID. Otherwise, it is a defined resource from APPLY (coursesAverage)
+                        if (getKey.indexOf('_') != -1)
+                            getKeyID = getKey.split('_')[0];
+                        else
+                            getKeyID = getKey;
+
+                        if (that.isValidResourceID(getKeyID))
                             continue;
-                        } else {
-                            console.log('RouteHandler.postQuery: substring to get id from GET keys: ' + getDatasetID);
-                            if (invalidIds.indexOf(getDatasetID) < 0)
-                                invalidIds.push(getDatasetID);
-                            console.log("logged invalid ids: " + invalidIds);
-                            missingResource = true;
-                        }
+                        else if (that.isValidDefinedID(getKeyID, applyKeys))
+                            continue;
+                        else
+                            invalidIDs = that.logInvalidID(getKeyID, invalidIDs)
                     }
 
+                    // Do we have any missing resources?
+                    if (invalidIDs.length > 0)
+                        missingResource = true;
+
+                    // Error code handling
                     if (missingResource) {
-                        reject({code: 424, body: {missing: invalidIds}});
+                        reject({code: 424, body: {missing: invalidIDs}});
                     } else {
                         let result = qController.query(query);
                         console.log('RouteHandler.postQuery: result of controller.query(query)' + result);

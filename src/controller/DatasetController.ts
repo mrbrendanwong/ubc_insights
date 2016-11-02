@@ -155,6 +155,7 @@ export default class DatasetController {
      * @param id
      * @param processedDataset
      */
+    //TODO: Update for D3 dataset
     private save(id:string, processedDataset:any) {
 
         if (!fs.existsSync('data')) {
@@ -165,8 +166,6 @@ export default class DatasetController {
         }
         this.datasets[id] = processedDataset;
     }
-
-    // FIRST DRAFT: SPENCER DID THIS
 
     public queryDataset(queryIDs:any) : Array<any> {
         this.getDatasets();
@@ -224,8 +223,8 @@ export default class DatasetController {
             fs.unlinkSync("data/" + id + '.json');
             console.log('Done unlinkSync in DatasetController.ts');
         }
-        if (this.datasets[id] !== undefined) { // NEED TO UPDATE
-            this.datasets[id] = undefined; // NEED TO UPDATE
+        if (this.datasets[id] !== undefined) {
+            this.datasets[id] = undefined;
             console.log('Done setting cache (this.datasets) to undefined');
             console.log(this.datasets[id]);
         }
