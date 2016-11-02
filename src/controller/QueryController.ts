@@ -385,13 +385,15 @@ export default class QueryController {
 
 // UP means lowest first
 // Down means highest first
-    private queryOrder(query: QueryRequest, unsortedData: Array<any>): any {
+    private queryOrder(query: QueryRequest, unsortedData: Array<any>, originalSort: boolean): any {
         var orderKeys: any;
         var downDir: boolean = false;
-        console.log("in query order")
+        console.log("in query order");
 
         if (query.ORDER == undefined) {
             orderKeys = "courses_dept";
+        }else if (originalSort) {
+            orderKeys ="courses_uuid";
         }
         else if (typeof query.ORDER === 'string') {
             if (query.GET.indexOf(query.ORDER) >= 0)
@@ -459,12 +461,24 @@ export default class QueryController {
             if (x == 0)
                 continue;
             else if (dataset[x+1] == undefined){ // for last course
-                tempGroup.push(dataset[x-1]);
-                // might break something
-                tempGroup.push(dataset[x]);
-                groupedDataset.push(tempGroup);
-                tempGroup = [];
-                break;
+                if (this.shouldBeGrouped(dataset[x-1], dataset[x], groupRequests)) {
+                    tempGroup.push(dataset[x-1]);
+                    // might break something
+                    tempGroup.push(dataset[x]);
+                    groupedDataset.push(tempGroup);
+                    tempGroup = [];
+                    break;
+                }
+                else {
+                    tempGroup.push(dataset[x-1]);
+                    // might break something
+                    groupedDataset.push(tempGroup);
+                    tempGroup = [];
+                    tempGroup.push(dataset[x]);
+                    groupedDataset.push(tempGroup);
+                    tempGroup = [];
+                }
+                 break;
             }
             if (this.shouldBeGrouped(dataset[x - 1], dataset[x], groupRequests))
                 tempGroup.push(dataset[x - 1]);
@@ -480,25 +494,6 @@ export default class QueryController {
 
     }
 
-//private assembleOfferings(dataset:any):any {
-//    let combinedCourseArray:any = [];
-//    let tempArray:any = [];
-//    for (var i = 0; i < dataset.length; i++){
-//        if (i == 0)
-//            continue;
-//        if ((dataset[i].courses_dept == dataset[i-1].courses_dept) && (dataset[i].courses_id == dataset[i-1].courses_id))
-//            tempArray.push(dataset[i-1]);
-//        else {
-//            let tempObject:any = {};
-//            tempObject['courses_dept'] = tempArray[0].courses_dept;
-//            tempObject['courses_id'] =  tempArray[0].courses_id;
-//
-//            for (var x = 0; x < tempArray.length; x++) {
-//
-//            }
-//        }
-//    }
-//}
 // Verifies if two course offerings should be grouped together
     private shouldBeGrouped(offering1:any, offering2:any, groupRequests:any):boolean {
         let groupWorthy:boolean = true;
@@ -510,21 +505,22 @@ export default class QueryController {
     }
 
 // TODO: Handle apply calls
-    private queryApply(applyRequests:any, groupRequests:any, groupedDataset:any):any {
+    private queryApply(query:any, applyRequests:any, groupRequests:any, groupedDataset:any):any {
         // Go through each set of applications
         let appliedDataset:any = [];
         for (var x = 0; x < groupedDataset.length; x++) {
             //     console.log(applyRequests[i]);
-            appliedDataset.push(this.applyComputations(applyRequests, groupRequests, groupedDataset[x]));
+            appliedDataset.push(this.applyComputations(query, applyRequests, groupRequests, groupedDataset[x]));
             // Send each group to the computation helper
         }
         return appliedDataset;
 
     }
 
-    private applyComputations(applyKeys:any, groupRequests:any, dataInstance:any):any {
+    private applyComputations(query, applyKeys:any, groupRequests:any, dataInstance:any):any {
         // datainstance is an array of offerings (corresponding to a group)
-        //  console.log(JSON.stringify(Object.keys(applyKey)[0]))
+        // order back to OG form
+        dataInstance = this.queryOrder(query, dataInstance, true);
         let computatedObject:any = {};
         let desiredID:any = "";
         for (var i = 0; i < groupRequests.length; i++) {
@@ -562,14 +558,14 @@ export default class QueryController {
                             uniqueArray.push(dataInstance[q][desiredID]);
                         else {
                             for (var t = 0; t < uniqueArray.length; t++){
-                                if (dataInstance[q][desiredID] == uniqueArray[t])
+                                if (dataInstance[q][desiredID] == uniqueArray[t]) {
                                     break;
+                                }
                                 else if (uniqueArray[t+1] == undefined || uniqueArray[t+1] == null)
                                     uniqueArray.push(dataInstance[q][desiredID]);
                             }
                         }
                     }
-               //     console.log("HOW MANY " + uniqueArray.length);
                     computatedObject[applicationID] = uniqueArray.length;
                     break;
                 case 'MAX':
@@ -598,9 +594,7 @@ export default class QueryController {
                     console.log("Uh oh, this method received an unsupported APPLY key");
                     break;
             }
-            //    console.log(computatedObject);
         }
-        //  console.log(computatedObject);
         return computatedObject;
     }
 
@@ -639,7 +633,7 @@ export default class QueryController {
         }else
             filteredData = this.filterByGET(queryResult, query.GET);
 
-        completedOrderQuery = this.queryOrder(query, filteredData);
+        completedOrderQuery = this.queryOrder(query, filteredData, false);
         resultToBeRendered = this.queryAs(query, completedOrderQuery);
         return resultToBeRendered;
     }
@@ -654,20 +648,23 @@ export default class QueryController {
         let fixedArray:any = [];
         var resultToBeRendered:any;
         var filteredData:any;
+        let initialOrdering:any;
 
         if (Object.keys(query.WHERE).length != 0) {
             completedWhereQuery = this.queryWhere(query.WHERE, query.GET, queryResult, false, dataset1, dataset2);
-            completedGroupQuery = this.queryGroup(query.GROUP, completedWhereQuery, query.GET);
-        } else
-            completedGroupQuery = this.queryGroup(query.GROUP, queryResult, query.GET);
-
+            initialOrdering = this.queryOrder(query, completedWhereQuery, false);
+            completedGroupQuery = this.queryGroup(query.GROUP, initialOrdering, query.GET);
+        } else {
+            initialOrdering = this.queryOrder(query, queryResult, false);
+            completedGroupQuery = this.queryGroup(query.GROUP, initialOrdering, query.GET);
+        }
         if (query.APPLY.length != 0) {
-            completedApplyQuery = this.queryApply(query.APPLY, query.GROUP, completedGroupQuery);
-            completedOrderQuery = this.queryOrder(query, completedApplyQuery);
+            completedApplyQuery = this.queryApply(query, query.APPLY, query.GROUP, completedGroupQuery);
+            completedOrderQuery = this.queryOrder(query, completedApplyQuery, false);
         } else {
             fixedArray = this.fixDoubleArray(completedGroupQuery);
             filteredData = this.filterByGET(fixedArray, query.GET);
-            completedOrderQuery = this.queryOrder(query, filteredData);
+            completedOrderQuery = this.queryOrder(query, filteredData, false);
         }
         resultToBeRendered = this.queryAs(query, completedOrderQuery);
         return resultToBeRendered;
@@ -684,7 +681,7 @@ export default class QueryController {
             queryResult = controller.queryDataset(query.GET);
             if (query.GROUP == undefined || query.GROUP.length == 0)
                 return this.queryD1(query, queryResult);
-             else
+            else
                 return this.queryD2(query, queryResult);
 
         }
