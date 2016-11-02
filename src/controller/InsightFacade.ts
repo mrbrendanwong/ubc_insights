@@ -116,7 +116,7 @@ export default class InsightFacade implements IInsightFacade {
                 if (isValid === true) {
                     let invalidIDs: any[] = [];
                     let applyKeys = qController.applyKeyExtraction(query);
-
+                    
                     // Check if GET keys are valid
                     for (var i = 0; i < query.GET.length; i++) {
                         var getKey: string = query.GET[i];
