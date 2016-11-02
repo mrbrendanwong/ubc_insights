@@ -11,7 +11,6 @@ import {Datasets} from '../controller/DatasetController';
 import {QueryRequest} from "../controller/QueryController";
 
 export default class InsightFacade implements IInsightFacade {
-
     // TODO: need to implement this
     //private static iinsightFacade = new IInsightFacade();
 
@@ -67,9 +66,7 @@ export default class InsightFacade implements IInsightFacade {
                 if (controller.getDataset(id) || fs.existsSync("data/" + id + '.json')) {
                     controller.deleteDataset(id);
                     console.log('delete done in RouteHandler');
-                    if (fs.existsSync("data/" + id + '.json'))
-                        reject({code: 400, body: {error: 'delete did not delete for some reason!'}});
-                    else
+                    if (!fs.existsSync("data/" + id + '.json'))
                         fulfill({code: 204, body: 'the operation was successful.'});
                 } else {
                     reject({code:404, body: {error: 'the operation was unsuccessful because the ' +
@@ -83,65 +80,73 @@ export default class InsightFacade implements IInsightFacade {
         });
     }
 
+    // Check if id belongs to a PUT resource on disk or in cache
+    isValidResourceID(id: string) : boolean {
+        let controller = InsightFacade.datasetController;
+        if (fs.existsSync('data/' + id + '.json') || controller.getDataset(id))
+            return true;
+        else
+            return false;
+    }
+
+    // Check if id belongs to key defined in APPLY
+    isValidDefinedID(id: string, applyKeys: any[]) : boolean {
+        if (applyKeys.indexOf(id) > -1)
+            return true;
+        else
+            return false;
+    }
+
+    logInvalidID(id: string, invalidIDs: any[]): any {
+        if (invalidIDs.indexOf(id) < 0)
+            invalidIDs.push(id);
+        return invalidIDs;
+    }
+
     performQuery(query: QueryRequest): Promise<InsightResponse> {
+        let that = this;
         let controller = InsightFacade.datasetController;
         return new Promise(function (fulfill, reject) {
             try {
-                let dsController = InsightFacade.datasetController;
-                let datasets: Datasets = dsController.getDatasets();
-                let controller = new QueryController(datasets);
-                let isValid = controller.isValid(query);
-                let missing_resource = false;
+                let datasets: Datasets = controller.getDatasets();
+                let qController = new QueryController(datasets);
+                let isValid = qController.isValid(query);
+                let missingResource = false;
+
                 if (isValid === true) {
-                    var invalid_ids: any[] = [];
+                    let invalidIDs: any[] = [];
+                    let applyKeys = qController.applyKeyExtraction(query);
+                    
+                    // Check if GET keys are valid
+                    for (var i = 0; i < query.GET.length; i++) {
+                        var getKey: string = query.GET[i];
+                        console.log(getKey);
+                        var getKeyID: string;
 
-                    if (query.APPLY != (undefined || null)) {
-                        var applyKeys: any[] = [];
-                        for (var j = 0; j < query.APPLY.length; j++) {
-                            console.log(Object.keys(query.APPLY[j])[0]);
-                            applyKeys[j] = Object.keys(query.APPLY[j])[0];
-                        }
-                    }
+                        // If get key is a part of a PUT resource (eg. courses_avg from courses.json),
+                        // extract resource ID. Otherwise, it is a defined resource from APPLY (coursesAverage)
+                        if (getKey.indexOf('_') != -1)
+                            getKeyID = getKey.split('_')[0];
+                        else
+                            getKeyID = getKey;
 
-                    for (var i = 0; i < query.GET.length; i++){
-                        var getDatasetID: string = query.GET[i];
-                        if (getDatasetID.indexOf('_') !== -1)
-                            getDatasetID = getDatasetID.split('_')[0];
-                        if (dsController.getDataset(getDatasetID)
-                            || fs.existsSync("data/" + getDatasetID + '.json')
-                            || query.GROUP.indexOf(getDatasetID) > -1
-                            || applyKeys.indexOf(getDatasetID) > -1) {
+                        if (that.isValidResourceID(getKeyID))
                             continue;
-                        } else {
-                            console.log('RouteHandler.postQuery: substring to get id from GET keys: ' + getDatasetID);
-                            if (invalid_ids.indexOf(getDatasetID) < 0)
-                                invalid_ids.push(getDatasetID);
-                            console.log("logged invalid ids: " + invalid_ids);
-                            missing_resource = true;
-                        }
+                        else if (that.isValidDefinedID(getKeyID, applyKeys))
+                            continue;
+                        else
+                            invalidIDs = that.logInvalidID(getKeyID, invalidIDs)
                     }
 
-                    //if (query.GROUP != (undefined || null)) {
-                    //    for (var k = 0; k < query.GROUP.length; k++){
-                    //        console.log("In InsightFacade" + query.GROUP[k]);
-                    //        var groupDatasetID: string = query.GROUP[k];
-                    //        if (query.GET.indexOf(groupDatasetID) > -1)
-                    //            continue;
-                    //        else {
-                    //            if (invalid_ids.indexOf(groupDatasetID) < 0) {
-                    //                if (groupDatasetID.indexOf('_') !== -1)
-                    //                    groupDatasetID = groupDatasetID.split('_')[0];
-                    //                invalid_ids.push(groupDatasetID);
-                    //            }
-                    //            missing_resource = true;
-                    //        }
-                    //    }
-                    //}
+                    // Do we have any missing resources?
+                    if (invalidIDs.length > 0)
+                        missingResource = true;
 
-                    if (missing_resource) {
-                        reject({code: 424, body: {missing: invalid_ids}});
+                    // Error code handling
+                    if (missingResource) {
+                        reject({code: 424, body: {missing: invalidIDs}});
                     } else {
-                        let result = controller.query(query);
+                        let result = qController.query(query);
                         console.log('RouteHandler.postQuery: result of controller.query(query)' + result);
                         if (result !== null){
                             fulfill({code: 200, body: result});
@@ -156,7 +161,7 @@ export default class InsightFacade implements IInsightFacade {
                 }
             } catch (err) {
                 Log.trace('DatasetController::process(..) - ERROR: ' + err);
-                reject({code: 400,  body: {error: 'invalid query. please fix query formatting'}});
+                reject({code: 400, body: {error: err.message}});
             }
         });
     }

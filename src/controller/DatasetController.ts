@@ -63,7 +63,7 @@ export default class DatasetController {
                             console.log("Loading time");
                             this.datasets["courses"] = fs.readFileSync('data/courses.json', 'utf8');
                         }
-                        console.log("Found one!");
+                        console.log("Found one!" + this.datasets);
                         return this.datasets;
                     }
                 }
@@ -155,6 +155,7 @@ export default class DatasetController {
      * @param id
      * @param processedDataset
      */
+    //TODO: Update for D3 dataset
     private save(id:string, processedDataset:any) {
 
         if (!fs.existsSync('data')) {
@@ -166,42 +167,65 @@ export default class DatasetController {
         this.datasets[id] = processedDataset;
     }
 
-    // FIRST DRAFT: SPENCER DID THIS
-
     public queryDataset(queryIDs:any) : Array<any> {
         this.getDatasets();
-        let coursesDataset = this.getDataset(queryIDs[0].split("_")[0]);
+        let mainID:any = queryIDs[0].split("_")[0];
+        let coursesDataset = this.getDataset(mainID);
         let parsedCDB = JSON.parse(coursesDataset);
         let currentSearchArray:Array<any> = [];
         for (var x = 0; x < parsedCDB.length; x++ ) {
             if (parsedCDB[x] != null) {
-                for (var z = 0; z < parsedCDB[x].length; z++) {
-                    let currentResult:any = {};
-                    currentResult["courses_dept"] = parsedCDB[x][z].Subject;
-                    currentResult["courses_id"] = parsedCDB[x][z].Course;
-                    currentResult["courses_avg"] = parsedCDB[x][z].Avg;
-                    currentResult["courses_instructor"] = parsedCDB[x][z].Professor;
-                    currentResult["courses_title"] = parsedCDB[x][z].Title;
-                    currentResult["courses_pass"] = parsedCDB[x][z].Pass;
-                    currentResult["courses_fail"] = parsedCDB[x][z].Fail;
-                    currentResult["courses_audit"] = parsedCDB[x][z].Audit;
-                    currentResult["courses_uuid"] = parsedCDB[x][z].id;
-                    currentSearchArray.push(currentResult);
+                switch (mainID) {
+                    case 'courses':
+                        for (var z = 0; z < parsedCDB[x].length; z++) {
+                            let currentResult:any = {};
+                            currentResult["courses_dept"] = parsedCDB[x][z].Subject;
+                            currentResult["courses_id"] = parsedCDB[x][z].Course;
+                            currentResult["courses_avg"] = parsedCDB[x][z].Avg;
+                            currentResult["courses_instructor"] = parsedCDB[x][z].Professor;
+                            currentResult["courses_title"] = parsedCDB[x][z].Title;
+                            currentResult["courses_pass"] = parsedCDB[x][z].Pass;
+                            currentResult["courses_fail"] = parsedCDB[x][z].Fail;
+                            currentResult["courses_audit"] = parsedCDB[x][z].Audit;
+                            currentResult["courses_uuid"] = parsedCDB[x][z].id;
+                            // currentResult["courses_year"] = parsedCDB[x][z].Year unless section = overall
+                            currentSearchArray.push(currentResult);
+                        }
+                        break;
+                    case 'rooms':
+                        for (var z = 0; z < parsedCDB[x].length; z++) {
+                            let currentResult:any = {};
+                            currentResult["rooms_fullname"] = parsedCDB[x][z].Subject;
+                            currentResult["rooms_shortname"] = parsedCDB[x][z].Course;
+                            currentResult["rooms_number"] = parsedCDB[x][z].Avg;
+                            currentResult["rooms_name"] = parsedCDB[x][z].Professor;
+                            currentResult["rooms_address"] = parsedCDB[x][z].Title;
+                            currentResult["rooms_lat"] = parsedCDB[x][z].Pass;
+                            currentResult["rooms_lon"] = parsedCDB[x][z].Fail;
+                            currentResult["rooms_seats"] = parsedCDB[x][z].Audit;
+                            currentResult["rooms_type"] = parsedCDB[x][z].id;
+                            currentResult["rooms_furniture"] = parsedCDB[x][z].id;
+                            currentResult["rooms_href"] = parsedCDB[x][z].id;
+                            currentSearchArray.push(currentResult);
+                        }
+
+                        break;
+                    default:
+                        break;
                 }
             }
         }
         return currentSearchArray;
     }
 
-    // FIRST DRAFT: BRENDON DID THIS
     public deleteDataset(id:string) {
         if (fs.existsSync("data/" + id + '.json')) {
             fs.unlinkSync("data/" + id + '.json');
-            console.log('done unlinkSync in DatasetController.ts');
+            console.log('Done unlinkSync in DatasetController.ts');
         }
-        if (this.datasets[id] !== undefined) { // NEED TO UPDATE
-            this.datasets[id] = undefined; // NEED TO UPDATE
-            console.log('done setting cache (this.datasets) to undefined');
+        if (this.datasets[id] !== undefined) {
+            this.datasets[id] = undefined;
+            console.log('Done setting cache (this.datasets) to undefined');
             console.log(this.datasets[id]);
         }
     }

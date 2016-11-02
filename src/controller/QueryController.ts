@@ -5,6 +5,7 @@
 import {Datasets} from "./DatasetController";
 import Log from "../Util";
 import DatasetController from '../controller/DatasetController';
+import {get} from "http";
 
 export interface QueryRequest {
     GET: string|string[];
@@ -29,35 +30,44 @@ export default class QueryController {
     }
 
     public isValid(query:QueryRequest):boolean {
-        if (query == null)
-            return false;
-        if (query.GROUP != undefined && query.GROUP.length == 0)
-            return false;
 
-        if (query.GROUP != undefined && query.APPLY != undefined) {
-            if (!this.applyGroupValidation(query)) {
-                console.log("FAIL");
-                return false;
-            }
-        }
-        // Empty Group && non-empty Apply
-        if ((query.APPLY != undefined) && (query.GROUP == undefined || (query.GROUP != undefined && query.GROUP.length == 0)))
-            return false;
-        else if ((query.GROUP != undefined) && (query.APPLY == undefined))
-            return false;
-        else if (query.GROUP != undefined && query.GROUP.length == 0)
+
+        // Don't provide anything, return false
+        if (query == null)
             return false;
 
         if (query.GET == undefined || query.GET == null || query.AS == undefined || query.AS == null)
             return false;
+
+        // Group needs to contain at least 1 element, return false
+        if (query.GROUP != undefined && query.GROUP.length == 0)
+            return false;
+
+        // Empty Group && non-empty Apply
+        if ((query.APPLY != undefined) && (query.GROUP == undefined || (query.GROUP != undefined && query.GROUP.length == 0)))
+            return false;
+
+        // Non-Empty group and empty Apply
+        if ((query.GROUP != undefined) && (query.APPLY == undefined))
+            return false;
+
+        // Special handling for Group and Apply
+        if (query.GROUP != undefined && (query.APPLY != undefined)) {
+            return this.applyGroupValidation(query);
+        }
+
+        // Should catch whatever made it through to this point
         if (typeof query !== 'undefined' && query !== null && Object.keys(query).length > 0) {
             console.log('QueryController.isValid: Object.keys(query) is ' + Object.keys(query));
             return true;
         }
+
         return false;
     }
 
     private applyGroupValidation(query:any):boolean {
+        let matchFlag:boolean = false;
+        let secondaryMatchFlag:boolean = false;
 
         // Check if each apply element is unique
         for (var i = 0; i < query.APPLY.length; i++) {
@@ -69,27 +79,39 @@ export default class QueryController {
             }
         }
 
-        // Make sure no "_" in Group keys
+        // As per piazza, this causes Hades to fail
+        //
+        //// Check if all keys in group are in GET
+        //for (var q = 0; q < query.GROUP.length; q++) {
+        //    matchFlag = false;
+        //    for (var w = 0; w < query.GET.length; w++) {
+        //        if (query.GET[w] == query.GROUP[q])
+        //            matchFlag = true;
+        //    }
+        //    if (!matchFlag) {
+        //        return false;
+        //    }
+        //}
+
+        // Make sure no "_" in Group keys not sure what second or-statement does
         for (var x = 0; x < query.GROUP.length; x++) {
-            if (query.GROUP[x].indexOf("_") == -1 || query.GET.indexOf(query.GROUP[x]) < 0) {
+            if (query.GROUP[x].indexOf("_") == -1) {
                 console.log("Invalid key in Group");
                 return false;
             }
         }
 
-
         //Makes sure any non "_" keys in GET are in APPLY
         for (var y = 0; y < query.GET.length; y++) {
             // Find non-"_" Keys
+            matchFlag = false;
             if (query.GET[y].indexOf("_") == -1) {
                 for (var z = 0; z < query.APPLY.length; z++) {
                     if (query.GET[y] == Object.keys(query.APPLY[z])[0])
-                        break;
-                    else if (query.APPLY[z + 1] == undefined) {
-                        console.log("Non _ keys in GET isn't in APPLY");
-                        return false;
-                    }
+                        matchFlag = true;
                 }
+                if (!matchFlag)
+                    return false;
             }
         }
 
@@ -111,18 +133,28 @@ export default class QueryController {
         }
 
         // Check if GET key is contained in either GROUP or APPLY
-        if (query.APPLY.length > 0) {
-            var applyKeys:any[] = [];
-            for (var j = 0; j < query.APPLY.length; j++) {
-                applyKeys[j] = Object.keys(query.APPLY[j])[0];
-            }
+        var applyKeys:any[] = [];
+        for (var t = 0; t < query.APPLY.length; t++) {
+            applyKeys[t] = Object.keys(query.APPLY[t])[0];
+        }
 
-            for (var i = 0; i < query.GET.length; i++) {
-                var getDatasetID:string = query.GET[i];
-                if (query.GROUP.indexOf(getDatasetID) < 0 && applyKeys.indexOf(getDatasetID) < 0) {
-                    return false;
-                }
+        for (var e = 0; e < query.GROUP.length; e++) {
+            matchFlag = false;
+            for (var r = 0; r < query.GET.length; r++) {
+                if (query.GET[r] == query.GROUP[r])
+                    matchFlag = true;
             }
+            if (!matchFlag)
+                return false;
+        }
+        for (var d = 0; d < query.APPLY.length; d++) {
+            secondaryMatchFlag = false;
+            for (var s = 0; s < query.GET.length; s++) {
+                if (query.GET[s] == applyKeys[d])
+                    secondaryMatchFlag = true;
+            }
+            if (!secondaryMatchFlag)
+                return false;
         }
 
         return true;
@@ -351,36 +383,8 @@ export default class QueryController {
         return finalizedArray;
     }
 
-    //
-    //private queryOrder(query:QueryRequest, tobeSortedData:Array<any>):any {
-    //    console.log(tobeSortedData);
-    //    var orderKey:any;
-    //    let unsortedData:any;
-    //    if (query.ORDER == undefined)
-    //        orderKey = "courses_dept";
-    //    else {
-    //        if (query.GET.indexOf(query.ORDER) >= 0)
-    //            orderKey = query.ORDER;
-    //        else
-    //            return null;
-    //    }
-    //    if (query.GROUP == undefined)
-    //        unsortedData = this.filterByGET(tobeSortedData, query.GET);
-    //    else
-    //        unsortedData = tobeSortedData;
-    //    var sortedData = unsortedData.sort(
-    //        function (a:any, b:any):any {
-    //            if (a[orderKey] < b[orderKey]) return -1;
-    //            if (a[orderKey] > b[orderKey]) return 1;
-    //            return 0;
-    //        });
-    //    // console.log('we are in queryOrder')
-    //    // console.log(sortedData);
-    //    return sortedData;
-    //}
-
-    // UP means lowest first
-    // Down means highest first
+// UP means lowest first
+// Down means highest first
     private queryOrder(query: QueryRequest, unsortedData: Array<any>): any {
         var orderKeys: any;
         var downDir: boolean = false;
@@ -434,6 +438,7 @@ export default class QueryController {
 
 
     private queryAs(query:QueryRequest, resultArray:Array<any>):any {
+        console.log(query.AS);
         if (resultArray == null)
             return null;
         if (query.AS === "TABLE") {
@@ -459,6 +464,7 @@ export default class QueryController {
                 tempGroup.push(dataset[x]);
                 groupedDataset.push(tempGroup);
                 tempGroup = [];
+                break;
             }
             if (this.shouldBeGrouped(dataset[x - 1], dataset[x], groupRequests))
                 tempGroup.push(dataset[x - 1]);
@@ -474,26 +480,26 @@ export default class QueryController {
 
     }
 
-    //private assembleOfferings(dataset:any):any {
-    //    let combinedCourseArray:any = [];
-    //    let tempArray:any = [];
-    //    for (var i = 0; i < dataset.length; i++){
-    //        if (i == 0)
-    //            continue;
-    //        if ((dataset[i].courses_dept == dataset[i-1].courses_dept) && (dataset[i].courses_id == dataset[i-1].courses_id))
-    //            tempArray.push(dataset[i-1]);
-    //        else {
-    //            let tempObject:any = {};
-    //            tempObject['courses_dept'] = tempArray[0].courses_dept;
-    //            tempObject['courses_id'] =  tempArray[0].courses_id;
-    //
-    //            for (var x = 0; x < tempArray.length; x++) {
-    //
-    //            }
-    //        }
-    //    }
-    //}
-    // Verifies if two course offerings should be grouped together
+//private assembleOfferings(dataset:any):any {
+//    let combinedCourseArray:any = [];
+//    let tempArray:any = [];
+//    for (var i = 0; i < dataset.length; i++){
+//        if (i == 0)
+//            continue;
+//        if ((dataset[i].courses_dept == dataset[i-1].courses_dept) && (dataset[i].courses_id == dataset[i-1].courses_id))
+//            tempArray.push(dataset[i-1]);
+//        else {
+//            let tempObject:any = {};
+//            tempObject['courses_dept'] = tempArray[0].courses_dept;
+//            tempObject['courses_id'] =  tempArray[0].courses_id;
+//
+//            for (var x = 0; x < tempArray.length; x++) {
+//
+//            }
+//        }
+//    }
+//}
+// Verifies if two course offerings should be grouped together
     private shouldBeGrouped(offering1:any, offering2:any, groupRequests:any):boolean {
         let groupWorthy:boolean = true;
         for (var x = 0; x < groupRequests.length; x++) {
@@ -563,6 +569,7 @@ export default class QueryController {
                             }
                         }
                     }
+               //     console.log("HOW MANY " + uniqueArray.length);
                     computatedObject[applicationID] = uniqueArray.length;
                     break;
                 case 'MAX':
@@ -597,6 +604,17 @@ export default class QueryController {
         return computatedObject;
     }
 
+    public applyKeyExtraction(query: QueryRequest): any[] {
+        let queryApply = query.APPLY;
+        let applyKeys: any[] = [];
+        console.log("Apply keys are " + queryApply);
+        if (queryApply != undefined || queryApply != null) {
+            for (var i = 0; i < queryApply.length; i++)
+                applyKeys[i] = Object.keys(queryApply[i])[0];
+        }
+        return applyKeys;
+    }
+
     private fixDoubleArray(doubleArray:Array<any>) {
         let singleArray:Array<any> = [];
         for (var i = 0; i < doubleArray.length; i++) {
@@ -607,11 +625,26 @@ export default class QueryController {
         return singleArray;
     }
 
-    public query(query:QueryRequest):QueryResponse {
-        Log.trace('QueryController::query( ' + JSON.stringify(query) + ' )');
+    private queryD1(query:QueryRequest, queryResult:any): QueryResponse {
+        let completedWhereQuery:any;
+        let completedOrderQuery:any;
+        let dataset1:Array<any> = [];
+        let dataset2:Array<any> = [];
+        var resultToBeRendered:any;
+        var filteredData:any;
 
-        // TODO: implement this (where we handle get, where, etc.)
-        let queryResult:Array<any>;
+        if (query.WHERE) {
+            completedWhereQuery = this.queryWhere(query.WHERE, query.GET, queryResult, false, dataset1, dataset2);
+            filteredData = this.filterByGET(completedWhereQuery, query.GET);
+        }else
+            filteredData = this.filterByGET(queryResult, query.GET);
+
+        completedOrderQuery = this.queryOrder(query, filteredData);
+        resultToBeRendered = this.queryAs(query, completedOrderQuery);
+        return resultToBeRendered;
+    }
+
+    private queryD2(query:QueryRequest, queryResult:any): QueryResponse {
         let completedWhereQuery:any;
         let completedOrderQuery:any;
         let completedGroupQuery:any;
@@ -619,56 +652,41 @@ export default class QueryController {
         let dataset1:Array<any> = [];
         let dataset2:Array<any> = [];
         let fixedArray:any = [];
-        let controller = QueryController.datasetController;
         var resultToBeRendered:any;
+        var filteredData:any;
 
+        if (Object.keys(query.WHERE).length != 0) {
+            completedWhereQuery = this.queryWhere(query.WHERE, query.GET, queryResult, false, dataset1, dataset2);
+            completedGroupQuery = this.queryGroup(query.GROUP, completedWhereQuery, query.GET);
+        } else
+            completedGroupQuery = this.queryGroup(query.GROUP, queryResult, query.GET);
+
+        if (query.APPLY.length != 0) {
+            completedApplyQuery = this.queryApply(query.APPLY, query.GROUP, completedGroupQuery);
+            completedOrderQuery = this.queryOrder(query, completedApplyQuery);
+        } else {
+            fixedArray = this.fixDoubleArray(completedGroupQuery);
+            filteredData = this.filterByGET(fixedArray, query.GET);
+            completedOrderQuery = this.queryOrder(query, filteredData);
+        }
+        resultToBeRendered = this.queryAs(query, completedOrderQuery);
+        return resultToBeRendered;
+    }
+
+    public query(query:QueryRequest):QueryResponse {
+        Log.trace('QueryController::query( ' + JSON.stringify(query) + ' )');
+        // TODO: implement this (where we handle get, where, etc.)
+        let queryResult:Array<any>;
+        let controller = QueryController.datasetController;
         // For the get query
         if (query.GET) {
             // #D1 support
             queryResult = controller.queryDataset(query.GET);
-            if (query.GROUP == undefined || query.GROUP.length == 0) {
-                if (query.WHERE) {
-                    completedWhereQuery = this.queryWhere(query.WHERE, query.GET, queryResult, false, dataset1, dataset2);
-                    var filteredData:any = this.filterByGET(completedWhereQuery, query.GET);
-                    completedOrderQuery = this.queryOrder(query, filteredData);
-                }
-                resultToBeRendered = this.queryAs(query, completedOrderQuery);
-                return resultToBeRendered;
-            } else {
-                if (Object.keys(query.WHERE).length != 0) {
-                    completedWhereQuery = this.queryWhere(query.WHERE, query.GET, queryResult, false, dataset1, dataset2);
-                    completedGroupQuery = this.queryGroup(query.GROUP, completedWhereQuery, query.GET);
-                    if (query.APPLY.length != 0) {
-                        //console.log(completedWhereQuery);
-                        completedApplyQuery = this.queryApply(query.APPLY, query.GROUP, completedGroupQuery);
-                        completedOrderQuery = this.queryOrder(query, completedApplyQuery);
-                    } else {
-                        // Fix this for jaguar
-                        fixedArray = this.fixDoubleArray(completedGroupQuery);
-                        //   console.log(fixedArray);
-                        var filteredData:any = this.filterByGET(fixedArray, query.GET);
-                        completedOrderQuery = this.queryOrder(query, filteredData);
-                        //    console.log(completedOrderQuery);
-                    }
-                } else {
-                    completedGroupQuery = this.queryGroup(query.GROUP, queryResult, query.GET);
-                    if (query.APPLY.length != 0) {
-                        completedApplyQuery = this.queryApply(query.APPLY, query.GROUP, completedGroupQuery);
-                        completedOrderQuery = this.queryOrder(query, completedApplyQuery);
-                        //  console.log(completedOrderQuery);
-                    }else {
-                        fixedArray = this.fixDoubleArray(completedGroupQuery);
-                        var filteredData:any = this.filterByGET(fixedArray, query.GET);
-                        completedOrderQuery = this.queryOrder(query, filteredData);
-                    }
-                }
-                //  console.log(completedApplyQuery);
-                //  console.log(completedOrderQuery);
-                resultToBeRendered = this.queryAs(query, completedOrderQuery);
-                // console.log(resultToBeRendered);
-                //  console.log(resultToBeRendered);
-                return resultToBeRendered;
-            }
+            if (query.GROUP == undefined || query.GROUP.length == 0)
+                return this.queryD1(query, queryResult);
+             else
+                return this.queryD2(query, queryResult);
+
         }
     }
 }

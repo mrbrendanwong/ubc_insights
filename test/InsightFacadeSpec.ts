@@ -167,6 +167,7 @@ describe("InsightFacade", function () {
 
         Log.trace("Starting test: " + that.test.title);
         return facade.performQuery(query).then(function (response:InsightResponse) {
+            console.log("HOWDY "+ JSON.stringify(response));
             expect(response.code).to.equal(200);
         }).catch(function (response:InsightResponse) {
             expect.fail('Should not happen');
@@ -217,4 +218,13 @@ describe("InsightFacade", function () {
         });
     });
 
+    it("Should be equivalent to D2 query result", function () {
+        var that = this;
+        let query: QueryRequest = {GET: ['courses_id', 'courseAverage'], WHERE: {IS: {"courses_dept": "cpsc"}} , GROUP: ["courses_id"], APPLY: [ {"courseAverage": {"AVG": "courses_avg"}} ], ORDER: { "dir": "UP", "keys": ["courseAverage", "courses_id"]}, AS: 'TABLE'};
+        return facade.performQuery(query).then(function (response:InsightResponse) {
+            expect(response.code).to.equal(200);
+        }).catch(function (response) {
+            expect.fail("Should not occur");
+        })
+    })
 });
