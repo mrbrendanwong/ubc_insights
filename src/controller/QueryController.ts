@@ -519,7 +519,8 @@ export default class QueryController {
     private applyComputations(query:any, applyKeys:any, groupRequests:any, dataInstance:any):any {
         // datainstance is an array of offerings (corresponding to a group)
         // order back to OG form
-        dataInstance = this.queryOrder(query, dataInstance, true);
+        if (this.isExtraSortingNeeded(query))
+            dataInstance = this.queryOrder(query, dataInstance, true);
         let computatedObject:any = {};
         let desiredID:any = "";
         for (var i = 0; i < groupRequests.length; i++) {
@@ -618,6 +619,23 @@ export default class QueryController {
         return singleArray;
     }
 
+    private isExtraSortingNeeded(query:any):boolean {
+        let applyKeys:any;
+        if (query.APPLY.length == 0)
+            return false;
+        else {
+            applyKeys = query.APPLY;
+            for (var z = 0; z < applyKeys.length; z++) {
+                let trueApplyKey:any = applyKeys[z];
+                let applicationID:any = Object.keys(applyKeys[z])[0];
+                let finalApplyKey:any = Object.keys(trueApplyKey[Object.keys(trueApplyKey)[0]])[0];
+                if (finalApplyKey == "AVG" || finalApplyKey == "COUNT")
+                    return true;
+            }
+            return false;
+        }
+    }
+
     private queryD1(query:QueryRequest, queryResult:any): QueryResponse {
         let completedWhereQuery:any;
         let completedOrderQuery:any;
@@ -651,21 +669,29 @@ export default class QueryController {
 
         if (Object.keys(query.WHERE).length != 0) {
             completedWhereQuery = this.queryWhere(query.WHERE, query.GET, queryResult, false, dataset1, dataset2);
-        //    initialOrdering = this.queryOrder(query, completedWhereQuery, false);
-            completedGroupQuery = this.queryGroup(query.GROUP, completedWhereQuery, query.GET);
+            if (this.isExtraSortingNeeded(query)) {
+                initialOrdering = this.queryOrder(query, completedWhereQuery, false);
+                completedGroupQuery = this.queryGroup(query.GROUP, initialOrdering, query.GET);
+            }
+            else
+                completedGroupQuery = this.queryGroup(query.GROUP, completedWhereQuery, query.GET);
         } else {
-         //   initialOrdering = this.queryOrder(query, queryResult, false);
-            completedGroupQuery = this.queryGroup(query.GROUP, queryResult, query.GET);
+            if (this.isExtraSortingNeeded(query)){
+                initialOrdering = this.queryOrder(query, queryResult, false);
+                completedGroupQuery = this.queryGroup(query.GROUP, initialOrdering, query.GET);
+            } else
+                completedGroupQuery = this.queryGroup(query.GROUP, queryResult, query.GET);
         }
         if (query.APPLY.length != 0) {
             completedApplyQuery = this.queryApply(query, query.APPLY, query.GROUP, completedGroupQuery);
-            completedOrderQuery = this.queryOrder(query, completedApplyQuery, false);
+            completedOrderQuery = this.queryOrder(query, completedApplyQuery, false); //why was this changed
         } else {
             fixedArray = this.fixDoubleArray(completedGroupQuery);
             filteredData = this.filterByGET(fixedArray, query.GET);
             completedOrderQuery = this.queryOrder(query, filteredData, false);
         }
         resultToBeRendered = this.queryAs(query, completedOrderQuery);
+        console.log(JSON.stringify(resultToBeRendered));
         return resultToBeRendered;
     }
 
