@@ -141,12 +141,13 @@ export default class QueryController {
         for (var e = 0; e < query.GROUP.length; e++) {
             matchFlag = false;
             for (var r = 0; r < query.GET.length; r++) {
-                if (query.GET[r] == query.GROUP[r])
+                if (query.GET[r] == query.GROUP[e])
                     matchFlag = true;
             }
             if (!matchFlag)
                 return false;
         }
+
         for (var d = 0; d < query.APPLY.length; d++) {
             secondaryMatchFlag = false;
             for (var s = 0; s < query.GET.length; s++) {
@@ -156,7 +157,6 @@ export default class QueryController {
             if (!secondaryMatchFlag)
                 return false;
         }
-
         return true;
     }
 

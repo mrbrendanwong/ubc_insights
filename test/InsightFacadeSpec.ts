@@ -209,7 +209,22 @@ describe("InsightFacade", function () {
 
     it("Should be able to handle another complex D2 query", function () {
         var that = this;
-        var query = { GET: ['courses_id', 'numSections', 'maxFail', 'minPass', "courses_dept"], WHERE: { IS: { "courses_dept": "cpsc" } }, GROUP: [ "courses_dept", "courses_id" ], APPLY: [ {"numSections": {"COUNT": "courses_uuid"}}, {"maxFail": {"MAX": "courses_fail"}}, {"minPass": {"MIN": "courses_pass"}} ], ORDER:  { "dir": "UP", "keys": ["numSections", "courses_dept", "courses_id"]}, AS: 'table' };
+        var query = {
+            "GET": ["courses_id", "courses_dept", "minFail", "maxAudit"],
+            "WHERE":{
+                "AND": [
+                    {"OR": [
+                        {"IS": {"courses_id": "4*"}},
+                        {"IS": {"courses_id": "5*"}}
+                    ]},
+                    {"IS": {"courses_dept": "c*"}}
+                ]
+            },
+            "GROUP": ["courses_id", "courses_dept" ],
+            "APPLY": [ {"minFail": {"MIN": "courses_fail"}}, {"maxAudit": {"MAX": "courses_audit"}} ],
+            "ORDER": { "dir": "UP", "keys": ["courses_id", "courses_dept"]},
+            "AS":"TABLE"
+        };
         Log.trace("Starting test: " + that.test.title);
         return facade.performQuery(query).then(function (response) {
             expect(response.code).to.equal(200);
