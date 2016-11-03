@@ -240,10 +240,10 @@ export default class QueryController {
         //}
         //finalArray = b1.concat(b2);
         //return finalArray;
-        var hash = {};
-        var arr = [];
+        var hash:any = {};
+        var arr:any = [];
         for (var i = 0; i < a1.length; i++) {
-            if (hash[a1[i]["courses_uuid"]] !== a1[i]["courses_uuid"])
+            if (has h[a1[i]["courses_uuid"]] !== a1[i]["courses_uuid"])
                 hash[a1[i]["courses_uuid"]] = a1[i]["courses_uuid"];
                 arr[arr.length] = a1[i];
         }
