@@ -727,11 +727,6 @@ export default class QueryController {
         // TODO: implement this (where we handle get, where, etc.)
         let queryResult:Array<any>;
         let controller = QueryController.datasetController;
-
-        // TODO: ERASE WHEN DONE TESTING METHOD
-        let testVar = this.whereKeyExtraction(query.WHERE);
-
-
         // For the get query
         if (query.GET) {
             // #D1 support
