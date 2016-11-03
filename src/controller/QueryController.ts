@@ -460,24 +460,24 @@ export default class QueryController {
             if (x == 0)
                 continue;
             else if (dataset[x+1] == undefined){ // for last course
-             //   if (this.shouldBeGrouped(dataset[x-1], dataset[x], groupRequests)) {
+                if (this.shouldBeGrouped(dataset[x-1], dataset[x], groupRequests)) {
                     tempGroup.push(dataset[x-1]);
                     // might break something
                     tempGroup.push(dataset[x]);
                     groupedDataset.push(tempGroup);
                     tempGroup = [];
                     break;
-                //}
-                //else {
-                //    tempGroup.push(dataset[x-1]);
-                //    // might break something
-                //    groupedDataset.push(tempGroup);
-                //    tempGroup = [];
-                //    tempGroup.push(dataset[x]);
-                //    groupedDataset.push(tempGroup);
-                //    tempGroup = [];
-                //    break;
-                //}
+                }
+                else {
+                    tempGroup.push(dataset[x-1]);
+                    // might break something
+                    groupedDataset.push(tempGroup);
+                    tempGroup = [];
+                    tempGroup.push(dataset[x]);
+                    groupedDataset.push(tempGroup);
+                    tempGroup = [];
+                    break;
+                }
             }
             if (this.shouldBeGrouped(dataset[x - 1], dataset[x], groupRequests))
                 tempGroup.push(dataset[x - 1]);
@@ -519,7 +519,7 @@ export default class QueryController {
     private applyComputations(query:any, applyKeys:any, groupRequests:any, dataInstance:any):any {
         // datainstance is an array of offerings (corresponding to a group)
         // order back to OG form
-        dataInstance = this.queryOrder(query, dataInstance, true);
+      //  dataInstance = this.queryOrder(query, dataInstance, true);
         let computatedObject:any = {};
         let desiredID:any = "";
         for (var i = 0; i < groupRequests.length; i++) {
