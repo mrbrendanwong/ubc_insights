@@ -394,8 +394,7 @@ export default class QueryController {
             orderKeys = "courses_dept";
         }else if (originalSort) {
             orderKeys ="courses_uuid";
-        }
-        else if (typeof query.ORDER === 'string') {
+        }else if (typeof query.ORDER === 'string') {
             if (query.GET.indexOf(query.ORDER) >= 0)
                 orderKeys = query.ORDER;
             else
@@ -461,24 +460,24 @@ export default class QueryController {
             if (x == 0)
                 continue;
             else if (dataset[x+1] == undefined){ // for last course
-                if (this.shouldBeGrouped(dataset[x-1], dataset[x], groupRequests)) {
+             //   if (this.shouldBeGrouped(dataset[x-1], dataset[x], groupRequests)) {
                     tempGroup.push(dataset[x-1]);
                     // might break something
                     tempGroup.push(dataset[x]);
                     groupedDataset.push(tempGroup);
                     tempGroup = [];
                     break;
-                }
-                else {
-                    tempGroup.push(dataset[x-1]);
-                    // might break something
-                    groupedDataset.push(tempGroup);
-                    tempGroup = [];
-                    tempGroup.push(dataset[x]);
-                    groupedDataset.push(tempGroup);
-                    tempGroup = [];
-                    break;
-                }
+                //}
+                //else {
+                //    tempGroup.push(dataset[x-1]);
+                //    // might break something
+                //    groupedDataset.push(tempGroup);
+                //    tempGroup = [];
+                //    tempGroup.push(dataset[x]);
+                //    groupedDataset.push(tempGroup);
+                //    tempGroup = [];
+                //    break;
+                //}
             }
             if (this.shouldBeGrouped(dataset[x - 1], dataset[x], groupRequests))
                 tempGroup.push(dataset[x - 1]);
