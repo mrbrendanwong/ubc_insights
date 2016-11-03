@@ -651,11 +651,11 @@ export default class QueryController {
 
         if (Object.keys(query.WHERE).length != 0) {
             completedWhereQuery = this.queryWhere(query.WHERE, query.GET, queryResult, false, dataset1, dataset2);
-            initialOrdering = this.queryOrder(query, completedWhereQuery, false);
-            completedGroupQuery = this.queryGroup(query.GROUP, initialOrdering, query.GET);
+        //    initialOrdering = this.queryOrder(query, completedWhereQuery, false);
+            completedGroupQuery = this.queryGroup(query.GROUP, completedWhereQuery, query.GET);
         } else {
-            initialOrdering = this.queryOrder(query, queryResult, false);
-            completedGroupQuery = this.queryGroup(query.GROUP, initialOrdering, query.GET);
+         //   initialOrdering = this.queryOrder(query, queryResult, false);
+            completedGroupQuery = this.queryGroup(query.GROUP, queryResult, query.GET);
         }
         if (query.APPLY.length != 0) {
             completedApplyQuery = this.queryApply(query, query.APPLY, query.GROUP, completedGroupQuery);
