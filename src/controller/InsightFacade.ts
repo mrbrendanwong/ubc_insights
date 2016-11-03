@@ -9,6 +9,7 @@ var fs = require("fs");
 import {Datasets} from '../controller/DatasetController';
 
 import {QueryRequest} from "../controller/QueryController";
+import {type} from "os";
 
 export default class InsightFacade implements IInsightFacade {
     // TODO: need to implement this
@@ -97,9 +98,23 @@ export default class InsightFacade implements IInsightFacade {
             return false;
     }
 
-    logInvalidID(id: string, invalidIDs: any[]): any {
-        if (invalidIDs.indexOf(id) < 0)
-            invalidIDs.push(id);
+    findInvalidKeys(invalidIDs: any[], queryKeys: any, applyKeys: any[], queryController: any) {
+        for (var i = 0; i < queryKeys.length; i++) {
+            var queryKey: string = queryKeys[i];
+            var queryKeyID: string;
+
+            if (queryKey.indexOf('_') != -1)
+                queryKeyID = queryKey.split('_')[0];
+            else
+                queryKeyID = queryKey;
+
+            if (this.isValidResourceID(queryKeyID))
+                continue;
+            else if (this.isValidDefinedID(queryKeyID, applyKeys))
+                continue;
+            else
+                invalidIDs = queryController.noDuplicatePush(queryKeyID, invalidIDs);
+        }
         return invalidIDs;
     }
 
@@ -115,28 +130,51 @@ export default class InsightFacade implements IInsightFacade {
 
                 if (isValid === true) {
                     let invalidIDs: any[] = [];
-                    let applyKeys = qController.applyKeyExtraction(query);
-                    
+                    let getKeys = query.GET;
+                    let applyKeys = qController.applyKeyExtraction(query.APPLY);
+                    let whereKeys = qController.whereKeyExtraction(query.WHERE);
+
                     // Check if GET keys are valid
-                    for (var i = 0; i < query.GET.length; i++) {
-                        var getKey: string = query.GET[i];
-                        console.log(getKey);
-                        var getKeyID: string;
+                    let getInvalidKeys = that.findInvalidKeys(invalidIDs, getKeys, applyKeys, qController);
+                    invalidIDs = qController.noDuplicateConcat(getInvalidKeys, invalidIDs);
 
-                        // If get key is a part of a PUT resource (eg. courses_avg from courses.json),
-                        // extract resource ID. Otherwise, it is a defined resource from APPLY (coursesAverage)
-                        if (getKey.indexOf('_') != -1)
-                            getKeyID = getKey.split('_')[0];
-                        else
-                            getKeyID = getKey;
+                    // for (var i = 0; i < getKeys.length; i++) {
+                    //     var getKey: string = getKeys[i];
+                    //     var getKeyID: string;
+                    //
+                    //     // If get key is a part of a PUT resource (eg. courses_avg from courses.json),
+                    //     // extract resource ID. Otherwise, it is a defined resource from APPLY (coursesAverage)
+                    //     if (getKey.indexOf('_') != -1)
+                    //         getKeyID = getKey.split('_')[0];
+                    //     else
+                    //         getKeyID = getKey;
+                    //
+                    //     if (that.isValidResourceID(getKeyID))
+                    //         continue;
+                    //     else if (that.isValidDefinedID(getKeyID, applyKeys))
+                    //         continue;
+                    //     else
+                    //         invalidIDs = qController.noDuplicatePush(getKeyID, invalidIDs);
+                    // }
 
-                        if (that.isValidResourceID(getKeyID))
-                            continue;
-                        else if (that.isValidDefinedID(getKeyID, applyKeys))
-                            continue;
-                        else
-                            invalidIDs = that.logInvalidID(getKeyID, invalidIDs)
-                    }
+                    // Check if WHERE keys are valid
+                    let whereInvalidKeys = that.findInvalidKeys(invalidIDs, whereKeys, applyKeys, qController);
+                    invalidIDs = qController.noDuplicateConcat(whereInvalidKeys, invalidIDs);
+
+                    // for (var i = 0; i <whereKeys.length; i++) {
+                    //     var whereKey: string = whereKeys[i];
+                    //     var whereKeyID: string;
+                    //
+                    //     if (whereKey.indexOf('_') != -1)
+                    //         whereKeyID = whereKey.split('_')[0];
+                    //     else
+                    //         whereKeyID = whereKey;
+                    //
+                    //     if (that.isValidResourceID(whereKeyID))
+                    //         continue;
+                    //     else
+                    //         invalidIDs = qController.noDuplicatePush(whereKeyID, invalidIDs);
+                    // }
 
                     // Do we have any missing resources?
                     if (invalidIDs.length > 0)

@@ -164,6 +164,11 @@ export default class DatasetController {
         if (id == "courses") {
             fs.writeFileSync('data/' + id + '.json', JSON.stringify(processedDataset.courses));
         }
+
+        // if (id == "rooms") {
+        //     fs.writeFileSync('data/' + id + '.json', JSON.stringify(processedDataset.rooms));
+        // }
+
         this.datasets[id] = processedDataset;
     }
 
