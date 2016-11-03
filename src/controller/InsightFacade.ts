@@ -9,6 +9,7 @@ var fs = require("fs");
 import {Datasets} from '../controller/DatasetController';
 
 import {QueryRequest} from "../controller/QueryController";
+import {type} from "os";
 
 export default class InsightFacade implements IInsightFacade {
     // TODO: need to implement this
@@ -120,7 +121,6 @@ export default class InsightFacade implements IInsightFacade {
                     // Check if GET keys are valid
                     for (var i = 0; i < query.GET.length; i++) {
                         var getKey: string = query.GET[i];
-                        console.log(getKey);
                         var getKeyID: string;
 
                         // If get key is a part of a PUT resource (eg. courses_avg from courses.json),
@@ -137,6 +137,8 @@ export default class InsightFacade implements IInsightFacade {
                         else
                             invalidIDs = that.logInvalidID(getKeyID, invalidIDs)
                     }
+
+                    // Check if WHERE keys are valid
 
                     // Do we have any missing resources?
                     if (invalidIDs.length > 0)
