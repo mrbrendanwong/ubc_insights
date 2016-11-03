@@ -519,7 +519,7 @@ export default class QueryController {
     private applyComputations(query:any, applyKeys:any, groupRequests:any, dataInstance:any):any {
         // datainstance is an array of offerings (corresponding to a group)
         // order back to OG form
-      //  dataInstance = this.queryOrder(query, dataInstance, true);
+        dataInstance = this.queryOrder(query, dataInstance, true);
         let computatedObject:any = {};
         let desiredID:any = "";
         for (var i = 0; i < groupRequests.length; i++) {
