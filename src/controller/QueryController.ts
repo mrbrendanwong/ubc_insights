@@ -60,7 +60,6 @@ export default class QueryController {
 
         // D2 Order key not in Get
         if (typeof query.ORDER === 'object') {
-            console.log('IN HERE')
             let orderKeys = query.ORDER.keys;
             for (var i = 0; i < orderKeys.length; i++) {
                 if (query.GET.indexOf(orderKeys[i]) < 0)
@@ -389,7 +388,6 @@ export default class QueryController {
     private queryOrder(query: QueryRequest, unsortedData: Array<any>, originalSort: boolean): any {
         var orderKeys: any;
         var downDir: boolean = false;
-        console.log("in query order");
 
         if (query.ORDER == undefined) {
             orderKeys = "courses_dept";
@@ -588,8 +586,24 @@ export default class QueryController {
         return computatedObject;
     }
 
-    public applyKeyExtraction(query: QueryRequest): any[] {
-        let queryApply = query.APPLY;
+    // Pushes 'pushElement' to 'targetArray' if array does not already contain the element
+    public noDuplicatePush(pushElement: any, targetArray: any[]): any[] {
+        if (targetArray.indexOf(pushElement) < 0)
+            targetArray.push(pushElement);
+        return targetArray;
+    }
+
+    // Pushes each element in 'sourceArray' to 'targetArray' if target array does not already contain the element
+    public noDuplicateConcat(sourceArray: any[], targetArray: any[]): any[] {
+        for (var i = 0; i < sourceArray.length; i++) {
+            if (targetArray.indexOf(sourceArray[i]) < 0)
+                targetArray.push(sourceArray[i]);
+        }
+        return targetArray;
+    }
+
+    // TODO: switch array adding to no duplicate push
+    public applyKeyExtraction(queryApply: any): any[] {
         let applyKeys: any[] = [];
         if (queryApply != undefined || queryApply != null) {
             for (var i = 0; i < queryApply.length; i++)
@@ -598,10 +612,53 @@ export default class QueryController {
         return applyKeys;
     }
 
-    // TODO: Finish this
-    public whereKeyExtraction(query: QueryRequest): any {
-        let queryWhere = query.WHERE;
+    // Extracts all resource keys from WHERE
+    public whereKeyExtraction(queryWhere: any): any {
         let whereKeys: any[] = [];
+
+        if (queryWhere == {})
+            return whereKeys;
+        else {
+            let whereKey: any;
+            switch (Object.keys(queryWhere)[0]) {
+                case 'GT':
+                    whereKey = Object.keys(queryWhere['GT']).toString();
+                    whereKeys.push(whereKey);
+                    break;
+                case 'LT':
+                    whereKey = Object.keys(queryWhere['LT']).toString();
+                    whereKeys.push(whereKey);
+                    break;
+                case 'EQ':
+                    whereKey = Object.keys(queryWhere['EQ']).toString();
+                    whereKeys.push(whereKey);
+                    break;
+                case 'IS':
+                    whereKey = Object.keys(queryWhere['IS']).toString();
+                    whereKeys.push(whereKey);
+                    break;
+                case 'AND':
+                    for (var i = 0; i < queryWhere['AND'].length; i++) {
+                        let deepKeys = this.whereKeyExtraction(queryWhere['AND'][i]);
+                        whereKeys = this.noDuplicateConcat(deepKeys, whereKeys);
+                    }
+                    break;
+                case 'OR':
+                    for (var i = 0; i < queryWhere['OR'].length; i++) {
+                        let deepKeys = this.whereKeyExtraction(queryWhere['OR'][i]);
+                        whereKeys = this.noDuplicateConcat(deepKeys, whereKeys);
+                    }
+                    break;
+                case 'NOT':
+                    let deepKeys = this.whereKeyExtraction(queryWhere['NOT']);
+                    whereKeys = this.noDuplicateConcat(deepKeys, whereKeys);
+                    break;
+                default:
+                    return whereKeys;
+            }
+            console.log("These are whereKeys " + whereKeys);
+            return whereKeys;
+        }
     }
 
     private fixDoubleArray(doubleArray:Array<any>) {
@@ -670,6 +727,11 @@ export default class QueryController {
         // TODO: implement this (where we handle get, where, etc.)
         let queryResult:Array<any>;
         let controller = QueryController.datasetController;
+
+        // TODO: ERASE WHEN DONE TESTING METHOD
+        let testVar = this.whereKeyExtraction(query.WHERE);
+
+
         // For the get query
         if (query.GET) {
             // #D1 support

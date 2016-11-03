@@ -98,6 +98,7 @@ export default class InsightFacade implements IInsightFacade {
             return false;
     }
 
+    // TODO: Replace with QueryController.noDuplicatePush
     logInvalidID(id: string, invalidIDs: any[]): any {
         if (invalidIDs.indexOf(id) < 0)
             invalidIDs.push(id);
@@ -116,11 +117,13 @@ export default class InsightFacade implements IInsightFacade {
 
                 if (isValid === true) {
                     let invalidIDs: any[] = [];
-                    let applyKeys = qController.applyKeyExtraction(query);
-                    
+                    let getKeys = query.GET;
+                    let applyKeys = qController.applyKeyExtraction(query.APPLY);
+                    let whereKeys = qController.whereKeyExtraction(query.WHERE);
+
                     // Check if GET keys are valid
-                    for (var i = 0; i < query.GET.length; i++) {
-                        var getKey: string = query.GET[i];
+                    for (var i = 0; i < getKeys.length; i++) {
+                        var getKey: string = getKeys[i];
                         var getKeyID: string;
 
                         // If get key is a part of a PUT resource (eg. courses_avg from courses.json),
@@ -135,14 +138,28 @@ export default class InsightFacade implements IInsightFacade {
                         else if (that.isValidDefinedID(getKeyID, applyKeys))
                             continue;
                         else
-                            invalidIDs = that.logInvalidID(getKeyID, invalidIDs)
+                            invalidIDs = that.logInvalidID(getKeyID, invalidIDs);
                     }
 
                     // Check if WHERE keys are valid
+                    for (var i = 0; i <whereKeys.length; i++) {
+                        var whereKey: string = whereKeys[i];
+                        var whereKeyID: string;
 
-                    // Do we have any missing resources?
-                    if (invalidIDs.length > 0)
-                        missingResource = true;
+                        if (whereKey.indexOf('_') != -1)
+                            whereKeyID = whereKey.split('_')[0];
+                        else
+                            whereKeyID = whereKey;
+
+                        if (that.isValidResourceID(whereKeyID))
+                            continue;
+                        else
+                            invalidIDs = that.logInvalidID(whereKeyID, invalidIDs);
+                    }
+
+                        // Do we have any missing resources?
+                        if (invalidIDs.length > 0)
+                            missingResource = true;
 
                     // Error code handling
                     if (missingResource) {
