@@ -218,27 +218,42 @@ export default class QueryController {
 
     }
 
+    // http://codegolf.stackexchange.com/questions/17127/array-merge-without-duplicates
     private unionArrays(a1:any, a2:any, getRequests:any):any {
-        var finalArray:any;
-        var b1:any = a1;
-        var b2:any = a2;
-        var c1:any;
-        var allIdentical = true;
-        for (var i = 0; i < b1.length; i++) {
-            for (var x = 0; x < b2.length; x++) {
-                allIdentical = true;
-                for (var y = 0; y < getRequests.length; y++) {
-                    if (b1[i][getRequests[y]] != b2[x][getRequests[y]])
-                        allIdentical = false;
-                }
-                if (allIdentical) {
-                    c1 = b2.splice(x, 1);
-                    break;
-                }
+        //var finalArray:any;
+        //var b1:any = a1;
+        //var b2:any = a2;
+        //var c1:any;
+        //var allIdentical = true;
+        //for (var i = 0; i < b1.length; i++) {
+        //    for (var x = 0; x < b2.length; x++) {
+        //        allIdentical = true;
+        //        for (var y = 0; y < getRequests.length; y++) {
+        //            if (b1[i][getRequests[y]] != b2[x][getRequests[y]])
+        //                allIdentical = false;
+        //        }
+        //        if (allIdentical) {
+        //            c1 = b2.splice(x, 1);
+        //            break;
+        //        }
+        //    }
+        //}
+        //finalArray = b1.concat(b2);
+        //return finalArray;
+        var hash = {};
+        var arr = [];
+        for (var i = 0; i < a1.length; i++) {
+            if (hash[a1[i]["courses_uuid"]] !== a1[i]["courses_uuid"])
+                hash[a1[i]["courses_uuid"]] = a1[i]["courses_uuid"];
+                arr[arr.length] = a1[i];
+        }
+        for (var i = 0; i < a2.length; i++) {
+            if (hash[a2[i]["courses_uuid"]] !== a2[i]["courses_uuid"]) {
+                hash[a2[i]["courses_uuid"]] = a2[i]["courses_uuid"];
+                arr[arr.length] = a2[i];
             }
         }
-        finalArray = b1.concat(b2);
-        return finalArray;
+        return arr;
     }
 
     private processWhere(data:Array<any>, whereCondition:string, restriction:any, restrictionValue:any, notFlag:boolean = false, getRequests:any):any {
