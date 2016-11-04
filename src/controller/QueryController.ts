@@ -81,16 +81,21 @@ export default class QueryController {
         // As per piazza, this causes Hades to fail
         //
         //// Check if all keys in group are in GET
-        //for (var q = 0; q < query.GROUP.length; q++) {
-        //    matchFlag = false;
-        //    for (var w = 0; w < query.GET.length; w++) {
-        //        if (query.GET[w] == query.GROUP[q])
-        //            matchFlag = true;
-        //    }
-        //    if (!matchFlag) {
-        //        return false;
-        //    }
-        //}
+        for (var q = 0; q < query.GET.length; q++) {
+            matchFlag = false;
+            if (query.GET[q].indexOf("_") >= 0) {
+                for (var w = 0; w < query.GROUP.length; w++) {
+                    console.log("This is " + query.GET[q] + " AND " + query.GROUP[w]);
+                    if (query.GET[q] == query.GROUP[w]) {
+                        console.log("MATCH");
+                        matchFlag = true;
+                    }
+                }
+                if (!matchFlag) {
+                    return false;
+                }
+            }
+        }
 
         // Make sure no "_" in Group keys not sure what second or-statement does
         for (var x = 0; x < query.GROUP.length; x++) {
