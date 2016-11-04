@@ -174,9 +174,16 @@ export default class DatasetController {
 
     public queryDataset(queryIDs:any) : Array<any> {
         this.getDatasets();
-        let mainID:any = queryIDs[0].split("_")[0];
-        let coursesDataset = this.getDataset(mainID);
-        let parsedCDB = JSON.parse(coursesDataset);
+        let mainID:any;
+        let coursesDataset:any;
+        let parsedCDB:any;
+        for (var i = 0; i < queryIDs.length; i++) {
+            if (queryIDs[i].indexOf("_") >= 0){
+                mainID = queryIDs[i     ].split("_")[0];
+                coursesDataset = this.getDataset(mainID);
+                parsedCDB = JSON.parse(coursesDataset);
+            }
+        }
         let currentSearchArray:Array<any> = [];
         for (var x = 0; x < parsedCDB.length; x++ ) {
             if (parsedCDB[x] != null) {

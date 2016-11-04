@@ -71,7 +71,6 @@ export default class QueryController {
         if (query.GROUP != undefined && (query.APPLY != undefined)) {
             return this.applyGroupValidation(query);
         }
-
         // Should catch whatever made it through to this point
         if (typeof query !== 'undefined' && query !== null && Object.keys(query).length > 0) {
             console.log('QueryController.isValid: Object.keys(query) is ' + Object.keys(query));
@@ -95,6 +94,22 @@ export default class QueryController {
             }
         }
 
+        // As per piazza, this causes Hades to fail
+        //
+        //// Check if all keys in group are in GET
+        for (var q = 0; q < query.GET.length; q++) {
+            matchFlag = false;
+            if (query.GET[q].indexOf("_") >= 0) {
+                for (var w = 0; w < query.GROUP.length; w++) {
+                    if (query.GET[q] == query.GROUP[w]) {
+                        matchFlag = true;
+                    }
+                }
+                if (!matchFlag) {
+                    return false;
+                }
+            }
+        }
         // Make sure no "_" in Group keys not sure what second or-statement does
         for (var x = 0; x < query.GROUP.length; x++) {
             if (query.GROUP[x].indexOf("_") == -1) {
@@ -102,6 +117,7 @@ export default class QueryController {
                 return false;
             }
         }
+
 
         //Makes sure any non "_" keys in GET are in APPLY
         for (var y = 0; y < query.GET.length; y++) {
@@ -140,6 +156,7 @@ export default class QueryController {
             applyKeys[t] = Object.keys(query.APPLY[t])[0];
         }
 
+
         for (var e = 0; e < query.GROUP.length; e++) {
             matchFlag = false;
             for (var r = 0; r < query.GET.length; r++) {
@@ -149,6 +166,7 @@ export default class QueryController {
             if (!matchFlag)
                 return false;
         }
+
         for (var d = 0; d < query.APPLY.length; d++) {
             secondaryMatchFlag = false;
             for (var s = 0; s < query.GET.length; s++) {
@@ -158,7 +176,6 @@ export default class QueryController {
             if (!secondaryMatchFlag)
                 return false;
         }
-
         return true;
     }
 
@@ -218,27 +235,22 @@ export default class QueryController {
 
     }
 
+    // http://codegolf.stackexchange.com/questions/17127/array-merge-without-duplicates
     private unionArrays(a1:any, a2:any, getRequests:any):any {
-        var finalArray:any;
-        var b1:any = a1;
-        var b2:any = a2;
-        var c1:any;
-        var allIdentical = true;
-        for (var i = 0; i < b1.length; i++) {
-            for (var x = 0; x < b2.length; x++) {
-                allIdentical = true;
-                for (var y = 0; y < getRequests.length; y++) {
-                    if (b1[i][getRequests[y]] != b2[x][getRequests[y]])
-                        allIdentical = false;
-                }
-                if (allIdentical) {
-                    c1 = b2.splice(x, 1);
-                    break;
-                }
+        var hash:any = {};
+        var arr:any = [];
+        for (var i = 0; i < a1.length; i++) {
+            if (hash[a1[i]["courses_uuid"]] !== a1[i]["courses_uuid"])
+                hash[a1[i]["courses_uuid"]] = a1[i]["courses_uuid"];
+            arr[arr.length] = a1[i];
+        }
+        for (var i = 0; i < a2.length; i++) {
+            if (hash[a2[i]["courses_uuid"]] !== a2[i]["courses_uuid"]) {
+                hash[a2[i]["courses_uuid"]] = a2[i]["courses_uuid"];
+                arr[arr.length] = a2[i];
             }
         }
-        finalArray = b1.concat(b2);
-        return finalArray;
+        return arr;
     }
 
     private processWhere(data:Array<any>, whereCondition:string, restriction:any, restrictionValue:any, notFlag:boolean = false, getRequests:any):any {
@@ -388,7 +400,6 @@ export default class QueryController {
     private queryOrder(query: QueryRequest, unsortedData: Array<any>, originalSort: boolean): any {
         var orderKeys: any;
         var downDir: boolean = false;
-
         if (query.ORDER == undefined) {
             orderKeys = "courses_dept";
         } else if (originalSort) {
@@ -440,46 +451,45 @@ export default class QueryController {
     }
 
 // TODO: Finish GROUP
-    private queryGroup(groupRequests:any, dataset:any, getRequests:any):any {
+    private queryGroup(groupRequests:any, dataset:any):any {
 
         let groupedDataset:any = [];
-        let tempGroup:any = [];
+        let groupQualities:any;
         // For every offering
+
+        var hash:any = {};
+
         for (var x = 0; x < dataset.length; x++) {
-            if (x == 0)
+            // collect the necessary info from current iteration
+            groupQualities = [];
+            for (var y = 0; y < groupRequests.length; y++){
+                groupQualities.push(dataset[x][groupRequests[y]]);
+            }
+            if (hash[groupQualities] !== undefined)
                 continue;
-            else if (dataset[x+1] == undefined){ // for last course
-                if (this.shouldBeGrouped(dataset[x-1], dataset[x], groupRequests)) {
-                    tempGroup.push(dataset[x-1]);
-                    // might break something
-                    tempGroup.push(dataset[x]);
-                    groupedDataset.push(tempGroup);
-                    tempGroup = [];
-                    break;
-                }
-                else {
-                    tempGroup.push(dataset[x-1]);
-                    // might break something
-                    groupedDataset.push(tempGroup);
-                    tempGroup = [];
-                    tempGroup.push(dataset[x]);
-                    groupedDataset.push(tempGroup);
-                    tempGroup = [];
-                    break;
-                }
-            }
-            if (this.shouldBeGrouped(dataset[x - 1], dataset[x], groupRequests))
-                tempGroup.push(dataset[x - 1]);
             else {
-                tempGroup.push(dataset[x - 1]);
-                groupedDataset.push(tempGroup);
-                tempGroup = [];
-
+                hash[groupQualities] = [];
             }
-
         }
-        return groupedDataset;
 
+        // Goes back through dataset and adds the data to the appropriate spot in the hash
+        for (var z = 0; z < dataset.length; z++) {
+            groupQualities = [];
+            for (var w = 0; w < groupRequests.length; w++){
+                groupQualities.push(dataset[z][groupRequests[w]]);
+            }
+            if (hash[groupQualities] !== undefined)
+                hash[groupQualities].push(dataset[z]);
+            else
+                continue;
+        }
+
+        // Return data to original form
+        Object.keys(hash).forEach(function(key,index) {
+            groupedDataset.push(hash[key]);
+        });
+
+        return groupedDataset;
     }
 
 // Verifies if two course offerings should be grouped together
@@ -497,7 +507,6 @@ export default class QueryController {
         // Go through each set of applications
         let appliedDataset:any = [];
         for (var x = 0; x < groupedDataset.length; x++) {
-            //     console.log(applyRequests[i]);
             appliedDataset.push(this.applyComputations(query, applyRequests, groupRequests, groupedDataset[x]));
             // Send each group to the computation helper
         }
@@ -508,11 +517,10 @@ export default class QueryController {
     private applyComputations(query:any, applyKeys:any, groupRequests:any, dataInstance:any):any {
         // datainstance is an array of offerings (corresponding to a group)
         // order back to OG form
-        dataInstance = this.queryOrder(query, dataInstance, true);
         let computatedObject:any = {};
         let desiredID:any = "";
-        for (var i = 0; i < groupRequests.length; i++) {
-            computatedObject[groupRequests[i]] = dataInstance[0][groupRequests[i]];
+        for (var i = 0; i < query.GET.length; i++) {
+            computatedObject[query.GET[i]] = dataInstance[0][query.GET[i]];
         }
         for (var z = 0; z < applyKeys.length; z++) {
             let trueApplyKey:any = applyKeys[z];
@@ -530,7 +538,6 @@ export default class QueryController {
                     desiredID = trueApplyKey[applicationID][finalApplyKey];
                     if (typeof dataInstance[0][desiredID] !== 'number')
                         break;
-                    //      console.log(dataInstance[0].courses_avg + " AND " + dataInstance[0].courses_dept);
                     for (var x = 0; x < dataInstance.length; x++) {
                         sum += dataInstance[x][desiredID];
                     }
@@ -661,15 +668,14 @@ export default class QueryController {
         }
     }
 
-    private fixDoubleArray(doubleArray:Array<any>) {
-        let singleArray:Array<any> = [];
-        for (var i = 0; i < doubleArray.length; i++) {
-            for (var j = 0; j < doubleArray[i].length; j++) {
-                singleArray.push(doubleArray[i][j]);
-            }
+    private handleEmptyApply(dataset:any):any {
+        let handledArray:any = [];
+        for (var i = 0; i < dataset.length; i++) {
+            handledArray.push(dataset[i][0]);
         }
-        return singleArray;
+        return handledArray;
     }
+
 
     private queryD1(query:QueryRequest, queryResult:any): QueryResponse {
         let completedWhereQuery:any;
@@ -687,6 +693,7 @@ export default class QueryController {
 
         completedOrderQuery = this.queryOrder(query, filteredData, false);
         resultToBeRendered = this.queryAs(query, completedOrderQuery);
+
         return resultToBeRendered;
     }
 
@@ -697,25 +704,23 @@ export default class QueryController {
         let completedApplyQuery:any;
         let dataset1:Array<any> = [];
         let dataset2:Array<any> = [];
-        let fixedArray:any = [];
+        let emptyApplyQuery:any = [];
         var resultToBeRendered:any;
         var filteredData:any;
         let initialOrdering:any;
 
         if (Object.keys(query.WHERE).length != 0) {
             completedWhereQuery = this.queryWhere(query.WHERE, query.GET, queryResult, false, dataset1, dataset2);
-            initialOrdering = this.queryOrder(query, completedWhereQuery, false);
-            completedGroupQuery = this.queryGroup(query.GROUP, initialOrdering, query.GET);
+            completedGroupQuery = this.queryGroup(query.GROUP, completedWhereQuery);
         } else {
-            initialOrdering = this.queryOrder(query, queryResult, false);
-            completedGroupQuery = this.queryGroup(query.GROUP, initialOrdering, query.GET);
+            completedGroupQuery = this.queryGroup(query.GROUP, queryResult);
         }
         if (query.APPLY.length != 0) {
             completedApplyQuery = this.queryApply(query, query.APPLY, query.GROUP, completedGroupQuery);
-            completedOrderQuery = this.queryOrder(query, completedApplyQuery, false);
+            completedOrderQuery = this.queryOrder(query, completedApplyQuery, false); //why was this changed
         } else {
-            fixedArray = this.fixDoubleArray(completedGroupQuery);
-            filteredData = this.filterByGET(fixedArray, query.GET);
+            emptyApplyQuery = this.handleEmptyApply(completedGroupQuery);
+            filteredData = this.filterByGET(emptyApplyQuery, query.GET);
             completedOrderQuery = this.queryOrder(query, filteredData, false);
         }
         resultToBeRendered = this.queryAs(query, completedOrderQuery);
@@ -739,4 +744,3 @@ export default class QueryController {
         }
     }
 }
-// TODO: Fix for D1 and talk about D2
