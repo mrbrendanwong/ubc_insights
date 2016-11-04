@@ -55,7 +55,6 @@ export default class QueryController {
         if (query.GROUP != undefined && (query.APPLY != undefined)) {
             return this.applyGroupValidation(query);
         }
-
         // Should catch whatever made it through to this point
         if (typeof query !== 'undefined' && query !== null && Object.keys(query).length > 0) {
             console.log('QueryController.isValid: Object.keys(query) is ' + Object.keys(query));
@@ -101,6 +100,7 @@ export default class QueryController {
             }
         }
 
+
         //Makes sure any non "_" keys in GET are in APPLY
         for (var y = 0; y < query.GET.length; y++) {
             // Find non-"_" Keys
@@ -137,6 +137,7 @@ export default class QueryController {
         for (var t = 0; t < query.APPLY.length; t++) {
             applyKeys[t] = Object.keys(query.APPLY[t])[0];
         }
+
 
         for (var e = 0; e < query.GROUP.length; e++) {
             matchFlag = false;
@@ -538,8 +539,8 @@ export default class QueryController {
             dataInstance = this.queryOrder(query, dataInstance, true);
         let computatedObject:any = {};
         let desiredID:any = "";
-        for (var i = 0; i < groupRequests.length; i++) {
-            computatedObject[groupRequests[i]] = dataInstance[0][groupRequests[i]];
+        for (var i = 0; i < query.GET.length; i++) {
+            computatedObject[query.GET[i]] = dataInstance[0][query.GET[i]];
         }
         for (var z = 0; z < applyKeys.length; z++) {
             let trueApplyKey:any = applyKeys[z];
@@ -557,7 +558,6 @@ export default class QueryController {
                     desiredID = trueApplyKey[applicationID][finalApplyKey];
                     if (typeof dataInstance[0][desiredID] !== 'number')
                         break;
-                    //      console.log(dataInstance[0].courses_avg + " AND " + dataInstance[0].courses_dept);
                     for (var x = 0; x < dataInstance.length; x++) {
                         sum += dataInstance[x][desiredID];
                     }
@@ -684,7 +684,7 @@ export default class QueryController {
 
         if (Object.keys(query.WHERE).length != 0) {
             completedWhereQuery = this.queryWhere(query.WHERE, query.GET, queryResult, false, dataset1, dataset2);
-            if (this.isExtraSortingNeeded(query)) {
+            if (this.isExtraSortingNeeded(query)) {;
                 initialOrdering = this.queryOrder(query, completedWhereQuery, false);
                 completedGroupQuery = this.queryGroup(query.GROUP, initialOrdering, query.GET);
             }
@@ -706,7 +706,6 @@ export default class QueryController {
             completedOrderQuery = this.queryOrder(query, filteredData, false);
         }
         resultToBeRendered = this.queryAs(query, completedOrderQuery);
-        console.log(JSON.stringify(resultToBeRendered));
         return resultToBeRendered;
     }
 
