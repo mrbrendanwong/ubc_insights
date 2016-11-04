@@ -85,9 +85,7 @@ export default class QueryController {
             matchFlag = false;
             if (query.GET[q].indexOf("_") >= 0) {
                 for (var w = 0; w < query.GROUP.length; w++) {
-                    console.log("This is " + query.GET[q] + " AND " + query.GROUP[w]);
                     if (query.GET[q] == query.GROUP[w]) {
-                        console.log("MATCH");
                         matchFlag = true;
                     }
                 }
@@ -486,10 +484,10 @@ export default class QueryController {
                     tempGroup.push(dataset[x-1]);
                     // might break something
                     tempGroup.push(dataset[x]);
-                    console.log("BEFORE: " + JSON.stringify(tempGroup));
-                    //if (this.isExtraSortingNeeded(query))
-                    //    tempFilteredGroup = this.queryOrder(query, tempGroup, true);
-                    //else
+                    if (this.isExtraSortingNeeded(query)) {
+                        tempFilteredGroup = this.queryOrder(query, tempGroup, true);
+                    }
+                    else
                         tempFilteredGroup = tempGroup;
 
                     groupedDataset.push(tempFilteredGroup);
@@ -499,9 +497,9 @@ export default class QueryController {
                 else {
                     tempGroup.push(dataset[x-1]);
                     // might break something
-                    //if (this.isExtraSortingNeeded(query))
-                    //    tempFilteredGroup = this.queryOrder(query, tempGroup, true);
-                    //else
+                    if (this.isExtraSortingNeeded(query))
+                        tempFilteredGroup = this.queryOrder(query, tempGroup, true);
+                    else
                         tempFilteredGroup = tempGroup;
                     groupedDataset.push(tempFilteredGroup);
                     tempGroup = [];
@@ -515,7 +513,11 @@ export default class QueryController {
                 tempGroup.push(dataset[x - 1]);
             else {
                 tempGroup.push(dataset[x - 1]);
-                groupedDataset.push(tempGroup);
+                if (this.isExtraSortingNeeded(query))
+                    tempFilteredGroup = this.queryOrder(query, tempGroup, true);
+                else
+                    tempFilteredGroup = tempGroup;
+                groupedDataset.push(tempFilteredGroup);
                 tempGroup = [];
 
             }
@@ -540,7 +542,6 @@ export default class QueryController {
         // Go through each set of applications
         let appliedDataset:any = [];
         for (var x = 0; x < groupedDataset.length; x++) {
-            //     console.log(applyRequests[i]);
             appliedDataset.push(this.applyComputations(query, applyRequests, groupRequests, groupedDataset[x]));
             // Send each group to the computation helper
         }
@@ -681,6 +682,7 @@ export default class QueryController {
 
         completedOrderQuery = this.queryOrder(query, filteredData, false);
         resultToBeRendered = this.queryAs(query, completedOrderQuery);
+
         return resultToBeRendered;
     }
 
@@ -694,20 +696,20 @@ export default class QueryController {
         let fixedArray:any = [];
         var resultToBeRendered:any;
         var filteredData:any;
-    //    let initialOrdering:any;
+        let initialOrdering:any;
 
         if (Object.keys(query.WHERE).length != 0) {
             completedWhereQuery = this.queryWhere(query.WHERE, query.GET, queryResult, false, dataset1, dataset2);
             if (this.isExtraSortingNeeded(query)) {
-           //     initialOrdering = this.queryOrder(query, completedWhereQuery, false);
-                completedGroupQuery = this.queryGroup(query.GROUP, completedWhereQuery, query);
+                initialOrdering = this.queryOrder(query, completedWhereQuery, false);
+                completedGroupQuery = this.queryGroup(query.GROUP, initialOrdering, query);
             }
             else
                 completedGroupQuery = this.queryGroup(query.GROUP, completedWhereQuery, query);
         } else {
             if (this.isExtraSortingNeeded(query)){
-        //        initialOrdering = this.queryOrder(query, queryResult, false);
-                completedGroupQuery = this.queryGroup(query.GROUP, queryResult, query);
+                initialOrdering = this.queryOrder(query, queryResult, false);
+                completedGroupQuery = this.queryGroup(query.GROUP, initialOrdering, query);
             } else
                 completedGroupQuery = this.queryGroup(query.GROUP, queryResult, query);
         }
