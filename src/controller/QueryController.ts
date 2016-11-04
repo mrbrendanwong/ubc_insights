@@ -467,10 +467,11 @@ export default class QueryController {
     }
 
 // TODO: Finish GROUP
-    private queryGroup(groupRequests:any, dataset:any, getRequests:any):any {
+    private queryGroup(groupRequests:any, dataset:any, query:any):any {
 
         let groupedDataset:any = [];
         let tempGroup:any = [];
+        let tempFilteredGroup:any = [];
         // For every offering
         for (var x = 0; x < dataset.length; x++) {
             if (x == 0)
@@ -480,14 +481,24 @@ export default class QueryController {
                     tempGroup.push(dataset[x-1]);
                     // might break something
                     tempGroup.push(dataset[x]);
-                    groupedDataset.push(tempGroup);
+                    console.log("BEFORE: " + JSON.stringify(tempGroup));
+                    //if (this.isExtraSortingNeeded(query))
+                    //    tempFilteredGroup = this.queryOrder(query, tempGroup, true);
+                    //else
+                        tempFilteredGroup = tempGroup;
+
+                    groupedDataset.push(tempFilteredGroup);
                     tempGroup = [];
                     break;
                 }
                 else {
                     tempGroup.push(dataset[x-1]);
                     // might break something
-                    groupedDataset.push(tempGroup);
+                    //if (this.isExtraSortingNeeded(query))
+                    //    tempFilteredGroup = this.queryOrder(query, tempGroup, true);
+                    //else
+                        tempFilteredGroup = tempGroup;
+                    groupedDataset.push(tempFilteredGroup);
                     tempGroup = [];
                     tempGroup.push(dataset[x]);
                     groupedDataset.push(tempGroup);
@@ -535,8 +546,6 @@ export default class QueryController {
     private applyComputations(query:any, applyKeys:any, groupRequests:any, dataInstance:any):any {
         // datainstance is an array of offerings (corresponding to a group)
         // order back to OG form
-        if (this.isExtraSortingNeeded(query))
-            dataInstance = this.queryOrder(query, dataInstance, true);
         let computatedObject:any = {};
         let desiredID:any = "";
         for (var i = 0; i < query.GET.length; i++) {
@@ -680,22 +689,22 @@ export default class QueryController {
         let fixedArray:any = [];
         var resultToBeRendered:any;
         var filteredData:any;
-        let initialOrdering:any;
+    //    let initialOrdering:any;
 
         if (Object.keys(query.WHERE).length != 0) {
             completedWhereQuery = this.queryWhere(query.WHERE, query.GET, queryResult, false, dataset1, dataset2);
-            if (this.isExtraSortingNeeded(query)) {;
-                initialOrdering = this.queryOrder(query, completedWhereQuery, false);
-                completedGroupQuery = this.queryGroup(query.GROUP, initialOrdering, query.GET);
+            if (this.isExtraSortingNeeded(query)) {
+           //     initialOrdering = this.queryOrder(query, completedWhereQuery, false);
+                completedGroupQuery = this.queryGroup(query.GROUP, completedWhereQuery, query);
             }
             else
-                completedGroupQuery = this.queryGroup(query.GROUP, completedWhereQuery, query.GET);
+                completedGroupQuery = this.queryGroup(query.GROUP, completedWhereQuery, query);
         } else {
             if (this.isExtraSortingNeeded(query)){
-                initialOrdering = this.queryOrder(query, queryResult, false);
-                completedGroupQuery = this.queryGroup(query.GROUP, initialOrdering, query.GET);
+        //        initialOrdering = this.queryOrder(query, queryResult, false);
+                completedGroupQuery = this.queryGroup(query.GROUP, queryResult, query);
             } else
-                completedGroupQuery = this.queryGroup(query.GROUP, queryResult, query.GET);
+                completedGroupQuery = this.queryGroup(query.GROUP, queryResult, query);
         }
         if (query.APPLY.length != 0) {
             completedApplyQuery = this.queryApply(query, query.APPLY, query.GROUP, completedGroupQuery);
