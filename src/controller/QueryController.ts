@@ -1,4 +1,4 @@
-    /**
+/**
  * Created by rtholmes on 2016-06-19.
  */
 
@@ -44,12 +44,28 @@ export default class QueryController {
             return false;
 
         // Empty Group && non-empty Apply
-        if ((query.APPLY != undefined) && (query.GROUP == undefined || (query.GROUP != undefined && query.GROUP.length == 0)))
+        if ((query.APPLY != undefined) && (query.GROUP == undefined
+            || (query.GROUP != undefined && query.GROUP.length == 0)))
             return false;
 
         // Non-Empty group and empty Apply
         if ((query.GROUP != undefined) && (query.APPLY == undefined))
             return false;
+
+        // D1 Order key not in Get
+        if (typeof query.ORDER === 'string') {
+            if (query.GET.indexOf(query.ORDER) < 0)
+                return false;
+        }
+
+        // D2 Order key not in Get
+        if (typeof query.ORDER === 'object') {
+            let orderKeys = query.ORDER.keys;
+            for (var i = 0; i < orderKeys.length; i++) {
+                if (query.GET.indexOf(orderKeys[i]) < 0)
+                    return false;
+            }
+        }
 
         // Special handling for Group and Apply
         if (query.GROUP != undefined && (query.APPLY != undefined)) {
@@ -94,7 +110,6 @@ export default class QueryController {
                 }
             }
         }
-
         // Make sure no "_" in Group keys not sure what second or-statement does
         for (var x = 0; x < query.GROUP.length; x++) {
             if (query.GROUP[x].indexOf("_") == -1) {
@@ -163,8 +178,6 @@ export default class QueryController {
         }
         return true;
     }
-
-
 
     private queryWhere(whereRequests:any, getRequests:any, rawData:Array<any>, notFlag:boolean, dataset1:Array<any> = [], dataset2:Array<any> = []):any {
         let whereID:Array<string>;
@@ -387,31 +400,20 @@ export default class QueryController {
     private queryOrder(query: QueryRequest, unsortedData: Array<any>, originalSort: boolean): any {
         var orderKeys: any;
         var downDir: boolean = false;
-        console.log("in query order");
-
         if (query.ORDER == undefined) {
             orderKeys = "courses_dept";
-        }else if (originalSort) {
+        } else if (originalSort) {
             orderKeys ="courses_uuid";
-        }else if (typeof query.ORDER === 'string') {
-            if (query.GET.indexOf(query.ORDER) >= 0)
-                orderKeys = query.ORDER;
-            else
-                return null;
-        }
-        else if (typeof query.ORDER === 'object') {
+        } else if (typeof query.ORDER === 'string') {
+            orderKeys = query.ORDER;
+        } else if (typeof query.ORDER === 'object') {
             console.log(query.ORDER['dir']);
             if (query.ORDER['dir'] == 'DOWN')
                 downDir = true;
             orderKeys = query.ORDER.keys;
             console.log(orderKeys);
-            for (var key in orderKeys) {
-                if (query.GET.indexOf(key))
-                    continue;
-                else
-                    return null;
-            }
         }
+
         var sortedData = unsortedData.sort(
             function comparator(a,b): any {
                 var property: any;
@@ -435,7 +437,6 @@ export default class QueryController {
 
         return sortedData;
     }
-
 
     private queryAs(query:QueryRequest, resultArray:Array<any>):any {
         console.log(query.AS);
@@ -592,10 +593,25 @@ export default class QueryController {
         return computatedObject;
     }
 
-    public applyKeyExtraction(query: QueryRequest): any[] {
-        let queryApply = query.APPLY;
+    // Pushes 'pushElement' to 'targetArray' if array does not already contain the element
+    public noDuplicatePush(pushElement: any, targetArray: any[]): any[] {
+        if (targetArray.indexOf(pushElement) < 0)
+            targetArray.push(pushElement);
+        return targetArray;
+    }
+
+    // Pushes each element in 'sourceArray' to 'targetArray' if target array does not already contain the element
+    public noDuplicateConcat(sourceArray: any[], targetArray: any[]): any[] {
+        for (var i = 0; i < sourceArray.length; i++) {
+            if (targetArray.indexOf(sourceArray[i]) < 0)
+                targetArray.push(sourceArray[i]);
+        }
+        return targetArray;
+    }
+
+    // TODO: switch array adding to no duplicate push
+    public applyKeyExtraction(queryApply: any): any[] {
         let applyKeys: any[] = [];
-        console.log("Apply keys are " + queryApply);
         if (queryApply != undefined || queryApply != null) {
             for (var i = 0; i < queryApply.length; i++)
                 applyKeys[i] = Object.keys(queryApply[i])[0];
@@ -603,14 +619,63 @@ export default class QueryController {
         return applyKeys;
     }
 
+    // Extracts all resource keys from WHERE
+    public whereKeyExtraction(queryWhere: any): any {
+        let whereKeys: any[] = [];
+
+        if (queryWhere == {})
+            return whereKeys;
+        else {
+            let whereKey: any;
+            switch (Object.keys(queryWhere)[0]) {
+                case 'GT':
+                    whereKey = Object.keys(queryWhere['GT']).toString();
+                    whereKeys.push(whereKey);
+                    break;
+                case 'LT':
+                    whereKey = Object.keys(queryWhere['LT']).toString();
+                    whereKeys.push(whereKey);
+                    break;
+                case 'EQ':
+                    whereKey = Object.keys(queryWhere['EQ']).toString();
+                    whereKeys.push(whereKey);
+                    break;
+                case 'IS':
+                    whereKey = Object.keys(queryWhere['IS']).toString();
+                    whereKeys.push(whereKey);
+                    break;
+                case 'AND':
+                    for (var i = 0; i < queryWhere['AND'].length; i++) {
+                        let deepKeys = this.whereKeyExtraction(queryWhere['AND'][i]);
+                        whereKeys = this.noDuplicateConcat(deepKeys, whereKeys);
+                    }
+                    break;
+                case 'OR':
+                    for (var i = 0; i < queryWhere['OR'].length; i++) {
+                        let deepKeys = this.whereKeyExtraction(queryWhere['OR'][i]);
+                        whereKeys = this.noDuplicateConcat(deepKeys, whereKeys);
+                    }
+                    break;
+                case 'NOT':
+                    let deepKeys = this.whereKeyExtraction(queryWhere['NOT']);
+                    whereKeys = this.noDuplicateConcat(deepKeys, whereKeys);
+                    break;
+                default:
+                    return whereKeys;
+            }
+            console.log("These are whereKeys " + whereKeys);
+            return whereKeys;
+        }
+    }
+
     private handleEmptyApply(dataset:any):any {
         let handledArray:any = [];
-        for (var i = 0; i < dataset.length; i++){
-            console.log(dataset[i][0]);
+        for (var i = 0; i < dataset.length; i++) {
             handledArray.push(dataset[i][0]);
         }
         return handledArray;
     }
+
 
     private queryD1(query:QueryRequest, queryResult:any): QueryResponse {
         let completedWhereQuery:any;
@@ -642,6 +707,7 @@ export default class QueryController {
         let emptyApplyQuery:any = [];
         var resultToBeRendered:any;
         var filteredData:any;
+        let initialOrdering:any;
 
         if (Object.keys(query.WHERE).length != 0) {
             completedWhereQuery = this.queryWhere(query.WHERE, query.GET, queryResult, false, dataset1, dataset2);
@@ -655,7 +721,6 @@ export default class QueryController {
         } else {
             emptyApplyQuery = this.handleEmptyApply(completedGroupQuery);
             filteredData = this.filterByGET(emptyApplyQuery, query.GET);
-
             completedOrderQuery = this.queryOrder(query, filteredData, false);
         }
         resultToBeRendered = this.queryAs(query, completedOrderQuery);
