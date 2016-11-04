@@ -473,56 +473,102 @@ export default class QueryController {
     private queryGroup(groupRequests:any, dataset:any, query:any):any {
 
         let groupedDataset:any = [];
+        let groupQualities:any;
         let tempGroup:any = [];
         let tempFilteredGroup:any = [];
         // For every offering
+
+        var hash:any = {};
+       // var arr:any = [];
+        //for (var i = 0; i < a1.length; i++) {
+        //    if (hash[a1[i]["courses_uuid"]] !== a1[i]["courses_uuid"])
+        //        hash[a1[i]["courses_uuid"]] = a1[i]["courses_uuid"];
+        //    arr[arr.length] = a1[i];
+        //}
+        //for (var i = 0; i < a2.length; i++) {
+        //    if (hash[a2[i]["courses_uuid"]] !== a2[i]["courses_uuid"]) {
+        //        hash[a2[i]["courses_uuid"]] = a2[i]["courses_uuid"];
+        //        arr[arr.length] = a2[i];
+        //    }
+        //}
         for (var x = 0; x < dataset.length; x++) {
-            if (x == 0)
+            // collect the necessary info from current iteration
+            groupQualities = [];
+            for (var y = 0; y < groupRequests.length; y++){
+               groupQualities.push(dataset[x][groupRequests[y]]);
+            }
+            if (hash[groupQualities] !== undefined)
                 continue;
-            else if (dataset[x+1] == undefined){ // for last course
-                if (this.shouldBeGrouped(dataset[x-1], dataset[x], groupRequests)) {
-                    tempGroup.push(dataset[x-1]);
-                    // might break something
-                    tempGroup.push(dataset[x]);
-                    if (this.isExtraSortingNeeded(query)) {
-                        tempFilteredGroup = this.queryOrder(query, tempGroup, true);
-                    }
-                    else
-                        tempFilteredGroup = tempGroup;
-
-                    groupedDataset.push(tempFilteredGroup);
-                    tempGroup = [];
-                    break;
-                }
-                else {
-                    tempGroup.push(dataset[x-1]);
-                    // might break something
-                    if (this.isExtraSortingNeeded(query))
-                        tempFilteredGroup = this.queryOrder(query, tempGroup, true);
-                    else
-                        tempFilteredGroup = tempGroup;
-                    groupedDataset.push(tempFilteredGroup);
-                    tempGroup = [];
-                    tempGroup.push(dataset[x]);
-                    groupedDataset.push(tempGroup);
-                    tempGroup = [];
-                    break;
-                }
-            }
-            if (this.shouldBeGrouped(dataset[x - 1], dataset[x], groupRequests))
-                tempGroup.push(dataset[x - 1]);
             else {
-                tempGroup.push(dataset[x - 1]);
-                if (this.isExtraSortingNeeded(query))
-                    tempFilteredGroup = this.queryOrder(query, tempGroup, true);
-                else
-                    tempFilteredGroup = tempGroup;
-                groupedDataset.push(tempFilteredGroup);
-                tempGroup = [];
-
+                hash[groupQualities] = [];
             }
-
         }
+
+        // Goes back through dataset and adds the data to the appropriate spot in the hash
+        for (var z = 0; z < dataset.length; z++) {
+            groupQualities = [];
+            for (var w = 0; w < groupRequests.length; w++){
+                groupQualities.push(dataset[z][groupRequests[w]]);
+            }
+            if (hash[groupQualities] !== undefined)
+                hash[groupQualities].push(dataset[z]);
+            else
+                continue;
+        }
+
+        // Return data to original form
+        Object.keys(hash).forEach(function(key,index) {
+            groupedDataset.push(hash[key]);
+        });
+
+        // we should now have a cache full of all the unique group keys (nothing inside yet)
+        //for (var x = 0; x < dataset.length; x++) {
+        //    if (x == 0)
+        //        continue;
+        //    else if (dataset[x+1] == undefined){ // for last course
+        //        if (this.shouldBeGrouped(dataset[x-1], dataset[x], groupRequests)) {
+        //            tempGroup.push(dataset[x-1]);
+        //            // might break something
+        //            tempGroup.push(dataset[x]);
+        //            if (this.isExtraSortingNeeded(query)) {
+        //                tempFilteredGroup = this.queryOrder(query, tempGroup, true);
+        //            }
+        //            else
+        //                tempFilteredGroup = tempGroup;
+        //
+        //            groupedDataset.push(tempFilteredGroup);
+        //            tempGroup = [];
+        //            break;
+        //        }
+        //        else {
+        //            tempGroup.push(dataset[x-1]);
+        //            // might break something
+        //            if (this.isExtraSortingNeeded(query))
+        //                tempFilteredGroup = this.queryOrder(query, tempGroup, true);
+        //            else
+        //                tempFilteredGroup = tempGroup;
+        //            groupedDataset.push(tempFilteredGroup);
+        //            tempGroup = [];
+        //            tempGroup.push(dataset[x]);
+        //            groupedDataset.push(tempGroup);
+        //            tempGroup = [];
+        //            break;
+        //        }
+        //    }
+        //    if (this.shouldBeGrouped(dataset[x - 1], dataset[x], groupRequests))
+        //        tempGroup.push(dataset[x - 1]);
+        //    else {
+        //        tempGroup.push(dataset[x - 1]);
+        //        if (this.isExtraSortingNeeded(query))
+        //            tempFilteredGroup = this.queryOrder(query, tempGroup, true);
+        //        else
+        //            tempFilteredGroup = tempGroup;
+        //        groupedDataset.push(tempFilteredGroup);
+        //        tempGroup = [];
+        //
+        //    }
+        //
+        //}
         return groupedDataset;
 
     }
@@ -696,20 +742,20 @@ export default class QueryController {
         let fixedArray:any = [];
         var resultToBeRendered:any;
         var filteredData:any;
-        let initialOrdering:any;
+     //   let initialOrdering:any;
 
         if (Object.keys(query.WHERE).length != 0) {
             completedWhereQuery = this.queryWhere(query.WHERE, query.GET, queryResult, false, dataset1, dataset2);
             if (this.isExtraSortingNeeded(query)) {
-                initialOrdering = this.queryOrder(query, completedWhereQuery, false);
-                completedGroupQuery = this.queryGroup(query.GROUP, initialOrdering, query);
+       //         initialOrdering = this.queryOrder(query, completedWhereQuery, false);
+                completedGroupQuery = this.queryGroup(query.GROUP, completedWhereQuery, query);
             }
             else
                 completedGroupQuery = this.queryGroup(query.GROUP, completedWhereQuery, query);
         } else {
             if (this.isExtraSortingNeeded(query)){
-                initialOrdering = this.queryOrder(query, queryResult, false);
-                completedGroupQuery = this.queryGroup(query.GROUP, initialOrdering, query);
+          //      initialOrdering = this.queryOrder(query, queryResult, false);
+                completedGroupQuery = this.queryGroup(query.GROUP, queryResult, query);
             } else
                 completedGroupQuery = this.queryGroup(query.GROUP, queryResult, query);
         }
