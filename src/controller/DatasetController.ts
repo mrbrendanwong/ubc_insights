@@ -8,6 +8,9 @@ import {relative} from "path";
 //import resolve = require("resolve");
 var fs = require("fs");
 var path = require("path");
+import parse5 = require('parse5');
+let document: parse5.ASTNode;
+let adapter: parse5.TreeAdapter = parse5.treeAdapters.default;
 /**
  * In memory representation of all datasets.
  */
@@ -43,6 +46,12 @@ export default class DatasetController {
                     }
                     else
                         return null;
+                case 'rooms':
+                    if (fs.existsSync('data/' + id + ".json")) {
+                        return this.datasets[id];
+                    }
+                    else
+                        return null;
                 default:
                     break;
             }
@@ -60,8 +69,11 @@ export default class DatasetController {
                 for (var i = 0; i < fileArray.length; i++) {
                     if (fileArray[i].includes("json")) {
                         if (fileArray[i] == "courses.json") {
-                            console.log("Loading time");
+                            console.log("Loading courses");
                             this.datasets["courses"] = fs.readFileSync('data/courses.json', 'utf8');
+                        } else if (fileArray[i] == "rooms.json") {
+                            console.log("Loading rooms");
+                            this.datasets["rooms"] = fs.readFileSync('data/rooms.json', 'utf8');
                         }
                         console.log("Found one!" + this.datasets);
                         return this.datasets;
@@ -110,10 +122,12 @@ export default class DatasetController {
                     // for future reference if (id == "courses") then do this for loop
                     var i = 0;
                     var fileCount:number = 0;
+
+                    // TODO: Have it read the index.htm file, then read only the html files that correspond to buildings in index.htm
                     zip.folder(id).forEach(function (relativePath, file) {
                         // check for dir
                         if (!file.dir) {
-                            if (id == 'courses') {
+                            if (id == 'courses' || id == 'rooms') {
                                 fileCount++;
                             }
                             else {
