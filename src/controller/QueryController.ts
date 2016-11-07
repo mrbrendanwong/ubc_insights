@@ -707,7 +707,6 @@ export default class QueryController {
         let emptyApplyQuery:any = [];
         var resultToBeRendered:any;
         var filteredData:any;
-        let initialOrdering:any;
 
         if (Object.keys(query.WHERE).length != 0) {
             completedWhereQuery = this.queryWhere(query.WHERE, query.GET, queryResult, false, dataset1, dataset2);
