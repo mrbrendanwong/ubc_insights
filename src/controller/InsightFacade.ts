@@ -138,43 +138,9 @@ export default class InsightFacade implements IInsightFacade {
                     let getInvalidKeys = that.findInvalidKeys(invalidIDs, getKeys, applyKeys, qController);
                     invalidIDs = qController.noDuplicateConcat(getInvalidKeys, invalidIDs);
 
-                    // for (var i = 0; i < getKeys.length; i++) {
-                    //     var getKey: string = getKeys[i];
-                    //     var getKeyID: string;
-                    //
-                    //     // If get key is a part of a PUT resource (eg. courses_avg from courses.json),
-                    //     // extract resource ID. Otherwise, it is a defined resource from APPLY (coursesAverage)
-                    //     if (getKey.indexOf('_') != -1)
-                    //         getKeyID = getKey.split('_')[0];
-                    //     else
-                    //         getKeyID = getKey;
-                    //
-                    //     if (that.isValidResourceID(getKeyID))
-                    //         continue;
-                    //     else if (that.isValidDefinedID(getKeyID, applyKeys))
-                    //         continue;
-                    //     else
-                    //         invalidIDs = qController.noDuplicatePush(getKeyID, invalidIDs);
-                    // }
-
                     // Check if WHERE keys are valid
                     let whereInvalidKeys = that.findInvalidKeys(invalidIDs, whereKeys, applyKeys, qController);
                     invalidIDs = qController.noDuplicateConcat(whereInvalidKeys, invalidIDs);
-
-                    // for (var i = 0; i <whereKeys.length; i++) {
-                    //     var whereKey: string = whereKeys[i];
-                    //     var whereKeyID: string;
-                    //
-                    //     if (whereKey.indexOf('_') != -1)
-                    //         whereKeyID = whereKey.split('_')[0];
-                    //     else
-                    //         whereKeyID = whereKey;
-                    //
-                    //     if (that.isValidResourceID(whereKeyID))
-                    //         continue;
-                    //     else
-                    //         invalidIDs = qController.noDuplicatePush(whereKeyID, invalidIDs);
-                    // }
 
                     // Do we have any missing resources?
                     if (invalidIDs.length > 0)
