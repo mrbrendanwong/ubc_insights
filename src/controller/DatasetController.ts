@@ -127,7 +127,7 @@ export default class DatasetController {
                     zip.folder(id).forEach(function (relativePath, file) {
                         // check for dir
                         if (!file.dir) {
-                            if (id == 'courses' || id == 'rooms') {
+                            if (id == 'courses') {
                                 fileCount++;
                             }
                             else {
