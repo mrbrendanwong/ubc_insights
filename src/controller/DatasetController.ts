@@ -9,6 +9,7 @@ import {relative} from "path";
 var fs = require("fs");
 var path = require("path");
 import parse5 = require('parse5');
+import {zebra} from "colors";
 let document: parse5.ASTNode;
 let adapter: parse5.TreeAdapter = parse5.treeAdapters.default;
 /**
@@ -123,33 +124,59 @@ export default class DatasetController {
                     var i = 0;
                     var fileCount:number = 0;
 
-                    // TODO: Have it read the index.htm file, then read only the html files that correspond to buildings in index.htm
-                    zip.folder(id).forEach(function (relativePath, file) {
-                        // check for dir
-                        if (!file.dir) {
-                            if (id == 'courses' || id == 'rooms') {
-                                fileCount++;
-                            }
-                            else {
-                                fulfill(false);
-                            }
-                            file.async("string").then(function success(contents) {
-                                if (id == 'courses') {
-                                    var parsedData = JSON.parse(contents);
+                    switch(id){
+                        case 'courses':
+                            zip.folder(id).forEach(function (relativePath, file) {
+                                // check for dir
+                                if (!file.dir) {
+                                    fileCount++;
+                                    file.async("string").then(function success(contents) {
+                                        var parsedData = JSON.parse(contents);
 
-                                    if (parsedData.result.length != 0) {
-                                        processedDataset.courses.push(parsedData.result);
-                                    }
-                                    if (i == (fileCount - 1)) {
-                                        fulfill(true);
-                                        that.save(id, processedDataset);
-                                    }
-                                    i++;
+                                        if (parsedData.result.length != 0) {
+                                            processedDataset.courses.push(parsedData.result);
+                                        }
+                                        if (i == (fileCount - 1)) {
+                                            fulfill(true);
+                                            that.save(id, processedDataset);
+                                        }
+                                        i++;
+                                    });
                                 }
-
                             });
-                        }
-                    });
+                        case 'rooms':
+                            var validBuildings:any = [];
+                            zip.file("index.htm").async("string").then(function success(contents) {
+
+                                var document = parse5.parse(contents);
+                                var previousValue:any;
+                                function printNode(node: ASTNode) {
+                                    if (node.attrs) {
+                                        node.attrs.forEach(function (value: ASTAttribute) {
+                                            previousValue = value.value;
+                                        });
+                                    }
+
+                                    if (node.value && previousValue == 'views-field views-field-field-building-code') {
+                                        if (node.value.trim() != "Code" && node.value.trim() != "")
+                                            validBuildings.push(node.value.trim());
+                                    }
+
+                                    if (node.childNodes) {
+                                        node.childNodes.forEach(printNode);
+                                    }
+                                }
+                                printNode(document);
+                                that.parseValidBuildings(zip, validBuildings);
+                                fulfill(true);
+                                that.save(id, processedDataset);
+                            });
+                            break;
+                        default:
+                            fulfill(false);
+                    }
+                    // TODO: Have it read the index.htm file, then read only the html files that correspond to buildings in index.htm
+
 
                 }).catch(function (err:any) {
                     Log.trace('DatasetController::process(..) - unzip ERROR: ' + err.message);
@@ -161,6 +188,19 @@ export default class DatasetController {
             }
         });
     }
+
+    private parseValidBuildings(zip:JSZip, validBuildings:any):any {
+        let z:number = 0;
+        console.log(validBuildings.length);
+      for (var i = 0; i < validBuildings.length; i++){
+
+          zip.file('campus/discover/buildings-and-classrooms/' + validBuildings[i]).async("string").then(function success(contents) {
+              console.log('campus/discover/buildings-and-classrooms/' + validBuildings[z]);
+              z++;
+          });
+      }
+    }
+
 
     /**
      * Writes the processed dataset to disk as 'id.json'. The function should overwrite
@@ -179,9 +219,9 @@ export default class DatasetController {
             fs.writeFileSync('data/' + id + '.json', JSON.stringify(processedDataset.courses));
         }
 
-        // if (id == "rooms") {
-        //     fs.writeFileSync('data/' + id + '.json', JSON.stringify(processedDataset.rooms));
-        // }
+        if (id == "rooms") {
+            fs.writeFileSync('data/' + id + '.json', JSON.stringify(processedDataset.rooms));
+        }
 
         this.datasets[id] = processedDataset;
     }
