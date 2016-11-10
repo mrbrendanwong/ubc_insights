@@ -109,7 +109,6 @@ export default class DatasetController {
                     // switch to var
                     let processedDataset = {
                         courses: <Array<any>> [],
-                        rooms: <Array<any>> []
                     };
                     // TODO: iterate through files in zip (zip.files)
                     // The contents of the file will depend on the id provided. e.g.,
@@ -169,7 +168,7 @@ export default class DatasetController {
                                 }
                                 printNode(document);
                                 that.parseValidBuildings(zip, validBuildings).then(function(value) {
-                                    processedDataset.rooms.push(value);
+                                    processedDataset['rooms'] = value;
                                     fulfill(true);
                                     that.save(id, processedDataset);
                                 });
@@ -193,39 +192,48 @@ export default class DatasetController {
     }
 
     private parseValidBuildings(zip:JSZip, validBuildings:any):Promise<any> {
+        let outOfIdeasCounter:number = 0;
         let asyncIterationCounter:number = 0;
         let buildingInfoCounter:number = 0;
         let roomInfoCounter:number = 0;
         let parsedArray:any = [];
-        let iterationObject:any = {};
         let buildingInfoCollectionFlag:boolean = false;
         let roomInfoCollectionFlag:boolean = false;
-        console.log(validBuildings.length);
+        let currentBuilding:any = "";
+        let currentAddress:any = "";
+        let currentLink:any = "";
+        let currentCode:any = "";
         return new Promise(function(resolve) {
             for (var i = 0; i < validBuildings.length; i++) {
-                if (i == 1) {
-                    zip.file('campus/discover/buildings-and-classrooms/' + validBuildings[i]).async("string").then(function success(contents) {
-                        var document = parse5.parse(contents);
+                let iterationObject:any = {};
+                // parsedArray.push(iterationObject);
+                //if (i == 0) {
+                zip.file('campus/discover/buildings-and-classrooms/' + validBuildings[i]).async("string").then(function success(contents) {
+                    var document = parse5.parse(contents);
 
-                        function printNode(node:ASTNode) {
+                    function printNode(node:ASTNode) {
 
-                            if (node.attrs) {
-                                node.attrs.forEach(function (value:ASTAttribute) {
-                                    if (roomInfoCollectionFlag && value.name == "href") {
-                                        iterationObject['rooms_href'] = value.value.trim();
-                                    }
-                                    if (value.value.trim() == "building-info")
-                                        buildingInfoCollectionFlag = true;
-                                    else if (value.value.trim().indexOf("-room-") >= 0)
-                                        roomInfoCollectionFlag = true;
-                                });
-                            }
+                        if (node.attrs) {
+                            node.attrs.forEach(function (value:ASTAttribute) {
+                                if (value.name == "href" && value.value.trim().length < 5)
+                                    currentCode = value.value.trim();
+                                if (roomInfoCollectionFlag && value.name == "href") {
+                                    currentLink = value.value.trim();
+                                }
+                                if (value.value.trim() == "building-info")
+                                    buildingInfoCollectionFlag = true;
+                                else if (value.value.trim().indexOf("-room-") >= 0) {
+                                    roomInfoCollectionFlag = true;
+                                }
+                            });
+                        }
 
-                            if (node.value) {
+                        if (node.value) {
+                            if (node.value.trim() != "Room" && node.value.trim() != "Capacity" && node.value.trim() != "Furniture type" && node.value.trim() != "Room type") {
                                 if (buildingInfoCollectionFlag) {
                                     if (buildingInfoCounter < 2) {
                                         if (node.value.trim() != "") {
-                                            iterationObject[buildingInfoCounter == 0 ? 'rooms_fullname' : 'rooms_address'] = node.value.trim();
+                                            buildingInfoCounter == 0 ? (currentBuilding = node.value.trim()) : (currentAddress = node.value.trim());
                                             buildingInfoCounter++;
                                         }
                                     } else {
@@ -235,36 +243,47 @@ export default class DatasetController {
                                 } else if (roomInfoCollectionFlag) {
                                     if (roomInfoCounter < 4) {
                                         if (node.value.trim() != "") {
-                                            if (roomInfoCounter == 0)
-                                                iterationObject['rooms_number'] = node.value.trim();
+                                            if (roomInfoCounter == 0) {
+                                                parsedArray.push({
+                                                    rooms_fullname: currentBuilding,
+                                                    rooms_shortname: currentCode,
+                                                    rooms_address: currentAddress,
+                                                    rooms_href: currentLink
+                                                });
+                                                parsedArray[asyncIterationCounter]['rooms_number'] = node.value.trim();
+                                                parsedArray[asyncIterationCounter]['rooms_name'] = parsedArray[asyncIterationCounter]['rooms_shortname'] + " " + parsedArray[asyncIterationCounter]['rooms_number'];
+                                            }
                                             else if (roomInfoCounter == 1)
-                                                iterationObject['rooms_seats'] = parseInt(node.value.trim());
+                                                parsedArray[asyncIterationCounter]['rooms_seats'] = parseInt(node.value.trim());
                                             else if (roomInfoCounter == 2)
-                                                iterationObject['rooms_furniture'] = node.value.trim();
+                                                parsedArray[asyncIterationCounter]['rooms_furniture'] = node.value.trim();
                                             else if (roomInfoCounter == 3)
-                                                iterationObject['rooms_type'] = node.value.trim();
+                                                parsedArray[asyncIterationCounter]['rooms_type'] = node.value.trim();
                                             roomInfoCounter++;
                                         }
                                     } else {
+                                        if (roomInfoCounter == 4)
+                                            asyncIterationCounter++;
                                         roomInfoCounter = 0;
                                         roomInfoCollectionFlag = false;
                                     }
                                 }
                             }
-
-                            if (node.childNodes) {
-                                node.childNodes.forEach(printNode);
-                            }
                         }
 
-                        printNode(document);
-                        iterationObject['rooms_shortname'] = validBuildings[asyncIterationCounter];
-                        iterationObject['rooms_name'] = iterationObject['rooms_shortname'] + " " + iterationObject['rooms_number'];
-                        parsedArray.push(iterationObject);
-                        asyncIterationCounter++;
+                        if (node.childNodes) {
+                            node.childNodes.forEach(printNode);
+                        }
+                    }
+
+                    printNode(document);
+                    if (outOfIdeasCounter == validBuildings.length - 1) {
+                        console.log(parsedArray.length);
                         resolve(parsedArray);
-                    });
-                }
+                    }
+                    outOfIdeasCounter++;
+                });
+                //}
             }
         });
     }
@@ -325,7 +344,7 @@ export default class DatasetController {
                             // currentResult["courses_year"] = parsedCDB[x][z].Year unless section = overall
                             currentSearchArray.push(currentResult);
                         }
-                        break;,
+                        break;
                     default:
                         break;
                 }
