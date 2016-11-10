@@ -255,7 +255,6 @@ export default class QueryController {
 
     private processWhere(data:Array<any>, whereCondition:string, restriction:any, restrictionValue:any, notFlag:boolean = false, getRequests:any):any {
         let processedData:Array<any> = [];
-
         switch (whereCondition) {
             case 'GT':
                 if (notFlag) {
@@ -302,6 +301,7 @@ export default class QueryController {
             case 'IS':
                 if (notFlag) {
                     for (var i = 0; i < data.length; i++) {
+                        console.log(data[i]);
                         if ((restrictionValue.localeCompare(data[i][restriction].toLowerCase())) != 0)
                             processedData.push(data[i]);
                     }
@@ -329,7 +329,7 @@ export default class QueryController {
                         }
                     } else {
                         for (var i = 0; i < data.length; i++) {
-                            if (restrictionValue == (data[i][restriction].toLowerCase()))
+                            if (restrictionValue.toLowerCase() == (data[i][restriction].toLowerCase()))
                                 processedData.push(data[i]);
                         }
                     }
@@ -386,6 +386,47 @@ export default class QueryController {
                                 break;
                         }
                         break;
+                    case 'rooms':
+                        switch (dataID) {
+                            case 'fullname':
+                                currentResult["rooms_fullname"] = unfinishedDataset[x].rooms_fullname;
+                                break;
+                            case 'shortname':
+                                currentResult["rooms_shortname"] = unfinishedDataset[x].rooms_shortname;
+                                break;
+                            case 'number':
+                                currentResult["rooms_number"] = unfinishedDataset[x].rooms_number;
+                                break;
+                            case 'name':
+                                currentResult["rooms_name"] = unfinishedDataset[x].rooms_name;
+                                break;
+                            case 'address':
+                                currentResult["rooms_address"] = unfinishedDataset[x].rooms_address;
+                                break;
+                            //case 'lat':
+                            //    currentResult["rooms_lat"] = unfinishedDataset[x].rooms_lat;
+                            //    break;
+                            //case 'lon':
+                            //    currentResult["rooms_lon"] = unfinishedDataset[x].rooms_lons;
+                            //    break;
+                            case 'seats':
+                                currentResult["rooms_seats"] = unfinishedDataset[x].rooms_seats;
+                                break;
+                            case 'type':
+                                currentResult["rooms_type"] = unfinishedDataset[x].rooms_type;
+                                break;
+                            case 'furniture':
+                                currentResult["rooms_furniture"] = unfinishedDataset[x].rooms_furniture;
+                                break;
+                            case 'href':
+                                currzentResult["rooms_href"] = unfinishedDataset[x].rooms_href;
+                                break;
+                            default:
+                                console.log("Uh oh, you sent an invalid key");
+                                break;
+                        }
+                        break;
+
                     default:
                         break;
                 }
@@ -395,8 +436,8 @@ export default class QueryController {
         return finalizedArray;
     }
 
-// UP means lowest first
-// Down means highest first
+    // UP means lowest first
+    // Down means highest first
     private queryOrder(query: QueryRequest, unsortedData: Array<any>, originalSort: boolean): any {
         var orderKeys: any;
         var downDir: boolean = false;
@@ -450,7 +491,7 @@ export default class QueryController {
         return dataObject;
     }
 
-// TODO: Finish GROUP
+    // TODO: Finish GROUP
     private queryGroup(groupRequests:any, dataset:any):any {
 
         let groupedDataset:any = [];
@@ -492,7 +533,7 @@ export default class QueryController {
         return groupedDataset;
     }
 
-// Verifies if two course offerings should be grouped together
+    // Verifies if two course offerings should be grouped together
     private shouldBeGrouped(offering1:any, offering2:any, groupRequests:any):boolean {
         let groupWorthy:boolean = true;
         for (var x = 0; x < groupRequests.length; x++) {
@@ -502,7 +543,7 @@ export default class QueryController {
         return groupWorthy;
     }
 
-// TODO: Handle apply calls
+    // TODO: Handle apply calls
     private queryApply(query:any, applyRequests:any, groupRequests:any, groupedDataset:any):any {
         // Go through each set of applications
         let appliedDataset:any = [];
@@ -684,7 +725,6 @@ export default class QueryController {
         let dataset2:Array<any> = [];
         var resultToBeRendered:any;
         var filteredData:any;
-
         if (query.WHERE) {
             completedWhereQuery = this.queryWhere(query.WHERE, query.GET, queryResult, false, dataset1, dataset2);
             filteredData = this.filterByGET(completedWhereQuery, query.GET);
@@ -693,7 +733,7 @@ export default class QueryController {
 
         completedOrderQuery = this.queryOrder(query, filteredData, false);
         resultToBeRendered = this.queryAs(query, completedOrderQuery);
-
+        console.log(JSON.stringify(resultToBeRendered));
         return resultToBeRendered;
     }
 

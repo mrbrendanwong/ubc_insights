@@ -76,11 +76,11 @@ export default class DatasetController {
                             console.log("Loading rooms");
                             this.datasets["rooms"] = fs.readFileSync('data/rooms.json', 'utf8');
                         }
-                        console.log("Found one!" + this.datasets);
-                        return this.datasets;
                     }
                 }
-                return null;
+                console.log("Found one!" + this.datasets);
+                return this.datasets;
+              //  return null;
             }
             else {
                 return null;
@@ -314,6 +314,7 @@ export default class DatasetController {
     }
 
     public queryDataset(queryIDs:any) : Array<any> {
+
         this.getDatasets();
         let mainID:any;
         let coursesDataset:any;
@@ -345,6 +346,8 @@ export default class DatasetController {
                             currentSearchArray.push(currentResult);
                         }
                         break;
+                    case 'rooms':
+                        return parsedCDB;
                     default:
                         break;
                 }
