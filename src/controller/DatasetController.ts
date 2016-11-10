@@ -124,7 +124,6 @@ export default class DatasetController {
                     // for future reference if (id == "courses") then do this for loop
                     var i = 0;
                     var fileCount:number = 0;
-
                     switch(id){
                         case 'courses':
                             zip.folder(id).forEach(function (relativePath, file) {
@@ -145,10 +144,10 @@ export default class DatasetController {
                                     });
                                 }
                             });
+                            break;
                         case 'rooms':
                             var validBuildings:any = [];
                             zip.file("index.htm").async("string").then(function success(contents) {
-
                                 var document = parse5.parse(contents);
                                 var previousValue:any;
                                 function printNode(node: ASTNode) {
