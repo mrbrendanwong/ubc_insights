@@ -726,9 +726,11 @@ export default class QueryController {
         // TODO: implement this (where we handle get, where, etc.)
         let queryResult:Array<any>;
         let controller = QueryController.datasetController;
-        let testLatLon = controller.getLatLon('1961 East Mall V6T 1Z1');
-        console.log("This is " + testLatLon);
-        // For the get query
+
+        controller.getLatLon('1961 East Mall V6T 1Z1').then(function success(contents) {
+            console.log('Here are contents ' + contents);
+        });
+
         if (query.GET) {
             // #D1 support
             queryResult = controller.queryDataset(query.GET);

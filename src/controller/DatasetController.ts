@@ -11,6 +11,7 @@ var path = require("path");
 import parse5 = require('parse5');
 import {ASTNode} from "parse5";
 import http = require('http');
+import {bodyParser} from "restify";
 let document: parse5.ASTNode;
 let adapter: parse5.TreeAdapter = parse5.treeAdapters.default;
 
@@ -170,7 +171,7 @@ export default class DatasetController {
     // http://stackoverflow.com/questions/6968448/where-is-body-in-a-nodejs-http-get-response
     // https://nodejs.org/api/http.html
     // NOTE TO SPENCER: Dunno if I'm doing this right lol
-    public getLatLon(buildingAddress: any): any {
+    public getLatLon(buildingAddress: any): Promise<any> {
         let escapedAddress = buildingAddress.replace(/ /g, '%20');
         let path = '/api/v1/team16/' +  escapedAddress;
         let options = {
@@ -179,21 +180,20 @@ export default class DatasetController {
             path: path,
         };
 
-        let latLon = http.get(options, function(res) {
-            var body = '';
-            res.on('data', function(chunk: any) {
-                body += chunk;
+        return new Promise(function (resolve) {
+            http.get(options, function(res) {
+                var body = '';
+                res.on('data', function(chunk: any) {
+                    body += chunk;
+                });
+                res.on('end', function() {
+                    console.log(body);
+                    resolve(body);
+                });
+            }).on('error', function(e: any) {
+                console.log("Got error: " + e.message);
             });
-            res.on('end', function() {
-                console.log(body);
-            });
-        }).on('error', function(e: any) {
-            console.log("Got error: " + e.message);
         });
-
-        // let latLongRequest: string = 'http://skaha.cs.ubc.ca:8022/api/v1/team16/'+  buildingAddress;
-
-        return latLon;
     }
 
     /**
