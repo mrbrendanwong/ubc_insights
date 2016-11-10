@@ -8,10 +8,10 @@ import {relative} from "path";
 //import resolve = require("resolve");
 var fs = require("fs");
 var path = require("path");
-import parse5 = require('parse5');
-import {zebra} from "colors";
-let document: parse5.ASTNode;
-let adapter: parse5.TreeAdapter = parse5.treeAdapters.default;
+var parse5 = require('parse5');
+import { ASTNode as ASTNode } from "parse5";
+import { ASTAttribute as ASTAttribute } from "parse5";
+
 /**
  * In memory representation of all datasets.
  */
@@ -109,6 +109,7 @@ export default class DatasetController {
                     // switch to var
                     let processedDataset = {
                         courses: <Array<any>> [],
+                        rooms: <Array<any>> []
                     };
                     // TODO: iterate through files in zip (zip.files)
                     // The contents of the file will depend on the id provided. e.g.,
