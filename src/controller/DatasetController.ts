@@ -9,8 +9,11 @@ import {relative} from "path";
 var fs = require("fs");
 var path = require("path");
 import parse5 = require('parse5');
+import {ASTNode} from "parse5";
+import http = require('http');
 let document: parse5.ASTNode;
 let adapter: parse5.TreeAdapter = parse5.treeAdapters.default;
+
 /**
  * In memory representation of all datasets.
  */
@@ -145,6 +148,8 @@ export default class DatasetController {
                                         that.save(id, processedDataset);
                                     }
                                     i++;
+                                } else if (id == 'rooms') {
+                                    var parsedData = this.parseHtml(contents);
                                 }
 
                             });
@@ -162,6 +167,35 @@ export default class DatasetController {
         });
     }
 
+    // http://stackoverflow.com/questions/6968448/where-is-body-in-a-nodejs-http-get-response
+    // https://nodejs.org/api/http.html
+    // NOTE TO SPENCER: Dunno if I'm doing this right lol
+    public getLatLon(buildingAddress: any): any {
+        let escapedAddress = buildingAddress.replace(/ /g, '%20');
+        let path = '/api/v1/team16/' +  escapedAddress;
+        let options = {
+            host: 'skaha.cs.ubc.ca',
+            port: 8022,
+            path: path,
+        };
+
+        let latLon = http.get(options, function(res) {
+            var body = '';
+            res.on('data', function(chunk: any) {
+                body += chunk;
+            });
+            res.on('end', function() {
+                console.log(body);
+            });
+        }).on('error', function(e: any) {
+            console.log("Got error: " + e.message);
+        });
+
+        // let latLongRequest: string = 'http://skaha.cs.ubc.ca:8022/api/v1/team16/'+  buildingAddress;
+
+        return latLon;
+    }
+
     /**
      * Writes the processed dataset to disk as 'id.json'. The function should overwrite
      * any existing dataset with the same name.
@@ -177,11 +211,9 @@ export default class DatasetController {
         }
         if (id == "courses") {
             fs.writeFileSync('data/' + id + '.json', JSON.stringify(processedDataset.courses));
+        } else if (id == "rooms") {
+            fs.writeFileSync('data/' + id + '.json', JSON.stringify(processedDataset.rooms));
         }
-
-        // if (id == "rooms") {
-        //     fs.writeFileSync('data/' + id + '.json', JSON.stringify(processedDataset.rooms));
-        // }
 
         this.datasets[id] = processedDataset;
     }
@@ -193,7 +225,7 @@ export default class DatasetController {
         let parsedCDB:any;
         for (var i = 0; i < queryIDs.length; i++) {
             if (queryIDs[i].indexOf("_") >= 0){
-                mainID = queryIDs[i     ].split("_")[0];
+                mainID = queryIDs[i].split("_")[0];
                 coursesDataset = this.getDataset(mainID);
                 parsedCDB = JSON.parse(coursesDataset);
             }

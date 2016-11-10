@@ -94,9 +94,7 @@ export default class QueryController {
             }
         }
 
-        // As per piazza, this causes Hades to fail
-        //
-        //// Check if all keys in group are in GET
+        // Check if all keys in group are in GET
         for (var q = 0; q < query.GET.length; q++) {
             matchFlag = false;
             if (query.GET[q].indexOf("_") >= 0) {
@@ -395,8 +393,7 @@ export default class QueryController {
         return finalizedArray;
     }
 
-// UP means lowest first
-// Down means highest first
+// UP means lowest first, DOWN means highest first
     private queryOrder(query: QueryRequest, unsortedData: Array<any>, originalSort: boolean): any {
         var orderKeys: any;
         var downDir: boolean = false;
@@ -450,7 +447,6 @@ export default class QueryController {
         return dataObject;
     }
 
-// TODO: Finish GROUP
     private queryGroup(groupRequests:any, dataset:any):any {
 
         let groupedDataset:any = [];
@@ -502,7 +498,6 @@ export default class QueryController {
         return groupWorthy;
     }
 
-// TODO: Handle apply calls
     private queryApply(query:any, applyRequests:any, groupRequests:any, groupedDataset:any):any {
         // Go through each set of applications
         let appliedDataset:any = [];
@@ -731,6 +726,8 @@ export default class QueryController {
         // TODO: implement this (where we handle get, where, etc.)
         let queryResult:Array<any>;
         let controller = QueryController.datasetController;
+        let testLatLon = controller.getLatLon('1961 East Mall V6T 1Z1');
+        console.log("This is " + testLatLon);
         // For the get query
         if (query.GET) {
             // #D1 support
