@@ -194,7 +194,9 @@ export default class DatasetController {
     }
 
     private parseValidBuildings(zip:JSZip, validBuildings:any):Promise<any> {
+        let that = this;
         let outOfIdeasCounter:number = 0;
+        let latLonCounter:number = 0;
         let asyncIterationCounter:number = 0;
         let buildingInfoCounter:number = 0;
         let roomInfoCounter:number = 0;
@@ -252,6 +254,13 @@ export default class DatasetController {
                                                     rooms_address: currentAddress,
                                                     rooms_href: currentLink
                                                 });
+                                                that.getLatLon(currentAddress).then(function success(contents) {
+                                                    parsedArray[latLonCounter]['rooms_lat'] = contents.lat;
+                                                    parsedArray[latLonCounter]['rooms_lon'] = contents.lon;
+                                                    if (latLonCounter == parsedArray.length -1)
+                                                        resolve(parsedArray);
+                                                    latLonCounter++;
+                                                });
                                                 parsedArray[asyncIterationCounter]['rooms_number'] = node.value.trim();
                                                 parsedArray[asyncIterationCounter]['rooms_name'] = parsedArray[asyncIterationCounter]['rooms_shortname'] + " " + parsedArray[asyncIterationCounter]['rooms_number'];
                                             }
@@ -279,10 +288,10 @@ export default class DatasetController {
                     }
 
                     printNode(document);
-                    if (outOfIdeasCounter == validBuildings.length - 1) {
-                        console.log(parsedArray.length);
-                        resolve(parsedArray);
-                    }
+                    //if (outOfIdeasCounter == validBuildings.length - 1) {
+                    //    console.log(parsedArray.length);
+                    //    resolve(parsedArray);
+                    //}
                     outOfIdeasCounter++;
                 });
                 //}
@@ -294,7 +303,7 @@ export default class DatasetController {
     // https://nodejs.org/api/http.html
     // NOTE TO SPENCER: Dunno if I'm doing this right lol
     public getLatLon(buildingAddress: any): Promise<any> {
-        let escapedAddress = buildingAddress.replace(/ /g, '%20');
+        let escapedAddress = encodeURIComponent(buildingAddress);
         let path = '/api/v1/team16/' +  escapedAddress;
         let options = {
             host: 'skaha.cs.ubc.ca',
@@ -309,8 +318,7 @@ export default class DatasetController {
                     body += chunk;
                 });
                 res.on('end', function() {
-                    console.log(body);
-                    resolve(body);
+                    resolve(JSON.parse(body));
                 });
             }).on('error', function(e: any) {
                 console.log("Got error: " + e.message);

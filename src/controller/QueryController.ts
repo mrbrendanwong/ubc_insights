@@ -307,21 +307,21 @@ export default class QueryController {
                     if (restrictionValue[restrictionValue.length - 1] == "*" && restrictionValue[0] != "*") {
                         restrictionValue = restrictionValue.replace(/\*/g, '');
                         for (var i = 0; i < data.length; i++) {
-                            if ((data[i][restriction].toLowerCase()).startsWith(restrictionValue)) {
+                            if ((data[i][restriction].toLowerCase()).startsWith(restrictionValue.toLowerCase())) {
                                 processedData.push(data[i]);
                             }
                         }
                     } else if (restrictionValue[0] == "*" && restrictionValue[restrictionValue.length - 1] != "*") {
                         restrictionValue = restrictionValue.replace(/\*/g, '');
                         for (var i = 0; i < data.length; i++) {
-                            if ((data[i][restriction].toLowerCase()).endsWith(restrictionValue)) {
+                            if ((data[i][restriction].toLowerCase()).endsWith(restrictionValue.toLowerCase())) {
                                 processedData.push(data[i]);
                             }
                         }
                     } else if (restrictionValue[0] == "*" && restrictionValue[restrictionValue.length - 1] == "*") {
                         restrictionValue = restrictionValue.replace(/\*/g, '');
                         for (var i = 0; i < data.length; i++) {
-                            if ((data[i][restriction].toLowerCase()).indexOf(restrictionValue) >= 0) {
+                            if ((data[i][restriction].toLowerCase()).indexOf(restrictionValue.toLowerCase()) >= 0) {
                                 processedData.push(data[i]);
                             }
                         }
@@ -417,7 +417,7 @@ export default class QueryController {
                                 currentResult["rooms_furniture"] = unfinishedDataset[x].rooms_furniture;
                                 break;
                             case 'href':
-                                curentResult["rooms_href"] = unfinishedDataset[x].rooms_href;
+                                currentResult["rooms_href"] = unfinishedDataset[x].rooms_href;
                                 break;
                             default:
                                 console.log("Uh oh, you sent an invalid key");
@@ -730,7 +730,6 @@ export default class QueryController {
 
         completedOrderQuery = this.queryOrder(query, filteredData, false);
         resultToBeRendered = this.queryAs(query, completedOrderQuery);
-        console.log(JSON.stringify(resultToBeRendered));
         return resultToBeRendered;
     }
 
@@ -769,9 +768,7 @@ export default class QueryController {
         let queryResult:Array<any>;
         let controller = QueryController.datasetController;
 
-        controller.getLatLon('1961 East Mall V6T 1Z1').then(function success(contents) {
-            console.log('Here are contents ' + contents);
-        });
+
 
         if (query.GET) {
             // #D1 support
