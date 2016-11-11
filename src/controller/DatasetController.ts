@@ -262,7 +262,7 @@ export default class DatasetController {
                                                     latLonCounter++;
                                                 });
                                                 parsedArray[asyncIterationCounter]['rooms_number'] = node.value.trim();
-                                                parsedArray[asyncIterationCounter]['rooms_name'] = parsedArray[asyncIterationCounter]['rooms_shortname'] + " " + parsedArray[asyncIterationCounter]['rooms_number'];
+                                                parsedArray[asyncIterationCounter]['rooms_name'] = currentCode + " " + node.value.trim();
                                             }
                                             else if (roomInfoCounter == 1)
                                                 parsedArray[asyncIterationCounter]['rooms_seats'] = parseInt(node.value.trim());
@@ -375,7 +375,10 @@ export default class DatasetController {
                             currentResult["courses_fail"] = parsedCDB[x][z].Fail;
                             currentResult["courses_audit"] = parsedCDB[x][z].Audit;
                             currentResult["courses_uuid"] = parsedCDB[x][z].id;
-                            // currentResult["courses_year"] = parsedCDB[x][z].Year unless section = overall
+                            if (parsedCDB[x][z].Section == 'overall') {
+                                currentResult["courses_year"] = 1900;
+                            }
+                            currentResult["courses_year"] = Number(parsedCDB[x][z].Year);
                             currentSearchArray.push(currentResult);
                         }
                         break;
