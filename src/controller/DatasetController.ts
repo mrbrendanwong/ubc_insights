@@ -262,7 +262,7 @@ export default class DatasetController {
                                                     latLonCounter++;
                                                 });
                                                 parsedArray[asyncIterationCounter]['rooms_number'] = node.value.trim();
-                                                parsedArray[asyncIterationCounter]['rooms_name'] = currentCode + " " + node.value.trim();
+                                                parsedArray[asyncIterationCounter]['rooms_name'] = currentCode + "_" + node.value.trim();
                                             }
                                             else if (roomInfoCounter == 1)
                                                 parsedArray[asyncIterationCounter]['rooms_seats'] = parseInt(node.value.trim());
