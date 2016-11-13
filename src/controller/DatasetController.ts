@@ -196,9 +196,9 @@ export default class DatasetController {
     }
 
     private addLatLons(parsedRooms:any):Promise<any>{
-       that = this;
-        let latLonCounter = 0;
-        let uniqueAddresses = {};
+        let that = this;
+        let latLonCounter:number = 0;
+        let uniqueAddresses:any = {};
         return new Promise(function(resolve) {
             for (var i = 0; i < parsedRooms.length; i++) {
                 if (uniqueAddresses[parsedRooms[i]['rooms_address']] !== undefined)
@@ -307,7 +307,6 @@ export default class DatasetController {
 
                     printNode(document);
                     if (outOfIdeasCounter == validBuildings.length - 1) {
-                        console.log(parsedArray.length);
                         resolve(parsedArray);
                     }
                     outOfIdeasCounter++;

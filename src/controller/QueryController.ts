@@ -728,7 +728,6 @@ export default class QueryController {
 
         completedOrderQuery = this.queryOrder(query, filteredData, false);
         resultToBeRendered = this.queryAs(query, completedOrderQuery);
-        console.log(JSON.stringify(resultToBeRendered));
         return resultToBeRendered;
     }
 
@@ -758,7 +757,6 @@ export default class QueryController {
             completedOrderQuery = this.queryOrder(query, filteredData, false);
         }
         resultToBeRendered = this.queryAs(query, completedOrderQuery);
-        console.log(JSON.stringify(resultToBeRendered));
         return resultToBeRendered;
     }
 

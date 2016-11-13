@@ -348,75 +348,75 @@ describe("InsightFacade", function () {
             expect.fail("Should not occur");
         })
     });
-
-    it("Should match the first sample D3 query", function() {
-        var that = this;
-        let query: QueryRequest = {
-            "GET": ["rooms_fullname", "rooms_number"],
-            "WHERE": {"IS": {"rooms_shortname": "DMP"}},
-            "ORDER": {"dir": "UP", "keys": ["rooms_number"]},
-            "AS": "TABLE"
-        };
-        let expectation:any = { render: 'TABLE',
-            result:
-                [ { rooms_fullname: 'Hugh Dempster Pavilion',
-                    rooms_number: '101' },
-                    { rooms_fullname: 'Hugh Dempster Pavilion',
-                        rooms_number: '110' },
-                    { rooms_fullname: 'Hugh Dempster Pavilion',
-                        rooms_number: '201' },
-                    { rooms_fullname: 'Hugh Dempster Pavilion',
-                        rooms_number: '301' },
-                    { rooms_fullname: 'Hugh Dempster Pavilion',
-                        rooms_number: '310' } ] };
-        return facade.performQuery(query).then(function (response:InsightResponse) {
-            expect(response.body).to.deep.equal(expectation);
-        }).catch(function (response) {
-            expect.fail("Should not occur");
-        })
-    });
-
-    it("Should match the third sample D3 query", function() {
-        var that = this;
-        let query: QueryRequest =  {
-            "GET": ["rooms_fullname", "rooms_number", "rooms_seats"],
-            "WHERE": {"AND": [
-                {"GT": {"rooms_lat": 49.261292}},
-                {"LT": {"rooms_lon": -123.245214}},
-                {"LT": {"rooms_lat": 49.262966}},
-                {"GT": {"rooms_lon": -123.249886}},
-                {"IS": {"rooms_furniture": "*Movable Tables*"}}
-            ]},
-            "ORDER": { "dir": "UP", "keys": ["rooms_number"]},
-            "AS": "TABLE"
-        };
-        let expectation:any = { render: 'TABLE',
-                result:
-                    [ { rooms_fullname: 'Chemical and Biological Engineering Building',
-                        rooms_number: '103',
-                        rooms_seats: 60 },
-                        { rooms_fullname: 'Civil and Mechanical Engineering',
-                            rooms_number: '1206',
-                            rooms_seats: 26 },
-                        { rooms_fullname: 'Civil and Mechanical Engineering',
-                            rooms_number: '1210',
-                            rooms_seats: 22 },
-                        { rooms_fullname: 'MacLeod',
-                            rooms_number: '214',
-                            rooms_seats: 60 },
-                        { rooms_fullname: 'MacLeod',
-                            rooms_number: '220',
-                            rooms_seats: 40 },
-                        { rooms_fullname: 'MacLeod',
-                            rooms_number: '242',
-                            rooms_seats: 60 },
-                        { rooms_fullname: 'MacLeod',
-                            rooms_number: '254',
-                            rooms_seats: 84 } ] };
-        return facade.performQuery(query).then(function (response:InsightResponse) {
-            expect(response.body).to.deep.equal(expectation);
-        }).catch(function (response) {
-            expect.fail("Should not occur");
-        })
-    });
+    //
+    //it("Should match the first sample D3 query", function() {
+    //    var that = this;
+    //    let query: QueryRequest = {
+    //        "GET": ["rooms_fullname", "rooms_number"],
+    //        "WHERE": {"IS": {"rooms_shortname": "DMP"}},
+    //        "ORDER": {"dir": "UP", "keys": ["rooms_number"]},
+    //        "AS": "TABLE"
+    //    };
+    //    let expectation:any = { render: 'TABLE',
+    //        result:
+    //            [ { rooms_fullname: 'Hugh Dempster Pavilion',
+    //                rooms_number: '101' },
+    //                { rooms_fullname: 'Hugh Dempster Pavilion',
+    //                    rooms_number: '110' },
+    //                { rooms_fullname: 'Hugh Dempster Pavilion',
+    //                    rooms_number: '201' },
+    //                { rooms_fullname: 'Hugh Dempster Pavilion',
+    //                    rooms_number: '301' },
+    //                { rooms_fullname: 'Hugh Dempster Pavilion',
+    //                    rooms_number: '310' } ] };
+    //    return facade.performQuery(query).then(function (response:InsightResponse) {
+    //        expect(response.body).to.deep.equal(expectation);
+    //    }).catch(function (response) {
+    //        expect.fail("Should not occur");
+    //    })
+    //});
+    //
+    //it("Should match the third sample D3 query", function() {
+    //    var that = this;
+    //    let query: QueryRequest =  {
+    //        "GET": ["rooms_fullname", "rooms_number", "rooms_seats"],
+    //        "WHERE": {"AND": [
+    //            {"GT": {"rooms_lat": 49.261292}},
+    //            {"LT": {"rooms_lon": -123.245214}},
+    //            {"LT": {"rooms_lat": 49.262966}},
+    //            {"GT": {"rooms_lon": -123.249886}},
+    //            {"IS": {"rooms_furniture": "*Movable Tables*"}}
+    //        ]},
+    //        "ORDER": { "dir": "UP", "keys": ["rooms_number"]},
+    //        "AS": "TABLE"
+    //    };
+    //    let expectation:any = { render: 'TABLE',
+    //            result:
+    //                [ { rooms_fullname: 'Chemical and Biological Engineering Building',
+    //                    rooms_number: '103',
+    //                    rooms_seats: 60 },
+    //                    { rooms_fullname: 'Civil and Mechanical Engineering',
+    //                        rooms_number: '1206',
+    //                        rooms_seats: 26 },
+    //                    { rooms_fullname: 'Civil and Mechanical Engineering',
+    //                        rooms_number: '1210',
+    //                        rooms_seats: 22 },
+    //                    { rooms_fullname: 'MacLeod',
+    //                        rooms_number: '214',
+    //                        rooms_seats: 60 },
+    //                    { rooms_fullname: 'MacLeod',
+    //                        rooms_number: '220',
+    //                        rooms_seats: 40 },
+    //                    { rooms_fullname: 'MacLeod',
+    //                        rooms_number: '242',
+    //                        rooms_seats: 60 },
+    //                    { rooms_fullname: 'MacLeod',
+    //                        rooms_number: '254',
+    //                        rooms_seats: 84 } ] };
+    //    return facade.performQuery(query).then(function (response:InsightResponse) {
+    //        expect(response.body).to.deep.equal(expectation);
+    //    }).catch(function (response) {
+    //        expect.fail("Should not occur");
+    //    })
+    //});
 });
