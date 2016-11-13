@@ -32,7 +32,7 @@ describe("InsightFacade", function () {
         facade = new InsightFacade();
     });
 
-    it("Should be able to add a add a new dataset (204)", function () {
+    it("Should be able to add a new courses dataset (204)", function () {
         var that = this;
         Log.trace("Starting test: " + that.test.title);
         return facade.addDataset('courses', zipFileContents).then(function (response:InsightResponse) {
@@ -42,10 +42,30 @@ describe("InsightFacade", function () {
         });
     });
 
-    it("Should be able to update an existing dataset (201)", function () {
+    it("Should be able to add a new rooms dataset (204)", function () {
+        var that = this;
+        Log.trace("Starting test: " + that.test.title);
+        return facade.addDataset('rooms', zipFileContents).then(function (response:InsightResponse) {
+            expect(response.code).to.equal(204);
+        }).catch(function (response:InsightResponse) {
+            expect.fail('Should not happen');
+        });
+    });
+
+    it("Should be able to update an existing courses dataset (201)", function () {
         var that = this;
         Log.trace("Starting test: " + that.test.title);
         return facade.addDataset('courses', zipFileContents).then(function (response:InsightResponse) {
+            expect(response.code).to.equal(201);
+        }).catch(function (response:InsightResponse) {
+            expect.fail('Should not happen');
+        });
+    });
+
+    it("Should be able to update an existing rooms dataset (201)", function () {
+        var that = this;
+        Log.trace("Starting test: " + that.test.title);
+        return facade.addDataset('rooms', zipFileContents).then(function (response:InsightResponse) {
             expect(response.code).to.equal(201);
         }).catch(function (response:InsightResponse) {
             expect.fail('Should not happen');
@@ -322,6 +342,77 @@ describe("InsightFacade", function () {
             "AS":"TABLE"
         };
         let expectation:any = {"render":"TABLE","result":[{"courses_dept":"cpsc","courses_id":"589","numSection":14,"averageGrade":85.82,"countPass":4,"averageFail":0},{"courses_dept":"cpsc","courses_id":"547","numSection":2,"averageGrade":88.47,"countPass":1,"averageFail":0},{"courses_dept":"cpsc","courses_id":"544","numSection":12,"averageGrade":84.25,"countPass":4,"averageFail":0},{"courses_dept":"cpsc","courses_id":"543","numSection":8,"averageGrade":87.32,"countPass":3,"averageFail":0},{"courses_dept":"cpsc","courses_id":"540","numSection":10,"averageGrade":86.46,"countPass":5,"averageFail":0},{"courses_dept":"cpsc","courses_id":"527","numSection":2,"averageGrade":83.78,"countPass":1,"averageFail":0},{"courses_dept":"cpsc","courses_id":"522","numSection":6,"averageGrade":85.75,"countPass":3,"averageFail":0},{"courses_dept":"cpsc","courses_id":"521","numSection":10,"averageGrade":84.86,"countPass":5,"averageFail":0},{"courses_dept":"cpsc","courses_id":"515","numSection":4,"averageGrade":81.02,"countPass":2,"averageFail":0},{"courses_dept":"cpsc","courses_id":"513","numSection":12,"averageGrade":81.5,"countPass":5,"averageFail":0.33},{"courses_dept":"cpsc","courses_id":"509","numSection":8,"averageGrade":85.72,"countPass":4,"averageFail":0},{"courses_dept":"cpsc","courses_id":"507","numSection":6,"averageGrade":88.57,"countPass":3,"averageFail":0},{"courses_dept":"cpsc","courses_id":"503","numSection":6,"averageGrade":88.43,"countPass":3,"averageFail":0},{"courses_dept":"cpsc","courses_id":"502","numSection":8,"averageGrade":83.22,"countPass":4,"averageFail":0},{"courses_dept":"cpsc","courses_id":"501","numSection":8,"averageGrade":90.21,"countPass":4,"averageFail":0},{"courses_dept":"cpsc","courses_id":"500","numSection":12,"averageGrade":83.95,"countPass":4,"averageFail":0.33},{"courses_dept":"cpsc","courses_id":"490","numSection":10,"averageGrade":90.73,"countPass":4,"averageFail":0},{"courses_dept":"cpsc","courses_id":"449","numSection":10,"averageGrade":92.1,"countPass":3,"averageFail":0},{"courses_dept":"cpsc","courses_id":"445","numSection":12,"averageGrade":81.61,"countPass":5,"averageFail":0.33},{"courses_dept":"cpsc","courses_id":"444","numSection":8,"averageGrade":79.19,"countPass":4,"averageFail":0.25},{"courses_dept":"cpsc","courses_id":"430","numSection":16,"averageGrade":77.77,"countPass":8,"averageFail":0.13},{"courses_dept":"cpsc","courses_id":"425","numSection":12,"averageGrade":74.16,"countPass":6,"averageFail":1.83},{"courses_dept":"cpsc","courses_id":"422","numSection":12,"averageGrade":74.15,"countPass":5,"averageFail":1.33},{"courses_dept":"cpsc","courses_id":"421","numSection":12,"averageGrade":76.83,"countPass":6,"averageFail":0.67},{"courses_dept":"cpsc","courses_id":"420","numSection":12,"averageGrade":71.57,"countPass":6,"averageFail":4.33},{"courses_dept":"cpsc","courses_id":"418","numSection":4,"averageGrade":77.74,"countPass":2,"averageFail":1.5},{"courses_dept":"cpsc","courses_id":"416","numSection":12,"averageGrade":74.8,"countPass":6,"averageFail":1.33},{"courses_dept":"cpsc","courses_id":"415","numSection":12,"averageGrade":70.72,"countPass":6,"averageFail":4.17},{"courses_dept":"cpsc","courses_id":"411","numSection":12,"averageGrade":79.34,"countPass":6,"averageFail":0.33},{"courses_dept":"cpsc","courses_id":"410","numSection":12,"averageGrade":77.61,"countPass":6,"averageFail":0.83},{"courses_dept":"cpsc","courses_id":"404","numSection":18,"averageGrade":73.47,"countPass":17,"averageFail":3.67},{"courses_dept":"cpsc","courses_id":"344","numSection":13,"averageGrade":79.05,"countPass":8,"averageFail":0.62},{"courses_dept":"cpsc","courses_id":"340","numSection":12,"averageGrade":73.55,"countPass":6,"averageFail":4.5},{"courses_dept":"cpsc","courses_id":"322","numSection":22,"averageGrade":73.47,"countPass":17,"averageFail":5.82},{"courses_dept":"cpsc","courses_id":"320","numSection":23,"averageGrade":70.61,"countPass":20,"averageFail":10.52},{"courses_dept":"cpsc","courses_id":"319","numSection":12,"averageGrade":84.15,"countPass":6,"averageFail":0.33},{"courses_dept":"cpsc","courses_id":"317","numSection":18,"averageGrade":72.09,"countPass":17,"averageFail":5},{"courses_dept":"cpsc","courses_id":"314","numSection":18,"averageGrade":76.71,"countPass":16,"averageFail":2.44},{"courses_dept":"cpsc","courses_id":"313","numSection":26,"averageGrade":74.15,"countPass":22,"averageFail":6.08},{"courses_dept":"cpsc","courses_id":"312","numSection":12,"averageGrade":81.81,"countPass":6,"averageFail":1.17},{"courses_dept":"cpsc","courses_id":"311","numSection":12,"averageGrade":77.17,"countPass":6,"averageFail":3.67},{"courses_dept":"cpsc","courses_id":"310","numSection":26,"averageGrade":78.06,"countPass":19,"averageFail":2.38},{"courses_dept":"cpsc","courses_id":"304","numSection":30,"averageGrade":76.86,"countPass":21,"averageFail":1.8},{"courses_dept":"cpsc","courses_id":"303","numSection":12,"averageGrade":73.55,"countPass":6,"averageFail":3},{"courses_dept":"cpsc","courses_id":"302","numSection":12,"averageGrade":76.2,"countPass":6,"averageFail":1},{"courses_dept":"cpsc","courses_id":"301","numSection":12,"averageGrade":81.64,"countPass":6,"averageFail":5.17},{"courses_dept":"cpsc","courses_id":"261","numSection":6,"averageGrade":68.41,"countPass":3,"averageFail":13},{"courses_dept":"cpsc","courses_id":"259","numSection":8,"averageGrade":74.98,"countPass":4,"averageFail":13.5},{"courses_dept":"cpsc","courses_id":"221","numSection":37,"averageGrade":75.08,"countPass":28,"averageFail":6.43},{"courses_dept":"cpsc","courses_id":"213","numSection":31,"averageGrade":74.37,"countPass":24,"averageFail":7.35},{"courses_dept":"cpsc","courses_id":"210","numSection":39,"averageGrade":74.08,"countPass":34,"averageFail":11.18},{"courses_dept":"cpsc","courses_id":"121","numSection":43,"averageGrade":76.24,"countPass":34,"averageFail":8.7},{"courses_dept":"cpsc","courses_id":"110","numSection":49,"averageGrade":74.61,"countPass":44,"averageFail":24.41}]};
+        return facade.performQuery(query).then(function (response:InsightResponse) {
+            expect(response.body).to.deep.equal(expectation);
+        }).catch(function (response) {
+            expect.fail("Should not occur");
+        })
+    });
+
+    it("Should match the first sample D3 query", function() {
+        var that = this;
+        let query: QueryRequest = {
+            "GET": ["rooms_fullname", "rooms_number"],
+            "WHERE": {"IS": {"rooms_shortname": "DMP"}},
+            "ORDER": {"dir": "UP", "keys": ["rooms_number"]},
+            "AS": "TABLE"
+        };
+        let expectation:any = { render: 'TABLE',
+            result:
+                [ { rooms_fullname: 'Hugh Dempster Pavilion',
+                    rooms_number: '101' },
+                    { rooms_fullname: 'Hugh Dempster Pavilion',
+                        rooms_number: '110' },
+                    { rooms_fullname: 'Hugh Dempster Pavilion',
+                        rooms_number: '201' },
+                    { rooms_fullname: 'Hugh Dempster Pavilion',
+                        rooms_number: '301' },
+                    { rooms_fullname: 'Hugh Dempster Pavilion',
+                        rooms_number: '310' } ] };
+        return facade.performQuery(query).then(function (response:InsightResponse) {
+            expect(response.body).to.deep.equal(expectation);
+        }).catch(function (response) {
+            expect.fail("Should not occur");
+        })
+    });
+
+    it("Should match the third sample D3 query", function() {
+        var that = this;
+        let query: QueryRequest =  {
+            "GET": ["rooms_fullname", "rooms_number", "rooms_seats"],
+            "WHERE": {"AND": [
+                {"GT": {"rooms_lat": 49.261292}},
+                {"LT": {"rooms_lon": -123.245214}},
+                {"LT": {"rooms_lat": 49.262966}},
+                {"GT": {"rooms_lon": -123.249886}},
+                {"IS": {"rooms_furniture": "*Movable Tables*"}}
+            ]},
+            "ORDER": { "dir": "UP", "keys": ["rooms_number"]},
+            "AS": "TABLE"
+        };
+        let expectation:any = { render: 'TABLE',
+                result:
+                    [ { rooms_fullname: 'Chemical and Biological Engineering Building',
+                        rooms_number: '103',
+                        rooms_seats: 60 },
+                        { rooms_fullname: 'Civil and Mechanical Engineering',
+                            rooms_number: '1206',
+                            rooms_seats: 26 },
+                        { rooms_fullname: 'Civil and Mechanical Engineering',
+                            rooms_number: '1210',
+                            rooms_seats: 22 },
+                        { rooms_fullname: 'MacLeod',
+                            rooms_number: '214',
+                            rooms_seats: 60 },
+                        { rooms_fullname: 'MacLeod',
+                            rooms_number: '220',
+                            rooms_seats: 40 },
+                        { rooms_fullname: 'MacLeod',
+                            rooms_number: '242',
+                            rooms_seats: 60 },
+                        { rooms_fullname: 'MacLeod',
+                            rooms_number: '254',
+                            rooms_seats: 84 } ] };
         return facade.performQuery(query).then(function (response:InsightResponse) {
             expect(response.body).to.deep.equal(expectation);
         }).catch(function (response) {

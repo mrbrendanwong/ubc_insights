@@ -5,7 +5,6 @@
 import {Datasets} from "./DatasetController";
 import Log from "../Util";
 import DatasetController from '../controller/DatasetController';
-import {get} from "http";
 
 export interface QueryRequest {
     GET: string|string[];
@@ -299,35 +298,34 @@ export default class QueryController {
             case 'IS':
                 if (notFlag) {
                     for (var i = 0; i < data.length; i++) {
-                        console.log(data[i]);
-                        if ((restrictionValue.localeCompare(data[i][restriction].toLowerCase())) != 0)
+                        if ((restrictionValue.localeCompare(data[i][restriction])) != 0)
                             processedData.push(data[i]);
                     }
                 } else {
                     if (restrictionValue[restrictionValue.length - 1] == "*" && restrictionValue[0] != "*") {
                         restrictionValue = restrictionValue.replace(/\*/g, '');
                         for (var i = 0; i < data.length; i++) {
-                            if ((data[i][restriction].toLowerCase()).startsWith(restrictionValue.toLowerCase())) {
+                            if ((data[i][restriction]).startsWith(restrictionValue)) {
                                 processedData.push(data[i]);
                             }
                         }
                     } else if (restrictionValue[0] == "*" && restrictionValue[restrictionValue.length - 1] != "*") {
                         restrictionValue = restrictionValue.replace(/\*/g, '');
                         for (var i = 0; i < data.length; i++) {
-                            if ((data[i][restriction].toLowerCase()).endsWith(restrictionValue.toLowerCase())) {
+                            if ((data[i][restriction]).endsWith(restrictionValue)) {
                                 processedData.push(data[i]);
                             }
                         }
                     } else if (restrictionValue[0] == "*" && restrictionValue[restrictionValue.length - 1] == "*") {
                         restrictionValue = restrictionValue.replace(/\*/g, '');
                         for (var i = 0; i < data.length; i++) {
-                            if ((data[i][restriction].toLowerCase()).indexOf(restrictionValue.toLowerCase()) >= 0) {
+                            if ((data[i][restriction]).indexOf(restrictionValue) >= 0) {
                                 processedData.push(data[i]);
                             }
                         }
                     } else {
                         for (var i = 0; i < data.length; i++) {
-                            if (restrictionValue.toLowerCase() == (data[i][restriction].toLowerCase()))
+                            if (restrictionValue == (data[i][restriction]))
                                 processedData.push(data[i]);
                         }
                     }
@@ -730,6 +728,7 @@ export default class QueryController {
 
         completedOrderQuery = this.queryOrder(query, filteredData, false);
         resultToBeRendered = this.queryAs(query, completedOrderQuery);
+        console.log(JSON.stringify(resultToBeRendered));
         return resultToBeRendered;
     }
 
@@ -759,6 +758,7 @@ export default class QueryController {
             completedOrderQuery = this.queryOrder(query, filteredData, false);
         }
         resultToBeRendered = this.queryAs(query, completedOrderQuery);
+        console.log(JSON.stringify(resultToBeRendered));
         return resultToBeRendered;
     }
 

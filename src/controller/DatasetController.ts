@@ -170,9 +170,11 @@ export default class DatasetController {
                                 }
                                 printNode(document);
                                 that.parseValidBuildings(zip, validBuildings).then(function(value) {
-                                    processedDataset['rooms'] = value;
-                                    fulfill(true);
-                                    that.save(id, processedDataset);
+                                    that.addLatLons(value).then(function (result) {
+                                        processedDataset['rooms'] = result;
+                                        fulfill(true);
+                                        that.save(id, processedDataset);
+                                    });
                                 });
                             });
                             break;
@@ -193,10 +195,36 @@ export default class DatasetController {
         });
     }
 
+    private addLatLons(parsedRooms:any):Promise<any>{
+       that = this;
+        let latLonCounter = 0;
+        let uniqueAddresses = {};
+        return new Promise(function(resolve) {
+            for (var i = 0; i < parsedRooms.length; i++) {
+                if (uniqueAddresses[parsedRooms[i]['rooms_address']] !== undefined)
+                    continue;
+                else {
+                    uniqueAddresses[parsedRooms[i]['rooms_address']] = parsedRooms['rooms_address'];
+                }
+            }
+            Object.keys(uniqueAddresses).forEach(function(key,index) {
+                that.getLatLon(key).then(function success(contents) {
+                    uniqueAddresses[key] = contents;
+                    if (latLonCounter == Object.keys(uniqueAddresses).length - 1) {
+                        for (var x = 0; x < parsedRooms.length; x++){
+                            parsedRooms[x]['rooms_lat'] = uniqueAddresses[parsedRooms[x]['rooms_address']].lat;
+                            parsedRooms[x]['rooms_lon'] = uniqueAddresses[parsedRooms[x]['rooms_address']].lon;
+                        }
+                        resolve(parsedRooms);
+                    }
+                    latLonCounter++;
+                });
+            });
+        });
+    }
+
     private parseValidBuildings(zip:JSZip, validBuildings:any):Promise<any> {
-        let that = this;
         let outOfIdeasCounter:number = 0;
-        let latLonCounter:number = 0;
         let asyncIterationCounter:number = 0;
         let buildingInfoCounter:number = 0;
         let roomInfoCounter:number = 0;
@@ -209,9 +237,6 @@ export default class DatasetController {
         let currentCode:any = "";
         return new Promise(function(resolve) {
             for (var i = 0; i < validBuildings.length; i++) {
-                let iterationObject:any = {};
-                // parsedArray.push(iterationObject);
-                //if (i == 0) {
                 zip.file('campus/discover/buildings-and-classrooms/' + validBuildings[i]).async("string").then(function success(contents) {
                     var document = parse5.parse(contents);
 
@@ -253,14 +278,7 @@ export default class DatasetController {
                                                     rooms_shortname: currentCode,
                                                     rooms_address: currentAddress,
                                                     rooms_href: currentLink
-                                                });
-                                                that.getLatLon(currentAddress).then(function success(contents) {
-                                                    parsedArray[latLonCounter]['rooms_lat'] = contents.lat;
-                                                    parsedArray[latLonCounter]['rooms_lon'] = contents.lon;
-                                                    if (latLonCounter == parsedArray.length -1)
-                                                        resolve(parsedArray);
-                                                    latLonCounter++;
-                                                });
+                                                    });
                                                 parsedArray[asyncIterationCounter]['rooms_number'] = node.value.trim();
                                                 parsedArray[asyncIterationCounter]['rooms_name'] = currentCode + "_" + node.value.trim();
                                             }
@@ -288,10 +306,10 @@ export default class DatasetController {
                     }
 
                     printNode(document);
-                    //if (outOfIdeasCounter == validBuildings.length - 1) {
-                    //    console.log(parsedArray.length);
-                    //    resolve(parsedArray);
-                    //}
+                    if (outOfIdeasCounter == validBuildings.length - 1) {
+                        console.log(parsedArray.length);
+                        resolve(parsedArray);
+                    }
                     outOfIdeasCounter++;
                 });
                 //}
