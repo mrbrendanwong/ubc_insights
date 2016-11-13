@@ -8,13 +8,11 @@ import DatasetController from '../controller/DatasetController';
 
 export interface QueryRequest {
     GET: string|string[];
-    WHERE: {};
-    ORDER: any;
+    WHERE?: {};
+    ORDER?: any;
     AS: string;
-    GROUP: string[];
-    APPLY: any[];
-    add?: number[];
-    multiply?: number[];
+    GROUP?: string[];
+    APPLY?: any[];
 }
 
 export interface QueryResponse {
@@ -403,7 +401,7 @@ export default class QueryController {
                                 currentResult["rooms_lat"] = unfinishedDataset[x].rooms_lat;
                                 break;
                             case 'lon':
-                                currentResult["rooms_lon"] = unfinishedDataset[x].rooms_lons;
+                                currentResult["rooms_lon"] = unfinishedDataset[x].rooms_lon;
                                 break;
                             case 'seats':
                                 currentResult["rooms_seats"] = unfinishedDataset[x].rooms_seats;
@@ -728,6 +726,7 @@ export default class QueryController {
 
         completedOrderQuery = this.queryOrder(query, filteredData, false);
         resultToBeRendered = this.queryAs(query, completedOrderQuery);
+        console.log(JSON.stringify(resultToBeRendered));
         return resultToBeRendered;
     }
 
@@ -757,6 +756,7 @@ export default class QueryController {
             completedOrderQuery = this.queryOrder(query, filteredData, false);
         }
         resultToBeRendered = this.queryAs(query, completedOrderQuery);
+        console.log(JSON.stringify(resultToBeRendered));
         return resultToBeRendered;
     }
 

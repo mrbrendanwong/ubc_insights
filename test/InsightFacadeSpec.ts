@@ -12,11 +12,13 @@ import {QueryRequest} from "../src/controller/QueryController";
 describe("InsightFacade", function () {
 
     var zipFileContents:string = null;
+    var zipFileContentsRooms:string = null;
     var facade:InsightFacade = null;
     before(function () {
         Log.info('InsightController::before() - start');
         // this zip might be in a different spot for you
         zipFileContents = new Buffer(fs.readFileSync('../cpsc310d1public/310courses.1.0.zip')).toString('base64');
+        zipFileContentsRooms = new Buffer(fs.readFileSync('../cpsc310d1public/310rooms.1.1.zip')).toString('base64');
         try {
             // what you delete here is going to depend on your impl, just make sure
             // all of your temporary files and directories are deleted
@@ -45,7 +47,7 @@ describe("InsightFacade", function () {
     it("Should be able to add a new rooms dataset (204)", function () {
         var that = this;
         Log.trace("Starting test: " + that.test.title);
-        return facade.addDataset('rooms', zipFileContents).then(function (response:InsightResponse) {
+        return facade.addDataset('rooms', zipFileContentsRooms).then(function (response:InsightResponse) {
             expect(response.code).to.equal(204);
         }).catch(function (response:InsightResponse) {
             expect.fail('Should not happen');
@@ -65,7 +67,7 @@ describe("InsightFacade", function () {
     it("Should be able to update an existing rooms dataset (201)", function () {
         var that = this;
         Log.trace("Starting test: " + that.test.title);
-        return facade.addDataset('rooms', zipFileContents).then(function (response:InsightResponse) {
+        return facade.addDataset('rooms', zipFileContentsRooms).then(function (response:InsightResponse) {
             expect(response.code).to.equal(201);
         }).catch(function (response:InsightResponse) {
             expect.fail('Should not happen');
@@ -123,6 +125,26 @@ describe("InsightFacade", function () {
 
     });
 
+    it("Should be handle retrieving all room IDs", function () {
+        var that = this;
+        let query:QueryRequest = {
+            GET: ['rooms_fullname', 'rooms_shortname', 'rooms_number', 'rooms_address', 'rooms_lat', 'rooms_lon', 'rooms_seats', 'rooms_type', 'rooms_furniture', 'rooms_href'],
+            GROUP:['rooms_fullname', 'rooms_shortname', 'rooms_number', 'rooms_address', 'rooms_lat', 'rooms_lon', 'rooms_seats', 'rooms_type', 'rooms_furniture', 'rooms_href'],
+            APPLY:[],
+            WHERE: {IS: {"rooms_shortname": "DMP"}},
+            ORDER: {"dir": "UP", "keys": ["rooms_number"]},
+            AS: 'table'
+        };
+
+        Log.trace("Starting test: " + that.test.title);
+        return facade.performQuery(query).then(function (response:InsightResponse) {
+            expect(response.code).to.equal(200);
+        }).catch(function (response:InsightResponse) {
+            expect.fail('Should not happen');
+        });
+
+    });
+
     // Delete Dataset Tests
     it("Should be able to delete existing dataset (204)", function () {
         var that = this;
@@ -164,7 +186,32 @@ describe("InsightFacade", function () {
     });
 
 
-    it("Should be able to handle complex D1 query", function () {
+    it("Should be able to handle a complex D1 query", function() {
+        var that = this;
+        let query:QueryRequest = {GET: ['courses_dept'],WHERE: {
+            "OR": [
+                {
+                    "AND": [
+                        {"GT": {"courses_avg": 70}},
+                        {"IS": {"courses_dept": "*th"}},
+                        {"NOT": {"EQ": {"courses_id": 100}}}
+                    ]
+                },
+                {"IS": {"courses_instructor": "*gregor*"}}
+            ]
+        }, ORDER: 'courses_dept', AS: 'table'};
+
+        Log.trace("Starting test: " + that.test.title);
+        return facade.performQuery(query).then(function (response:InsightResponse) {
+            console.log("HOWDY "+ JSON.stringify(response));
+            expect(response.code).to.equal(200);
+        }).catch(function (response:InsightResponse) {
+            expect.fail('Should not happen');
+        });
+
+    });
+
+    it("Should be able to handle another complex D1 query", function () {
         var that = this;
         let query:QueryRequest = {
             GET: ["courses_dept", "courses_id", "courses_instructor"], WHERE: {
@@ -348,75 +395,75 @@ describe("InsightFacade", function () {
             expect.fail("Should not occur");
         })
     });
-    //
-    //it("Should match the first sample D3 query", function() {
-    //    var that = this;
-    //    let query: QueryRequest = {
-    //        "GET": ["rooms_fullname", "rooms_number"],
-    //        "WHERE": {"IS": {"rooms_shortname": "DMP"}},
-    //        "ORDER": {"dir": "UP", "keys": ["rooms_number"]},
-    //        "AS": "TABLE"
-    //    };
-    //    let expectation:any = { render: 'TABLE',
-    //        result:
-    //            [ { rooms_fullname: 'Hugh Dempster Pavilion',
-    //                rooms_number: '101' },
-    //                { rooms_fullname: 'Hugh Dempster Pavilion',
-    //                    rooms_number: '110' },
-    //                { rooms_fullname: 'Hugh Dempster Pavilion',
-    //                    rooms_number: '201' },
-    //                { rooms_fullname: 'Hugh Dempster Pavilion',
-    //                    rooms_number: '301' },
-    //                { rooms_fullname: 'Hugh Dempster Pavilion',
-    //                    rooms_number: '310' } ] };
-    //    return facade.performQuery(query).then(function (response:InsightResponse) {
-    //        expect(response.body).to.deep.equal(expectation);
-    //    }).catch(function (response) {
-    //        expect.fail("Should not occur");
-    //    })
-    //});
-    //
-    //it("Should match the third sample D3 query", function() {
-    //    var that = this;
-    //    let query: QueryRequest =  {
-    //        "GET": ["rooms_fullname", "rooms_number", "rooms_seats"],
-    //        "WHERE": {"AND": [
-    //            {"GT": {"rooms_lat": 49.261292}},
-    //            {"LT": {"rooms_lon": -123.245214}},
-    //            {"LT": {"rooms_lat": 49.262966}},
-    //            {"GT": {"rooms_lon": -123.249886}},
-    //            {"IS": {"rooms_furniture": "*Movable Tables*"}}
-    //        ]},
-    //        "ORDER": { "dir": "UP", "keys": ["rooms_number"]},
-    //        "AS": "TABLE"
-    //    };
-    //    let expectation:any = { render: 'TABLE',
-    //            result:
-    //                [ { rooms_fullname: 'Chemical and Biological Engineering Building',
-    //                    rooms_number: '103',
-    //                    rooms_seats: 60 },
-    //                    { rooms_fullname: 'Civil and Mechanical Engineering',
-    //                        rooms_number: '1206',
-    //                        rooms_seats: 26 },
-    //                    { rooms_fullname: 'Civil and Mechanical Engineering',
-    //                        rooms_number: '1210',
-    //                        rooms_seats: 22 },
-    //                    { rooms_fullname: 'MacLeod',
-    //                        rooms_number: '214',
-    //                        rooms_seats: 60 },
-    //                    { rooms_fullname: 'MacLeod',
-    //                        rooms_number: '220',
-    //                        rooms_seats: 40 },
-    //                    { rooms_fullname: 'MacLeod',
-    //                        rooms_number: '242',
-    //                        rooms_seats: 60 },
-    //                    { rooms_fullname: 'MacLeod',
-    //                        rooms_number: '254',
-    //                        rooms_seats: 84 } ] };
-    //    return facade.performQuery(query).then(function (response:InsightResponse) {
-    //        expect(response.body).to.deep.equal(expectation);
-    //    }).catch(function (response) {
-    //        expect.fail("Should not occur");
-    //    })
-    //});
+
+    it("Should match the first sample D3 query", function() {
+        var that = this;
+        let query: QueryRequest = {
+            "GET": ["rooms_fullname", "rooms_number"],
+            "WHERE": {"IS": {"rooms_shortname": "DMP"}},
+            "ORDER": {"dir": "UP", "keys": ["rooms_number"]},
+            "AS": "TABLE"
+        };
+        let expectation:any = { render: 'TABLE',
+            result:
+                [ { rooms_fullname: 'Hugh Dempster Pavilion',
+                    rooms_number: '101' },
+                    { rooms_fullname: 'Hugh Dempster Pavilion',
+                        rooms_number: '110' },
+                    { rooms_fullname: 'Hugh Dempster Pavilion',
+                        rooms_number: '201' },
+                    { rooms_fullname: 'Hugh Dempster Pavilion',
+                        rooms_number: '301' },
+                    { rooms_fullname: 'Hugh Dempster Pavilion',
+                        rooms_number: '310' } ] };
+        return facade.performQuery(query).then(function (response:InsightResponse) {
+            expect(response.body).to.deep.equal(expectation);
+        }).catch(function (response) {
+            expect.fail("Should not occur");
+        })
+    });
+
+    it("Should match the third sample D3 query", function() {
+        var that = this;
+        let query: QueryRequest =  {
+            "GET": ["rooms_fullname", "rooms_number", "rooms_seats"],
+            "WHERE": {"AND": [
+                {"GT": {"rooms_lat": 49.261292}},
+                {"LT": {"rooms_lon": -123.245214}},
+                {"LT": {"rooms_lat": 49.262966}},
+                {"GT": {"rooms_lon": -123.249886}},
+                {"IS": {"rooms_furniture": "*Movable Tables*"}}
+            ]},
+            "ORDER": { "dir": "UP", "keys": ["rooms_number"]},
+            "AS": "TABLE"
+        };
+        let expectation:any = { render: 'TABLE',
+                result:
+                    [ { rooms_fullname: 'Chemical and Biological Engineering Building',
+                        rooms_number: '103',
+                        rooms_seats: 60 },
+                        { rooms_fullname: 'Civil and Mechanical Engineering',
+                            rooms_number: '1206',
+                            rooms_seats: 26 },
+                        { rooms_fullname: 'Civil and Mechanical Engineering',
+                            rooms_number: '1210',
+                            rooms_seats: 22 },
+                        { rooms_fullname: 'MacLeod',
+                            rooms_number: '214',
+                            rooms_seats: 60 },
+                        { rooms_fullname: 'MacLeod',
+                            rooms_number: '220',
+                            rooms_seats: 40 },
+                        { rooms_fullname: 'MacLeod',
+                            rooms_number: '242',
+                            rooms_seats: 60 },
+                        { rooms_fullname: 'MacLeod',
+                            rooms_number: '254',
+                            rooms_seats: 84 } ] };
+        return facade.performQuery(query).then(function (response:InsightResponse) {
+            expect(response.body).to.deep.equal(expectation);
+        }).catch(function (response) {
+            expect.fail("Should not occur");
+        })
+    });
 });
