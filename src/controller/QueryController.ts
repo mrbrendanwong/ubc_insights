@@ -557,17 +557,6 @@ export default class QueryController {
         return groupedDataset;
     }
 
-    // Verifies if two course offerings should be grouped together
-    private shouldBeGrouped(offering1:any, offering2:any, groupRequests:any):boolean {
-        let groupWorthy:boolean = true;
-        for (var x = 0; x < groupRequests.length; x++) {
-            if (offering1[groupRequests[x]] != offering2[groupRequests[x]])
-                groupWorthy = false;
-        }
-        return groupWorthy;
-    }
-
-
     private queryApply(query:any, applyRequests:any, groupRequests:any, groupedDataset:any):any {
         // Go through each set of applications
         let appliedDataset:any = [];
