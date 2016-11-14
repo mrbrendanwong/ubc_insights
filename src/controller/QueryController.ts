@@ -240,7 +240,6 @@ export default class QueryController {
                 mainID = getRequests[x].split("_")[0];
             }
         }
-        console.log(mainID);
         if (mainID == "courses") {
             for (var i = 0; i < a1.length; i++) {
                 if (hash[a1[i]["courses_uuid"]] !== a1[i]["courses_uuid"])
@@ -396,6 +395,8 @@ export default class QueryController {
                             case 'uuid':
                                 currentResult["courses_uuid"] = unfinishedDataset[x].courses_uuid;
                                 break;
+                            case 'year':
+                                currentResult["courses_year"] = unfinishedDataset[x].courses_year;
                             default:
                                 console.log("Uh oh, you sent an invalid key");
                                 break;
@@ -455,8 +456,17 @@ export default class QueryController {
     private queryOrder(query: QueryRequest, unsortedData: Array<any>, originalSort: boolean): any {
         var orderKeys: any;
         var downDir: boolean = false;
+        let mainID:any = "";
         if (query.ORDER == undefined) {
-            orderKeys = "courses_dept";
+            for (var x = 0; x < query.GET.length; x++) {
+                if (query.GET[x].indexOf("_") >= 0){
+                    mainID = query.GET[x].split("_")[0];
+                }
+            }
+            if (mainID == 'courses')
+                orderKeys = "courses_dept";
+            else
+                orderKeys = "rooms_shortname";
         } else if (originalSort) {
             orderKeys ="courses_uuid";
         } else if (typeof query.ORDER === 'string') {
@@ -747,7 +757,6 @@ export default class QueryController {
 
         completedOrderQuery = this.queryOrder(query, filteredData, false);
         resultToBeRendered = this.queryAs(query, completedOrderQuery);
-        console.log(JSON.stringify(resultToBeRendered));
         return resultToBeRendered;
     }
 
@@ -776,8 +785,7 @@ export default class QueryController {
             filteredData = this.filterByGET(emptyApplyQuery, query.GET);
             completedOrderQuery = this.queryOrder(query, filteredData, false);
         }
-        resultToBeRendered = this.queryAs(query, completedOrderQuery);
-        console.log(JSON.stringify(resultToBeRendered));
+        resultToBeRendered = this.queryAs(query, completedOrderQuery);;
         return resultToBeRendered;
     }
 
