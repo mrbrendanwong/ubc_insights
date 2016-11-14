@@ -136,7 +136,7 @@ export default class QueryController {
                 let innerKey:any = Object.keys(outmostKey[Object.keys(outmostKey)[0]])[0];
                 let desiredID = outmostKey[outerKey][innerKey];
                 if ((innerKey == 'MAX') || (innerKey == 'MIN') || (innerKey == 'AVG')) {
-                    if ((desiredID != "courses_avg") && (desiredID != "courses_pass") &&  (desiredID != "courses_fail") && (desiredID != "courses_audit"))
+                    if ((desiredID != "courses_avg") && (desiredID != "courses_pass") &&  (desiredID != "courses_fail") && (desiredID != "courses_audit") && (desiredID != "courses_year") && (desiredID != "rooms_lat") && (desiredID != "rooms_lon") && (desiredID != "rooms_seats"))
                         return false;
                 }
                 if (query.GROUP[j] == desiredID) {
@@ -779,13 +779,13 @@ export default class QueryController {
         }
         if (query.APPLY.length != 0) {
             completedApplyQuery = this.queryApply(query, query.APPLY, query.GROUP, completedGroupQuery);
-            completedOrderQuery = this.queryOrder(query, completedApplyQuery, false); //why was this changed
+            completedOrderQuery = this.queryOrder(query, completedApplyQuery, false);
         } else {
             emptyApplyQuery = this.handleEmptyApply(completedGroupQuery);
             filteredData = this.filterByGET(emptyApplyQuery, query.GET);
             completedOrderQuery = this.queryOrder(query, filteredData, false);
         }
-        resultToBeRendered = this.queryAs(query, completedOrderQuery);;
+        resultToBeRendered = this.queryAs(query, completedOrderQuery);
         return resultToBeRendered;
     }
 
@@ -794,8 +794,6 @@ export default class QueryController {
         // TODO: implement this (where we handle get, where, etc.)
         let queryResult:Array<any>;
         let controller = QueryController.datasetController;
-
-
 
         if (query.GET) {
             // #D1 support
