@@ -134,7 +134,6 @@ export default class DatasetController {
                                     fileCount++;
                                     file.async("string").then(function success(contents) {
                                         var parsedData = JSON.parse(contents);
-
                                         if (parsedData.result.length != 0) {
                                             processedDataset.courses.push(parsedData.result);
                                         }
@@ -158,7 +157,6 @@ export default class DatasetController {
                                             previousValue = value.value;
                                         });
                                     }
-
                                     if (node.value && previousValue == 'views-field views-field-field-building-code') {
                                         if (node.value.trim() != "Code" && node.value.trim() != "")
                                             validBuildings.push(node.value.trim());
@@ -278,7 +276,7 @@ export default class DatasetController {
                                                     rooms_shortname: currentCode,
                                                     rooms_address: currentAddress,
                                                     rooms_href: currentLink
-                                                    });
+                                                });
                                                 parsedArray[asyncIterationCounter]['rooms_number'] = node.value.trim();
                                                 parsedArray[asyncIterationCounter]['rooms_name'] = currentCode + "_" + node.value.trim();
                                             }
