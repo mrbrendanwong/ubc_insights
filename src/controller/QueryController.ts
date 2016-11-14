@@ -5,17 +5,14 @@
 import {Datasets} from "./DatasetController";
 import Log from "../Util";
 import DatasetController from '../controller/DatasetController';
-import {get} from "http";
 
 export interface QueryRequest {
     GET: string|string[];
-    WHERE: {};
-    ORDER: any;
+    WHERE?: {};
+    ORDER?: any;
     AS: string;
-    GROUP: string[];
-    APPLY: any[];
-    add?: number[];
-    multiply?: number[];
+    GROUP?: string[];
+    APPLY?: any[];
 }
 
 export interface QueryResponse {
@@ -94,9 +91,7 @@ export default class QueryController {
             }
         }
 
-        // As per piazza, this causes Hades to fail
-        //
-        //// Check if all keys in group are in GET
+        // Check if all keys in group are in GET
         for (var q = 0; q < query.GET.length; q++) {
             matchFlag = false;
             if (query.GET[q].indexOf("_") >= 0) {
@@ -141,7 +136,7 @@ export default class QueryController {
                 let innerKey:any = Object.keys(outmostKey[Object.keys(outmostKey)[0]])[0];
                 let desiredID = outmostKey[outerKey][innerKey];
                 if ((innerKey == 'MAX') || (innerKey == 'MIN') || (innerKey == 'AVG')) {
-                    if ((desiredID != "courses_avg") && (desiredID != "courses_pass") &&  (desiredID != "courses_fail") && (desiredID != "courses_audit"))
+                    if ((desiredID != "courses_avg") && (desiredID != "courses_pass") &&  (desiredID != "courses_fail") && (desiredID != "courses_audit") && (desiredID != "courses_year") && (desiredID != "rooms_lat") && (desiredID != "rooms_lon") && (desiredID != "rooms_seats"))
                         return false;
                 }
                 if (query.GROUP[j] == desiredID) {
@@ -239,15 +234,35 @@ export default class QueryController {
     private unionArrays(a1:any, a2:any, getRequests:any):any {
         var hash:any = {};
         var arr:any = [];
-        for (var i = 0; i < a1.length; i++) {
-            if (hash[a1[i]["courses_uuid"]] !== a1[i]["courses_uuid"])
-                hash[a1[i]["courses_uuid"]] = a1[i]["courses_uuid"];
-            arr[arr.length] = a1[i];
+        let mainID:any = "";
+        for (var x = 0; x < getRequests.length; x++) {
+            if (getRequests[x].indexOf("_") >= 0){
+                mainID = getRequests[x].split("_")[0];
+            }
         }
-        for (var i = 0; i < a2.length; i++) {
-            if (hash[a2[i]["courses_uuid"]] !== a2[i]["courses_uuid"]) {
-                hash[a2[i]["courses_uuid"]] = a2[i]["courses_uuid"];
-                arr[arr.length] = a2[i];
+        if (mainID == "courses") {
+            for (var i = 0; i < a1.length; i++) {
+                if (hash[a1[i]["courses_uuid"]] !== a1[i]["courses_uuid"])
+                    hash[a1[i]["courses_uuid"]] = a1[i]["courses_uuid"];
+                arr[arr.length] = a1[i];
+            }
+            for (var j = 0; j < a2.length; j++) {
+                if (hash[a2[j]["courses_uuid"]] !== a2[j]["courses_uuid"]) {
+                    hash[a2[j]["courses_uuid"]] = a2[j]["courses_uuid"];
+                    arr[arr.length] = a2[j];
+                }
+            }
+        } else {
+            for (var a = 0; a < a1.length; a++) {
+                if (hash[a1[a]["rooms_name"]] !== a1[a]["rooms_name"])
+                    hash[a1[a]["rooms_name"]] = a1[a]["rooms_name"];
+                arr[arr.length] = a1[a];
+            }
+            for (var b = 0; b < a2.length; b++) {
+                if (hash[a2[b]["rooms_name"]] !== a2[b]["rooms_name"]) {
+                    hash[a2[b]["rooms_name"]] = a2[b]["rooms_name"];
+                    arr[arr.length] = a2[b];
+                }
             }
         }
         return arr;
@@ -255,7 +270,6 @@ export default class QueryController {
 
     private processWhere(data:Array<any>, whereCondition:string, restriction:any, restrictionValue:any, notFlag:boolean = false, getRequests:any):any {
         let processedData:Array<any> = [];
-
         switch (whereCondition) {
             case 'GT':
                 if (notFlag) {
@@ -302,34 +316,34 @@ export default class QueryController {
             case 'IS':
                 if (notFlag) {
                     for (var i = 0; i < data.length; i++) {
-                        if ((restrictionValue.localeCompare(data[i][restriction].toLowerCase())) != 0)
+                        if ((restrictionValue.localeCompare(data[i][restriction])) != 0)
                             processedData.push(data[i]);
                     }
                 } else {
                     if (restrictionValue[restrictionValue.length - 1] == "*" && restrictionValue[0] != "*") {
                         restrictionValue = restrictionValue.replace(/\*/g, '');
                         for (var i = 0; i < data.length; i++) {
-                            if ((data[i][restriction].toLowerCase()).startsWith(restrictionValue)) {
+                            if ((data[i][restriction]).startsWith(restrictionValue)) {
                                 processedData.push(data[i]);
                             }
                         }
                     } else if (restrictionValue[0] == "*" && restrictionValue[restrictionValue.length - 1] != "*") {
                         restrictionValue = restrictionValue.replace(/\*/g, '');
                         for (var i = 0; i < data.length; i++) {
-                            if ((data[i][restriction].toLowerCase()).endsWith(restrictionValue)) {
+                            if ((data[i][restriction]).endsWith(restrictionValue)) {
                                 processedData.push(data[i]);
                             }
                         }
                     } else if (restrictionValue[0] == "*" && restrictionValue[restrictionValue.length - 1] == "*") {
                         restrictionValue = restrictionValue.replace(/\*/g, '');
                         for (var i = 0; i < data.length; i++) {
-                            if ((data[i][restriction].toLowerCase()).indexOf(restrictionValue) >= 0) {
+                            if ((data[i][restriction]).indexOf(restrictionValue) >= 0) {
                                 processedData.push(data[i]);
                             }
                         }
                     } else {
                         for (var i = 0; i < data.length; i++) {
-                            if (restrictionValue == (data[i][restriction].toLowerCase()))
+                            if (restrictionValue == (data[i][restriction]))
                                 processedData.push(data[i]);
                         }
                     }
@@ -381,11 +395,54 @@ export default class QueryController {
                             case 'uuid':
                                 currentResult["courses_uuid"] = unfinishedDataset[x].courses_uuid;
                                 break;
+                            case 'year':
+                                currentResult["courses_year"] = unfinishedDataset[x].courses_year;
                             default:
                                 console.log("Uh oh, you sent an invalid key");
                                 break;
                         }
                         break;
+                    case 'rooms':
+                        switch (dataID) {
+                            case 'fullname':
+                                currentResult["rooms_fullname"] = unfinishedDataset[x].rooms_fullname;
+                                break;
+                            case 'shortname':
+                                currentResult["rooms_shortname"] = unfinishedDataset[x].rooms_shortname;
+                                break;
+                            case 'number':
+                                currentResult["rooms_number"] = unfinishedDataset[x].rooms_number;
+                                break;
+                            case 'name':
+                                currentResult["rooms_name"] = unfinishedDataset[x].rooms_name;
+                                break;
+                            case 'address':
+                                currentResult["rooms_address"] = unfinishedDataset[x].rooms_address;
+                                break;
+                            case 'lat':
+                                currentResult["rooms_lat"] = unfinishedDataset[x].rooms_lat;
+                                break;
+                            case 'lon':
+                                currentResult["rooms_lon"] = unfinishedDataset[x].rooms_lon;
+                                break;
+                            case 'seats':
+                                currentResult["rooms_seats"] = unfinishedDataset[x].rooms_seats;
+                                break;
+                            case 'type':
+                                currentResult["rooms_type"] = unfinishedDataset[x].rooms_type;
+                                break;
+                            case 'furniture':
+                                currentResult["rooms_furniture"] = unfinishedDataset[x].rooms_furniture;
+                                break;
+                            case 'href':
+                                currentResult["rooms_href"] = unfinishedDataset[x].rooms_href;
+                                break;
+                            default:
+                                console.log("Uh oh, you sent an invalid key");
+                                break;
+                        }
+                        break;
+
                     default:
                         break;
                 }
@@ -395,13 +452,21 @@ export default class QueryController {
         return finalizedArray;
     }
 
-// UP means lowest first
-// Down means highest first
+// UP means lowest first, DOWN means highest first
     private queryOrder(query: QueryRequest, unsortedData: Array<any>, originalSort: boolean): any {
         var orderKeys: any;
         var downDir: boolean = false;
+        let mainID:any = "";
         if (query.ORDER == undefined) {
-            orderKeys = "courses_dept";
+            for (var x = 0; x < query.GET.length; x++) {
+                if (query.GET[x].indexOf("_") >= 0){
+                    mainID = query.GET[x].split("_")[0];
+                }
+            }
+            if (mainID == 'courses')
+                orderKeys = "courses_dept";
+            else
+                orderKeys = "rooms_shortname";
         } else if (originalSort) {
             orderKeys ="courses_uuid";
         } else if (typeof query.ORDER === 'string') {
@@ -450,7 +515,7 @@ export default class QueryController {
         return dataObject;
     }
 
-// TODO: Finish GROUP
+
     private queryGroup(groupRequests:any, dataset:any):any {
 
         let groupedDataset:any = [];
@@ -492,17 +557,6 @@ export default class QueryController {
         return groupedDataset;
     }
 
-// Verifies if two course offerings should be grouped together
-    private shouldBeGrouped(offering1:any, offering2:any, groupRequests:any):boolean {
-        let groupWorthy:boolean = true;
-        for (var x = 0; x < groupRequests.length; x++) {
-            if (offering1[groupRequests[x]] != offering2[groupRequests[x]])
-                groupWorthy = false;
-        }
-        return groupWorthy;
-    }
-
-// TODO: Handle apply calls
     private queryApply(query:any, applyRequests:any, groupRequests:any, groupedDataset:any):any {
         // Go through each set of applications
         let appliedDataset:any = [];
@@ -684,7 +738,6 @@ export default class QueryController {
         let dataset2:Array<any> = [];
         var resultToBeRendered:any;
         var filteredData:any;
-
         if (query.WHERE) {
             completedWhereQuery = this.queryWhere(query.WHERE, query.GET, queryResult, false, dataset1, dataset2);
             filteredData = this.filterByGET(completedWhereQuery, query.GET);
@@ -693,7 +746,6 @@ export default class QueryController {
 
         completedOrderQuery = this.queryOrder(query, filteredData, false);
         resultToBeRendered = this.queryAs(query, completedOrderQuery);
-
         return resultToBeRendered;
     }
 
@@ -716,7 +768,7 @@ export default class QueryController {
         }
         if (query.APPLY.length != 0) {
             completedApplyQuery = this.queryApply(query, query.APPLY, query.GROUP, completedGroupQuery);
-            completedOrderQuery = this.queryOrder(query, completedApplyQuery, false); //why was this changed
+            completedOrderQuery = this.queryOrder(query, completedApplyQuery, false);
         } else {
             emptyApplyQuery = this.handleEmptyApply(completedGroupQuery);
             filteredData = this.filterByGET(emptyApplyQuery, query.GET);
@@ -731,7 +783,7 @@ export default class QueryController {
         // TODO: implement this (where we handle get, where, etc.)
         let queryResult:Array<any>;
         let controller = QueryController.datasetController;
-        // For the get query
+
         if (query.GET) {
             // #D1 support
             queryResult = controller.queryDataset(query.GET);

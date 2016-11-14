@@ -12,11 +12,13 @@ import {QueryRequest} from "../src/controller/QueryController";
 describe("InsightFacade", function () {
 
     var zipFileContents:string = null;
+    var zipFileContentsRooms:string = null;
     var facade:InsightFacade = null;
     before(function () {
         Log.info('InsightController::before() - start');
         // this zip might be in a different spot for you
         zipFileContents = new Buffer(fs.readFileSync('../cpsc310d1public/310courses.1.0.zip')).toString('base64');
+        zipFileContentsRooms = new Buffer(fs.readFileSync('../cpsc310d1public/310rooms.1.1.zip')).toString('base64');
         try {
             // what you delete here is going to depend on your impl, just make sure
             // all of your temporary files and directories are deleted
@@ -32,7 +34,7 @@ describe("InsightFacade", function () {
         facade = new InsightFacade();
     });
 
-    it("Should be able to add a add a new dataset (204)", function () {
+    it("Should be able to add a new courses dataset (204)", function () {
         var that = this;
         Log.trace("Starting test: " + that.test.title);
         return facade.addDataset('courses', zipFileContents).then(function (response:InsightResponse) {
@@ -42,10 +44,30 @@ describe("InsightFacade", function () {
         });
     });
 
-    it("Should be able to update an existing dataset (201)", function () {
+    it("Should be able to add a new rooms dataset (204)", function () {
+        var that = this;
+        Log.trace("Starting test: " + that.test.title);
+        return facade.addDataset('rooms', zipFileContentsRooms).then(function (response:InsightResponse) {
+            expect(response.code).to.equal(204);
+        }).catch(function (response:InsightResponse) {
+            expect.fail('Should not happen');
+        });
+    });
+
+    it("Should be able to update an existing courses dataset (201)", function () {
         var that = this;
         Log.trace("Starting test: " + that.test.title);
         return facade.addDataset('courses', zipFileContents).then(function (response:InsightResponse) {
+            expect(response.code).to.equal(201);
+        }).catch(function (response:InsightResponse) {
+            expect.fail('Should not happen');
+        });
+    });
+
+    it("Should be able to update an existing rooms dataset (201)", function () {
+        var that = this;
+        Log.trace("Starting test: " + that.test.title);
+        return facade.addDataset('rooms', zipFileContentsRooms).then(function (response:InsightResponse) {
             expect(response.code).to.equal(201);
         }).catch(function (response:InsightResponse) {
             expect.fail('Should not happen');
@@ -103,6 +125,26 @@ describe("InsightFacade", function () {
 
     });
 
+    it("Should be handle retrieving all room IDs", function () {
+        var that = this;
+        let query:QueryRequest = {
+            GET: ['rooms_fullname', 'rooms_shortname', 'rooms_number', 'rooms_address', 'rooms_lat', 'rooms_lon', 'rooms_seats', 'rooms_type', 'rooms_furniture', 'rooms_href'],
+            GROUP:['rooms_fullname', 'rooms_shortname', 'rooms_number', 'rooms_address', 'rooms_lat', 'rooms_lon', 'rooms_seats', 'rooms_type', 'rooms_furniture', 'rooms_href'],
+            APPLY:[],
+            WHERE: {IS: {"rooms_shortname": "DMP"}},
+            ORDER: {"dir": "UP", "keys": ["rooms_number"]},
+            AS: 'table'
+        };
+
+        Log.trace("Starting test: " + that.test.title);
+        return facade.performQuery(query).then(function (response:InsightResponse) {
+            expect(response.code).to.equal(200);
+        }).catch(function (response:InsightResponse) {
+            expect.fail('Should not happen');
+        });
+
+    });
+
     // Delete Dataset Tests
     it("Should be able to delete existing dataset (204)", function () {
         var that = this;
@@ -144,7 +186,32 @@ describe("InsightFacade", function () {
     });
 
 
-    it("Should be able to handle complex D1 query", function () {
+    it("Should be able to handle a complex D1 query", function() {
+        var that = this;
+        let query:QueryRequest = {GET: ['courses_dept'],WHERE: {
+            "OR": [
+                {
+                    "AND": [
+                        {"GT": {"courses_avg": 70}},
+                        {"IS": {"courses_dept": "*th"}},
+                        {"NOT": {"EQ": {"courses_id": 100}}}
+                    ]
+                },
+                {"IS": {"courses_instructor": "*gregor*"}}
+            ]
+        }, ORDER: 'courses_dept', AS: 'table'};
+
+        Log.trace("Starting test: " + that.test.title);
+        return facade.performQuery(query).then(function (response:InsightResponse) {
+            console.log("HOWDY "+ JSON.stringify(response));
+            expect(response.code).to.equal(200);
+        }).catch(function (response:InsightResponse) {
+            expect.fail('Should not happen');
+        });
+
+    });
+
+    it("Should be able to handle another complex D1 query", function () {
         var that = this;
         let query:QueryRequest = {
             GET: ["courses_dept", "courses_id", "courses_instructor"], WHERE: {
@@ -322,6 +389,120 @@ describe("InsightFacade", function () {
             "AS":"TABLE"
         };
         let expectation:any = {"render":"TABLE","result":[{"courses_dept":"cpsc","courses_id":"589","numSection":14,"averageGrade":85.82,"countPass":4,"averageFail":0},{"courses_dept":"cpsc","courses_id":"547","numSection":2,"averageGrade":88.47,"countPass":1,"averageFail":0},{"courses_dept":"cpsc","courses_id":"544","numSection":12,"averageGrade":84.25,"countPass":4,"averageFail":0},{"courses_dept":"cpsc","courses_id":"543","numSection":8,"averageGrade":87.32,"countPass":3,"averageFail":0},{"courses_dept":"cpsc","courses_id":"540","numSection":10,"averageGrade":86.46,"countPass":5,"averageFail":0},{"courses_dept":"cpsc","courses_id":"527","numSection":2,"averageGrade":83.78,"countPass":1,"averageFail":0},{"courses_dept":"cpsc","courses_id":"522","numSection":6,"averageGrade":85.75,"countPass":3,"averageFail":0},{"courses_dept":"cpsc","courses_id":"521","numSection":10,"averageGrade":84.86,"countPass":5,"averageFail":0},{"courses_dept":"cpsc","courses_id":"515","numSection":4,"averageGrade":81.02,"countPass":2,"averageFail":0},{"courses_dept":"cpsc","courses_id":"513","numSection":12,"averageGrade":81.5,"countPass":5,"averageFail":0.33},{"courses_dept":"cpsc","courses_id":"509","numSection":8,"averageGrade":85.72,"countPass":4,"averageFail":0},{"courses_dept":"cpsc","courses_id":"507","numSection":6,"averageGrade":88.57,"countPass":3,"averageFail":0},{"courses_dept":"cpsc","courses_id":"503","numSection":6,"averageGrade":88.43,"countPass":3,"averageFail":0},{"courses_dept":"cpsc","courses_id":"502","numSection":8,"averageGrade":83.22,"countPass":4,"averageFail":0},{"courses_dept":"cpsc","courses_id":"501","numSection":8,"averageGrade":90.21,"countPass":4,"averageFail":0},{"courses_dept":"cpsc","courses_id":"500","numSection":12,"averageGrade":83.95,"countPass":4,"averageFail":0.33},{"courses_dept":"cpsc","courses_id":"490","numSection":10,"averageGrade":90.73,"countPass":4,"averageFail":0},{"courses_dept":"cpsc","courses_id":"449","numSection":10,"averageGrade":92.1,"countPass":3,"averageFail":0},{"courses_dept":"cpsc","courses_id":"445","numSection":12,"averageGrade":81.61,"countPass":5,"averageFail":0.33},{"courses_dept":"cpsc","courses_id":"444","numSection":8,"averageGrade":79.19,"countPass":4,"averageFail":0.25},{"courses_dept":"cpsc","courses_id":"430","numSection":16,"averageGrade":77.77,"countPass":8,"averageFail":0.13},{"courses_dept":"cpsc","courses_id":"425","numSection":12,"averageGrade":74.16,"countPass":6,"averageFail":1.83},{"courses_dept":"cpsc","courses_id":"422","numSection":12,"averageGrade":74.15,"countPass":5,"averageFail":1.33},{"courses_dept":"cpsc","courses_id":"421","numSection":12,"averageGrade":76.83,"countPass":6,"averageFail":0.67},{"courses_dept":"cpsc","courses_id":"420","numSection":12,"averageGrade":71.57,"countPass":6,"averageFail":4.33},{"courses_dept":"cpsc","courses_id":"418","numSection":4,"averageGrade":77.74,"countPass":2,"averageFail":1.5},{"courses_dept":"cpsc","courses_id":"416","numSection":12,"averageGrade":74.8,"countPass":6,"averageFail":1.33},{"courses_dept":"cpsc","courses_id":"415","numSection":12,"averageGrade":70.72,"countPass":6,"averageFail":4.17},{"courses_dept":"cpsc","courses_id":"411","numSection":12,"averageGrade":79.34,"countPass":6,"averageFail":0.33},{"courses_dept":"cpsc","courses_id":"410","numSection":12,"averageGrade":77.61,"countPass":6,"averageFail":0.83},{"courses_dept":"cpsc","courses_id":"404","numSection":18,"averageGrade":73.47,"countPass":17,"averageFail":3.67},{"courses_dept":"cpsc","courses_id":"344","numSection":13,"averageGrade":79.05,"countPass":8,"averageFail":0.62},{"courses_dept":"cpsc","courses_id":"340","numSection":12,"averageGrade":73.55,"countPass":6,"averageFail":4.5},{"courses_dept":"cpsc","courses_id":"322","numSection":22,"averageGrade":73.47,"countPass":17,"averageFail":5.82},{"courses_dept":"cpsc","courses_id":"320","numSection":23,"averageGrade":70.61,"countPass":20,"averageFail":10.52},{"courses_dept":"cpsc","courses_id":"319","numSection":12,"averageGrade":84.15,"countPass":6,"averageFail":0.33},{"courses_dept":"cpsc","courses_id":"317","numSection":18,"averageGrade":72.09,"countPass":17,"averageFail":5},{"courses_dept":"cpsc","courses_id":"314","numSection":18,"averageGrade":76.71,"countPass":16,"averageFail":2.44},{"courses_dept":"cpsc","courses_id":"313","numSection":26,"averageGrade":74.15,"countPass":22,"averageFail":6.08},{"courses_dept":"cpsc","courses_id":"312","numSection":12,"averageGrade":81.81,"countPass":6,"averageFail":1.17},{"courses_dept":"cpsc","courses_id":"311","numSection":12,"averageGrade":77.17,"countPass":6,"averageFail":3.67},{"courses_dept":"cpsc","courses_id":"310","numSection":26,"averageGrade":78.06,"countPass":19,"averageFail":2.38},{"courses_dept":"cpsc","courses_id":"304","numSection":30,"averageGrade":76.86,"countPass":21,"averageFail":1.8},{"courses_dept":"cpsc","courses_id":"303","numSection":12,"averageGrade":73.55,"countPass":6,"averageFail":3},{"courses_dept":"cpsc","courses_id":"302","numSection":12,"averageGrade":76.2,"countPass":6,"averageFail":1},{"courses_dept":"cpsc","courses_id":"301","numSection":12,"averageGrade":81.64,"countPass":6,"averageFail":5.17},{"courses_dept":"cpsc","courses_id":"261","numSection":6,"averageGrade":68.41,"countPass":3,"averageFail":13},{"courses_dept":"cpsc","courses_id":"259","numSection":8,"averageGrade":74.98,"countPass":4,"averageFail":13.5},{"courses_dept":"cpsc","courses_id":"221","numSection":37,"averageGrade":75.08,"countPass":28,"averageFail":6.43},{"courses_dept":"cpsc","courses_id":"213","numSection":31,"averageGrade":74.37,"countPass":24,"averageFail":7.35},{"courses_dept":"cpsc","courses_id":"210","numSection":39,"averageGrade":74.08,"countPass":34,"averageFail":11.18},{"courses_dept":"cpsc","courses_id":"121","numSection":43,"averageGrade":76.24,"countPass":34,"averageFail":8.7},{"courses_dept":"cpsc","courses_id":"110","numSection":49,"averageGrade":74.61,"countPass":44,"averageFail":24.41}]};
+        return facade.performQuery(query).then(function (response:InsightResponse) {
+            expect(response.body).to.deep.equal(expectation);
+        }).catch(function (response) {
+            expect.fail("Should not occur");
+        })
+    });
+
+    it("Should match the first sample D3 query", function() {
+        var that = this;
+        let query: QueryRequest = {
+            "GET": ["rooms_fullname", "rooms_number"],
+            "WHERE": {"IS": {"rooms_shortname": "DMP"}},
+            "ORDER": {"dir": "UP", "keys": ["rooms_number"]},
+            "AS": "TABLE"
+        };
+        let expectation:any = { render: 'TABLE',
+            result:
+                [ { rooms_fullname: 'Hugh Dempster Pavilion',
+                    rooms_number: '101' },
+                    { rooms_fullname: 'Hugh Dempster Pavilion',
+                        rooms_number: '110' },
+                    { rooms_fullname: 'Hugh Dempster Pavilion',
+                        rooms_number: '201' },
+                    { rooms_fullname: 'Hugh Dempster Pavilion',
+                        rooms_number: '301' },
+                    { rooms_fullname: 'Hugh Dempster Pavilion',
+                        rooms_number: '310' } ] };
+        return facade.performQuery(query).then(function (response:InsightResponse) {
+            expect(response.body).to.deep.equal(expectation);
+        }).catch(function (response) {
+            expect.fail("Should not occur");
+        })
+    });
+
+    it("Should match the third sample D3 query", function() {
+        var that = this;
+        let query: QueryRequest =  {
+            "GET": ["rooms_fullname", "rooms_number", "rooms_seats"],
+            "WHERE": {"AND": [
+                {"GT": {"rooms_lat": 49.261292}},
+                {"LT": {"rooms_lon": -123.245214}},
+                {"LT": {"rooms_lat": 49.262966}},
+                {"GT": {"rooms_lon": -123.249886}},
+                {"IS": {"rooms_furniture": "*Movable Tables*"}}
+            ]},
+            "ORDER": { "dir": "UP", "keys": ["rooms_number"]},
+            "AS": "TABLE"
+        };
+        let expectation:any = { render: 'TABLE',
+                result:
+                    [ { rooms_fullname: 'Chemical and Biological Engineering Building',
+                        rooms_number: '103',
+                        rooms_seats: 60 },
+                        { rooms_fullname: 'Civil and Mechanical Engineering',
+                            rooms_number: '1206',
+                            rooms_seats: 26 },
+                        { rooms_fullname: 'Civil and Mechanical Engineering',
+                            rooms_number: '1210',
+                            rooms_seats: 22 },
+                        { rooms_fullname: 'MacLeod',
+                            rooms_number: '214',
+                            rooms_seats: 60 },
+                        { rooms_fullname: 'MacLeod',
+                            rooms_number: '220',
+                            rooms_seats: 40 },
+                        { rooms_fullname: 'MacLeod',
+                            rooms_number: '242',
+                            rooms_seats: 60 },
+                        { rooms_fullname: 'MacLeod',
+                            rooms_number: '254',
+                            rooms_seats: 84 } ] };
+        return facade.performQuery(query).then(function (response:InsightResponse) {
+            expect(response.body).to.deep.equal(expectation);
+        }).catch(function (response) {
+            expect.fail("Should not occur");
+        })
+    });
+
+    it("Should match an alternate third sample D3 query", function() {
+        let query:QueryRequest =  {
+            "GET": ["rooms_fullname", "rooms_number", "rooms_seats"],
+            "WHERE": {"OR": [
+                {"GT": {"rooms_lat": 49.261292}},
+                {"LT": {"rooms_lon": -123.245214}},
+                {"LT": {"rooms_lat": 49.262966}},
+                {"GT": {"rooms_lon": -123.249886}},
+                {"IS": {"rooms_furniture": "*Movable Tables*"}}
+            ]},
+            "ORDER": { "dir": "UP", "keys": ["rooms_number"]},
+            "AS": "TABLE"
+        };
+        let expectation:any = {"render":"TABLE","result":[{"rooms_fullname":"Henry Angus","rooms_number":"037","rooms_seats":54},{"rooms_fullname":"Henry Angus","rooms_number":"039","rooms_seats":54},{"rooms_fullname":"Henry Angus","rooms_number":"098","rooms_seats":260},{"rooms_fullname":"Woodward (Instructional Resources Centre-IRC)","rooms_number":"1","rooms_seats":120},{"rooms_fullname":"Hebb","rooms_number":"10","rooms_seats":54},{"rooms_fullname":"Geography","rooms_number":"100","rooms_seats":225},{"rooms_fullname":"Mathematics","rooms_number":"100","rooms_seats":224},{"rooms_fullname":"Neville Scarfe","rooms_number":"100","rooms_seats":280},{"rooms_fullname":"Hebb","rooms_number":"100","rooms_seats":375},{"rooms_fullname":"Wesbrook","rooms_number":"100","rooms_seats":325},{"rooms_fullname":"Ponderosa Commons: Oak House","rooms_number":"1001","rooms_seats":40},{"rooms_fullname":"Life Sciences Centre","rooms_number":"1001","rooms_seats":350},{"rooms_fullname":"Forest Sciences Centre","rooms_number":"1001","rooms_seats":65},{"rooms_fullname":"Orchard Commons","rooms_number":"1001","rooms_seats":72},{"rooms_fullname":"Ponderosa Commons: Oak House","rooms_number":"1002","rooms_seats":40},{"rooms_fullname":"Forest Sciences Centre","rooms_number":"1002","rooms_seats":24},{"rooms_fullname":"Life Sciences Centre","rooms_number":"1002","rooms_seats":350},{"rooms_fullname":"Forest Sciences Centre","rooms_number":"1003","rooms_seats":65},{"rooms_fullname":"Neville Scarfe","rooms_number":"1003","rooms_seats":40},{"rooms_fullname":"Life Sciences Centre","rooms_number":"1003","rooms_seats":125},{"rooms_fullname":"Ponderosa Commons: Oak House","rooms_number":"1003","rooms_seats":40},{"rooms_fullname":"Neville Scarfe","rooms_number":"1004","rooms_seats":40},{"rooms_fullname":"Neville Scarfe","rooms_number":"1005","rooms_seats":40},{"rooms_fullname":"Forest Sciences Centre","rooms_number":"1005","rooms_seats":250},{"rooms_fullname":"Ponderosa Commons: Oak House","rooms_number":"1008","rooms_seats":24},{"rooms_fullname":"Ponderosa Commons: Oak House","rooms_number":"1009","rooms_seats":24},{"rooms_fullname":"Chemical and Biological Engineering Building","rooms_number":"101","rooms_seats":200},{"rooms_fullname":"Hugh Dempster Pavilion","rooms_number":"101","rooms_seats":40},{"rooms_fullname":"Geography","rooms_number":"101","rooms_seats":60},{"rooms_fullname":"The Leon and Thea Koerner University Centre","rooms_number":"101","rooms_seats":30},{"rooms_fullname":"Ponderosa Commons: Oak House","rooms_number":"1011","rooms_seats":24},{"rooms_fullname":"Earth Sciences Building","rooms_number":"1012","rooms_seats":150},{"rooms_fullname":"Earth Sciences Building","rooms_number":"1013","rooms_seats":350},{"rooms_fullname":"Chemical and Biological Engineering Building","rooms_number":"102","rooms_seats":94},{"rooms_fullname":"Mathematics","rooms_number":"102","rooms_seats":60},{"rooms_fullname":"Frederic Lasserre","rooms_number":"102","rooms_seats":80},{"rooms_fullname":"Neville Scarfe","rooms_number":"1020","rooms_seats":24},{"rooms_fullname":"Neville Scarfe","rooms_number":"1021","rooms_seats":20},{"rooms_fullname":"Neville Scarfe","rooms_number":"1022","rooms_seats":20},{"rooms_fullname":"Neville Scarfe","rooms_number":"1023","rooms_seats":20},{"rooms_fullname":"Neville Scarfe","rooms_number":"1024","rooms_seats":20},{"rooms_fullname":"The Leon and Thea Koerner University Centre","rooms_number":"103","rooms_seats":55},{"rooms_fullname":"Chemical and Biological Engineering Building","rooms_number":"103","rooms_seats":60},{"rooms_fullname":"Frederic Lasserre","rooms_number":"104","rooms_seats":94},{"rooms_fullname":"Mathematics","rooms_number":"104","rooms_seats":48},{"rooms_fullname":"Mathematics","rooms_number":"105","rooms_seats":30},{"rooms_fullname":"Allard Hall (LAW)","rooms_number":"105","rooms_seats":94},{"rooms_fullname":"Frederic Lasserre","rooms_number":"105","rooms_seats":60},{"rooms_fullname":"West Mall Swing Space","rooms_number":"105","rooms_seats":47},{"rooms_fullname":"West Mall Swing Space","rooms_number":"106","rooms_seats":27},{"rooms_fullname":"Frederic Lasserre","rooms_number":"107","rooms_seats":51},{"rooms_fullname":"The Leon and Thea Koerner University Centre","rooms_number":"107","rooms_seats":48},{"rooms_fullname":"West Mall Swing Space","rooms_number":"107","rooms_seats":47},{"rooms_fullname":"West Mall Swing Space","rooms_number":"108","rooms_seats":27},{"rooms_fullname":"The Leon and Thea Koerner University Centre","rooms_number":"109","rooms_seats":30},{"rooms_fullname":"West Mall Swing Space","rooms_number":"109","rooms_seats":47},{"rooms_fullname":"West Mall Swing Space","rooms_number":"110","rooms_seats":27},{"rooms_fullname":"Hugh Dempster Pavilion","rooms_number":"110","rooms_seats":120},{"rooms_fullname":"Mathematics Annex","rooms_number":"1100","rooms_seats":106},{"rooms_fullname":"Pharmaceutical Sciences Building","rooms_number":"1101","rooms_seats":236},{"rooms_fullname":"Allard Hall (LAW)","rooms_number":"112","rooms_seats":20},{"rooms_fullname":"Allard Hall (LAW)","rooms_number":"113","rooms_seats":20},{"rooms_fullname":"Hebb","rooms_number":"12","rooms_seats":54},{"rooms_fullname":"Aquatic Ecosystems Research Laboratory","rooms_number":"120","rooms_seats":144},{"rooms_fullname":"Pharmaceutical Sciences Building","rooms_number":"1201","rooms_seats":167},{"rooms_fullname":"Civil and Mechanical Engineering","rooms_number":"1202","rooms_seats":100},{"rooms_fullname":"Civil and Mechanical Engineering","rooms_number":"1204","rooms_seats":62},{"rooms_fullname":"Civil and Mechanical Engineering","rooms_number":"1206","rooms_seats":26},{"rooms_fullname":"West Mall Swing Space","rooms_number":"121","rooms_seats":187},{"rooms_fullname":"Allard Hall (LAW)","rooms_number":"121","rooms_seats":50},{"rooms_fullname":"Civil and Mechanical Engineering","rooms_number":"1210","rooms_seats":22},{"rooms_fullname":"Civil and Mechanical Engineering","rooms_number":"1212","rooms_seats":34},{"rooms_fullname":"Ponderosa Commons: Oak House","rooms_number":"1215","rooms_seats":24},{"rooms_fullname":"Civil and Mechanical Engineering","rooms_number":"1215","rooms_seats":45},{"rooms_fullname":"West Mall Swing Space","rooms_number":"122","rooms_seats":188},{"rooms_fullname":"Jack Bell Building for the School of Social Work","rooms_number":"122","rooms_seats":12},{"rooms_fullname":"Forest Sciences Centre","rooms_number":"1221","rooms_seats":99},{"rooms_fullname":"Jack Bell Building for the School of Social Work","rooms_number":"124","rooms_seats":68},{"rooms_fullname":"Centre for Interactive  Research on Sustainability","rooms_number":"1250","rooms_seats":426},{"rooms_fullname":"Hebb","rooms_number":"13","rooms_seats":54},{"rooms_fullname":"Ponderosa Commons: Oak House","rooms_number":"1302","rooms_seats":24},{"rooms_fullname":"Neville Scarfe","rooms_number":"1328","rooms_seats":38},{"rooms_fullname":"Earth and Ocean Sciences - Main","rooms_number":"135","rooms_seats":50},{"rooms_fullname":"Forest Sciences Centre","rooms_number":"1402","rooms_seats":18},{"rooms_fullname":"Auditorium Annex","rooms_number":"142","rooms_seats":20},{"rooms_fullname":"School of Population and Public Health","rooms_number":"143","rooms_seats":28},{"rooms_fullname":"Geography","rooms_number":"147","rooms_seats":60},{"rooms_fullname":"Biological Sciences","rooms_number":"1503","rooms_seats":16},{"rooms_fullname":"Friedman Building","rooms_number":"153","rooms_seats":160},{"rooms_fullname":"MacMillan","rooms_number":"154","rooms_seats":47},{"rooms_fullname":"Irving K Barber Learning Centre","rooms_number":"155","rooms_seats":50},{"rooms_fullname":"Irving K Barber Learning Centre","rooms_number":"156","rooms_seats":24},{"rooms_fullname":"Auditorium Annex","rooms_number":"157","rooms_seats":21},{"rooms_fullname":"Irving K Barber Learning Centre","rooms_number":"157","rooms_seats":24},{"rooms_fullname":"MacMillan","rooms_number":"158","rooms_seats":74},{"rooms_fullname":"Irving K Barber Learning Centre","rooms_number":"158","rooms_seats":24},{"rooms_fullname":"MacMillan","rooms_number":"160","rooms_seats":72},{"rooms_fullname":"Forest Sciences Centre","rooms_number":"1611","rooms_seats":24},{"rooms_fullname":"Forest Sciences Centre","rooms_number":"1613","rooms_seats":36},{"rooms_fullname":"Forest Sciences Centre","rooms_number":"1615","rooms_seats":20},{"rooms_fullname":"Forest Sciences Centre","rooms_number":"1617","rooms_seats":20},{"rooms_fullname":"MacMillan","rooms_number":"166","rooms_seats":200},{"rooms_fullname":"Irving K Barber Learning Centre","rooms_number":"182","rooms_seats":154},{"rooms_fullname":"Irving K Barber Learning Centre","rooms_number":"185","rooms_seats":40},{"rooms_fullname":"Irving K Barber Learning Centre","rooms_number":"191","rooms_seats":24},{"rooms_fullname":"Irving K Barber Learning Centre","rooms_number":"192","rooms_seats":8},{"rooms_fullname":"Irving K Barber Learning Centre","rooms_number":"193","rooms_seats":8},{"rooms_fullname":"Irving K Barber Learning Centre","rooms_number":"194","rooms_seats":8},{"rooms_fullname":"Irving K Barber Learning Centre","rooms_number":"195","rooms_seats":8},{"rooms_fullname":"Woodward (Instructional Resources Centre-IRC)","rooms_number":"2","rooms_seats":503},{"rooms_fullname":"Food, Nutrition and Health","rooms_number":"20","rooms_seats":12},{"rooms_fullname":"Hennings","rooms_number":"200","rooms_seats":257},{"rooms_fullname":"Neville Scarfe","rooms_number":"200","rooms_seats":40},{"rooms_fullname":"Leonard S. Klinck (also known as CSCI)","rooms_number":"200","rooms_seats":205},{"rooms_fullname":"Geography","rooms_number":"200","rooms_seats":100},{"rooms_fullname":"Biological Sciences","rooms_number":"2000","rooms_seats":228},{"rooms_fullname":"Wesbrook","rooms_number":"201","rooms_seats":102},{"rooms_fullname":"Hennings","rooms_number":"201","rooms_seats":155},{"rooms_fullname":"Neville Scarfe","rooms_number":"201","rooms_seats":40},{"rooms_fullname":"Leonard S. Klinck (also known as CSCI)","rooms_number":"201","rooms_seats":183},{"rooms_fullname":"Geography","rooms_number":"201","rooms_seats":42},{"rooms_fullname":"Hugh Dempster Pavilion","rooms_number":"201","rooms_seats":40},{"rooms_fullname":"Earth Sciences Building","rooms_number":"2012","rooms_seats":80},{"rooms_fullname":"Mathematics","rooms_number":"202","rooms_seats":30},{"rooms_fullname":"Neville Scarfe","rooms_number":"202","rooms_seats":40},{"rooms_fullname":"Anthropology and Sociology","rooms_number":"202","rooms_seats":26},{"rooms_fullname":"Hennings","rooms_number":"202","rooms_seats":150},{"rooms_fullname":"MacLeod","rooms_number":"202","rooms_seats":123},{"rooms_fullname":"Anthropology and Sociology","rooms_number":"203","rooms_seats":33},{"rooms_fullname":"Neville Scarfe","rooms_number":"203","rooms_seats":40},{"rooms_fullname":"Mathematics","rooms_number":"203","rooms_seats":48},{"rooms_fullname":"Robert F. Osborne Centre","rooms_number":"203A","rooms_seats":40},{"rooms_fullname":"Robert F. Osborne Centre","rooms_number":"203B","rooms_seats":39},{"rooms_fullname":"Neville Scarfe","rooms_number":"204","rooms_seats":40},{"rooms_fullname":"Mathematics","rooms_number":"204","rooms_seats":30},{"rooms_fullname":"Neville Scarfe","rooms_number":"204A","rooms_seats":24},{"rooms_fullname":"Anthropology and Sociology","rooms_number":"205","rooms_seats":37},{"rooms_fullname":"Neville Scarfe","rooms_number":"205","rooms_seats":34},{"rooms_fullname":"Neville Scarfe","rooms_number":"206","rooms_seats":40},{"rooms_fullname":"War Memorial Gymnasium","rooms_number":"206","rooms_seats":25},{"rooms_fullname":"Anthropology and Sociology","rooms_number":"207","rooms_seats":90},{"rooms_fullname":"Neville Scarfe","rooms_number":"207","rooms_seats":40},{"rooms_fullname":"Neville Scarfe","rooms_number":"208","rooms_seats":40},{"rooms_fullname":"War Memorial Gymnasium","rooms_number":"208","rooms_seats":40},{"rooms_fullname":"Neville Scarfe","rooms_number":"209","rooms_seats":60},{"rooms_fullname":"Neville Scarfe","rooms_number":"210","rooms_seats":24},{"rooms_fullname":"Frederic Lasserre","rooms_number":"211","rooms_seats":20},{"rooms_fullname":"Geography","rooms_number":"212","rooms_seats":72},{"rooms_fullname":"Geography","rooms_number":"214","rooms_seats":39},{"rooms_fullname":"MacLeod","rooms_number":"214","rooms_seats":60},{"rooms_fullname":"MacLeod","rooms_number":"220","rooms_seats":40},{"rooms_fullname":"Biological Sciences","rooms_number":"2200","rooms_seats":76},{"rooms_fullname":"Student Recreation Centre","rooms_number":"220A","rooms_seats":299},{"rooms_fullname":"Student Recreation Centre","rooms_number":"220B","rooms_seats":299},{"rooms_fullname":"Student Recreation Centre","rooms_number":"220C","rooms_seats":299},{"rooms_fullname":"West Mall Swing Space","rooms_number":"221","rooms_seats":190},{"rooms_fullname":"Jack Bell Building for the School of Social Work","rooms_number":"222","rooms_seats":29},{"rooms_fullname":"West Mall Swing Space","rooms_number":"222","rooms_seats":190},{"rooms_fullname":"Jack Bell Building for the School of Social Work","rooms_number":"223","rooms_seats":29},{"rooms_fullname":"Jack Bell Building for the School of Social Work","rooms_number":"224","rooms_seats":31},{"rooms_fullname":"Mathematics","rooms_number":"225","rooms_seats":25},{"rooms_fullname":"MacLeod","rooms_number":"228","rooms_seats":136},{"rooms_fullname":"Henry Angus","rooms_number":"232","rooms_seats":16},{"rooms_fullname":"Henry Angus","rooms_number":"234","rooms_seats":60},{"rooms_fullname":"Henry Angus","rooms_number":"235","rooms_seats":41},{"rooms_fullname":"Brock Hall Annex","rooms_number":"2365","rooms_seats":70},{"rooms_fullname":"Brock Hall Annex","rooms_number":"2367","rooms_seats":24},{"rooms_fullname":"Henry Angus","rooms_number":"237","rooms_seats":41},{"rooms_fullname":"Henry Angus","rooms_number":"241","rooms_seats":70},{"rooms_fullname":"Geography","rooms_number":"242","rooms_seats":21},{"rooms_fullname":"MacLeod","rooms_number":"242","rooms_seats":60},{"rooms_fullname":"Henry Angus","rooms_number":"243","rooms_seats":68},{"rooms_fullname":"Biological Sciences","rooms_number":"2519","rooms_seats":16},{"rooms_fullname":"MacLeod","rooms_number":"254","rooms_seats":84},{"rooms_fullname":"Henry Angus","rooms_number":"254","rooms_seats":80},{"rooms_fullname":"MacMillan","rooms_number":"256","rooms_seats":32},{"rooms_fullname":"MacMillan","rooms_number":"260","rooms_seats":32},{"rooms_fullname":"Irving K Barber Learning Centre","rooms_number":"261","rooms_seats":112},{"rooms_fullname":"Irving K Barber Learning Centre","rooms_number":"263","rooms_seats":8},{"rooms_fullname":"Irving K Barber Learning Centre","rooms_number":"264","rooms_seats":12},{"rooms_fullname":"Irving K Barber Learning Centre","rooms_number":"265","rooms_seats":10},{"rooms_fullname":"Irving K Barber Learning Centre","rooms_number":"266","rooms_seats":8},{"rooms_fullname":"Henry Angus","rooms_number":"291","rooms_seats":54},{"rooms_fullname":"Henry Angus","rooms_number":"292","rooms_seats":35},{"rooms_fullname":"Henry Angus","rooms_number":"293","rooms_seats":32},{"rooms_fullname":"Henry Angus","rooms_number":"295","rooms_seats":54},{"rooms_fullname":"Henry Angus","rooms_number":"296","rooms_seats":37},{"rooms_fullname":"Woodward (Instructional Resources Centre-IRC)","rooms_number":"3","rooms_seats":88},{"rooms_fullname":"Food, Nutrition and Health","rooms_number":"30","rooms_seats":28},{"rooms_fullname":"Orchard Commons","rooms_number":"3002","rooms_seats":25},{"rooms_fullname":"Orchard Commons","rooms_number":"3004","rooms_seats":25},{"rooms_fullname":"Hugh Dempster Pavilion","rooms_number":"301","rooms_seats":80},{"rooms_fullname":"Iona Building","rooms_number":"301","rooms_seats":100},{"rooms_fullname":"Hennings","rooms_number":"301","rooms_seats":30},{"rooms_fullname":"Orchard Commons","rooms_number":"3016","rooms_seats":25},{"rooms_fullname":"Orchard Commons","rooms_number":"3018","rooms_seats":48},{"rooms_fullname":"Hennings","rooms_number":"302","rooms_seats":30},{"rooms_fullname":"Frank Forward","rooms_number":"303","rooms_seats":63},{"rooms_fullname":"Hennings","rooms_number":"304","rooms_seats":36},{"rooms_fullname":"West Mall Swing Space","rooms_number":"305","rooms_seats":47},{"rooms_fullname":"Orchard Commons","rooms_number":"3052","rooms_seats":25},{"rooms_fullname":"Orchard Commons","rooms_number":"3058","rooms_seats":25},{"rooms_fullname":"West Mall Swing Space","rooms_number":"306","rooms_seats":27},{"rooms_fullname":"Orchard Commons","rooms_number":"3062","rooms_seats":16},{"rooms_fullname":"Orchard Commons","rooms_number":"3068","rooms_seats":16},{"rooms_fullname":"West Mall Swing Space","rooms_number":"307","rooms_seats":47},{"rooms_fullname":"Orchard Commons","rooms_number":"3072","rooms_seats":16},{"rooms_fullname":"Orchard Commons","rooms_number":"3074","rooms_seats":72},{"rooms_fullname":"West Mall Swing Space","rooms_number":"308","rooms_seats":27},{"rooms_fullname":"West Mall Swing Space","rooms_number":"309","rooms_seats":47},{"rooms_fullname":"Hugh Dempster Pavilion","rooms_number":"310","rooms_seats":160},{"rooms_fullname":"West Mall Swing Space","rooms_number":"310","rooms_seats":27},{"rooms_fullname":"Pharmaceutical Sciences Building","rooms_number":"3112","rooms_seats":7},{"rooms_fullname":"Pharmaceutical Sciences Building","rooms_number":"3114","rooms_seats":7},{"rooms_fullname":"Pharmaceutical Sciences Building","rooms_number":"3115","rooms_seats":7},{"rooms_fullname":"Pharmaceutical Sciences Building","rooms_number":"3116","rooms_seats":14},{"rooms_fullname":"Pharmaceutical Sciences Building","rooms_number":"3118","rooms_seats":7},{"rooms_fullname":"Pharmaceutical Sciences Building","rooms_number":"3120","rooms_seats":7},{"rooms_fullname":"Pharmaceutical Sciences Building","rooms_number":"3122","rooms_seats":7},{"rooms_fullname":"Pharmaceutical Sciences Building","rooms_number":"3124","rooms_seats":7},{"rooms_fullname":"Frank Forward","rooms_number":"317","rooms_seats":44},{"rooms_fullname":"Food, Nutrition and Health","rooms_number":"320","rooms_seats":27},{"rooms_fullname":"Pharmaceutical Sciences Building","rooms_number":"3208","rooms_seats":72},{"rooms_fullname":"Jack Bell Building for the School of Social Work","rooms_number":"324","rooms_seats":16},{"rooms_fullname":"Jack Bell Building for the School of Social Work","rooms_number":"326","rooms_seats":16},{"rooms_fullname":"Henry Angus","rooms_number":"332","rooms_seats":16},{"rooms_fullname":"Henry Angus","rooms_number":"334","rooms_seats":60},{"rooms_fullname":"Henry Angus","rooms_number":"335","rooms_seats":41},{"rooms_fullname":"Henry Angus","rooms_number":"339","rooms_seats":20},{"rooms_fullname":"Henry Angus","rooms_number":"343","rooms_seats":68},{"rooms_fullname":"Henry Angus","rooms_number":"345","rooms_seats":68},{"rooms_fullname":"Henry Angus","rooms_number":"347","rooms_seats":70},{"rooms_fullname":"Henry Angus","rooms_number":"350","rooms_seats":58},{"rooms_fullname":"Henry Angus","rooms_number":"354","rooms_seats":44},{"rooms_fullname":"MacMillan","rooms_number":"358","rooms_seats":24},{"rooms_fullname":"MacMillan","rooms_number":"360A","rooms_seats":6},{"rooms_fullname":"MacMillan","rooms_number":"360B","rooms_seats":6},{"rooms_fullname":"MacMillan","rooms_number":"360C","rooms_seats":8},{"rooms_fullname":"MacMillan","rooms_number":"360D","rooms_seats":8},{"rooms_fullname":"MacMillan","rooms_number":"360E","rooms_seats":8},{"rooms_fullname":"MacMillan","rooms_number":"360F","rooms_seats":8},{"rooms_fullname":"MacMillan","rooms_number":"360G","rooms_seats":8},{"rooms_fullname":"MacMillan","rooms_number":"360H","rooms_seats":8},{"rooms_fullname":"MacMillan","rooms_number":"360J","rooms_seats":8},{"rooms_fullname":"MacMillan","rooms_number":"360K","rooms_seats":8},{"rooms_fullname":"MacMillan","rooms_number":"360L","rooms_seats":8},{"rooms_fullname":"MacMillan","rooms_number":"360M","rooms_seats":8},{"rooms_fullname":"Woodward (Instructional Resources Centre-IRC)","rooms_number":"4","rooms_seats":120},{"rooms_fullname":"Food, Nutrition and Health","rooms_number":"40","rooms_seats":54},{"rooms_fullname":"Orchard Commons","rooms_number":"4002","rooms_seats":25},{"rooms_fullname":"Orchard Commons","rooms_number":"4004","rooms_seats":25},{"rooms_fullname":"Orchard Commons","rooms_number":"4016","rooms_seats":25},{"rooms_fullname":"Orchard Commons","rooms_number":"4018","rooms_seats":48},{"rooms_fullname":"West Mall Swing Space","rooms_number":"405","rooms_seats":47},{"rooms_fullname":"Orchard Commons","rooms_number":"4052","rooms_seats":25},{"rooms_fullname":"Orchard Commons","rooms_number":"4058","rooms_seats":25},{"rooms_fullname":"West Mall Swing Space","rooms_number":"406","rooms_seats":27},{"rooms_fullname":"Orchard Commons","rooms_number":"4062","rooms_seats":16},{"rooms_fullname":"Orchard Commons","rooms_number":"4068","rooms_seats":16},{"rooms_fullname":"West Mall Swing Space","rooms_number":"407","rooms_seats":47},{"rooms_fullname":"Orchard Commons","rooms_number":"4072","rooms_seats":20},{"rooms_fullname":"Orchard Commons","rooms_number":"4074","rooms_seats":72},{"rooms_fullname":"West Mall Swing Space","rooms_number":"408","rooms_seats":27},{"rooms_fullname":"West Mall Swing Space","rooms_number":"409","rooms_seats":47},{"rooms_fullname":"West Mall Swing Space","rooms_number":"410","rooms_seats":27},{"rooms_fullname":"Henry Angus","rooms_number":"432","rooms_seats":16},{"rooms_fullname":"Henry Angus","rooms_number":"434","rooms_seats":44},{"rooms_fullname":"Henry Angus","rooms_number":"435","rooms_seats":53},{"rooms_fullname":"Henry Angus","rooms_number":"437","rooms_seats":32},{"rooms_fullname":"Leonard S. Klinck (also known as CSCI)","rooms_number":"460","rooms_seats":75},{"rooms_fullname":"Irving K Barber Learning Centre","rooms_number":"460","rooms_seats":16},{"rooms_fullname":"Irving K Barber Learning Centre","rooms_number":"461","rooms_seats":30},{"rooms_fullname":"Leonard S. Klinck (also known as CSCI)","rooms_number":"462","rooms_seats":42},{"rooms_fullname":"Woodward (Instructional Resources Centre-IRC)","rooms_number":"5","rooms_seats":120},{"rooms_fullname":"Food, Nutrition and Health","rooms_number":"50","rooms_seats":43},{"rooms_fullname":"Frank Forward","rooms_number":"519","rooms_seats":35},{"rooms_fullname":"Frederic Lasserre","rooms_number":"5C","rooms_seats":20},{"rooms_fullname":"Woodward (Instructional Resources Centre-IRC)","rooms_number":"6","rooms_seats":181},{"rooms_fullname":"Food, Nutrition and Health","rooms_number":"60","rooms_seats":99},{"rooms_fullname":"Iona Building","rooms_number":"633","rooms_seats":50},{"rooms_fullname":"Robert F. Osborne Centre","rooms_number":"A","rooms_seats":442},{"rooms_fullname":"Buchanan","rooms_number":"A101","rooms_seats":275},{"rooms_fullname":"Buchanan","rooms_number":"A102","rooms_seats":150},{"rooms_fullname":"Buchanan","rooms_number":"A103","rooms_seats":131},{"rooms_fullname":"Buchanan","rooms_number":"A104","rooms_seats":150},{"rooms_fullname":"Buchanan","rooms_number":"A201","rooms_seats":181},{"rooms_fullname":"Buchanan","rooms_number":"A202","rooms_seats":108},{"rooms_fullname":"Buchanan","rooms_number":"A203","rooms_seats":108},{"rooms_fullname":"Allard Hall (LAW)","rooms_number":"B101","rooms_seats":44},{"rooms_fullname":"School of Population and Public Health","rooms_number":"B108","rooms_seats":30},{"rooms_fullname":"School of Population and Public Health","rooms_number":"B112","rooms_seats":16},{"rooms_fullname":"School of Population and Public Health","rooms_number":"B136","rooms_seats":12},{"rooms_fullname":"School of Population and Public Health","rooms_number":"B138","rooms_seats":14},{"rooms_fullname":"Buchanan","rooms_number":"B141","rooms_seats":42},{"rooms_fullname":"Buchanan","rooms_number":"B142","rooms_seats":26},{"rooms_fullname":"Chemistry","rooms_number":"B150","rooms_seats":265},{"rooms_fullname":"School of Population and Public Health","rooms_number":"B151","rooms_seats":66},{"rooms_fullname":"Buchanan","rooms_number":"B208","rooms_seats":56},{"rooms_fullname":"Buchanan","rooms_number":"B209","rooms_seats":40},{"rooms_fullname":"Buchanan","rooms_number":"B210","rooms_seats":48},{"rooms_fullname":"Buchanan","rooms_number":"B211","rooms_seats":40},{"rooms_fullname":"Buchanan","rooms_number":"B213","rooms_seats":78},{"rooms_fullname":"Buchanan","rooms_number":"B215","rooms_seats":78},{"rooms_fullname":"Buchanan","rooms_number":"B216","rooms_seats":22},{"rooms_fullname":"Buchanan","rooms_number":"B218","rooms_seats":40},{"rooms_fullname":"Buchanan","rooms_number":"B219","rooms_seats":24},{"rooms_fullname":"Chemistry","rooms_number":"B250","rooms_seats":240},{"rooms_fullname":"Buchanan","rooms_number":"B302","rooms_seats":32},{"rooms_fullname":"Buchanan","rooms_number":"B303","rooms_seats":40},{"rooms_fullname":"Buchanan","rooms_number":"B304","rooms_seats":32},{"rooms_fullname":"Buchanan","rooms_number":"B306","rooms_seats":32},{"rooms_fullname":"Buchanan","rooms_number":"B307","rooms_seats":32},{"rooms_fullname":"Buchanan","rooms_number":"B308","rooms_seats":32},{"rooms_fullname":"Buchanan","rooms_number":"B309","rooms_seats":40},{"rooms_fullname":"Buchanan","rooms_number":"B310","rooms_seats":32},{"rooms_fullname":"Buchanan","rooms_number":"B312","rooms_seats":18},{"rooms_fullname":"Buchanan","rooms_number":"B313","rooms_seats":78},{"rooms_fullname":"Buchanan","rooms_number":"B315","rooms_seats":78},{"rooms_fullname":"Buchanan","rooms_number":"B316","rooms_seats":22},{"rooms_fullname":"Buchanan","rooms_number":"B318","rooms_seats":40},{"rooms_fullname":"Buchanan","rooms_number":"B319","rooms_seats":24},{"rooms_fullname":"Woodward (Instructional Resources Centre-IRC)","rooms_number":"B75","rooms_seats":30},{"rooms_fullname":"Woodward (Instructional Resources Centre-IRC)","rooms_number":"B79","rooms_seats":21},{"rooms_fullname":"Chemistry","rooms_number":"C124","rooms_seats":90},{"rooms_fullname":"Chemistry","rooms_number":"C126","rooms_seats":90},{"rooms_fullname":"Chemistry","rooms_number":"D200","rooms_seats":114},{"rooms_fullname":"Buchanan","rooms_number":"D201","rooms_seats":40},{"rooms_fullname":"Buchanan","rooms_number":"D204","rooms_seats":40},{"rooms_fullname":"Buchanan","rooms_number":"D205","rooms_seats":30},{"rooms_fullname":"Buchanan","rooms_number":"D207","rooms_seats":30},{"rooms_fullname":"Buchanan","rooms_number":"D209","rooms_seats":22},{"rooms_fullname":"Buchanan","rooms_number":"D213","rooms_seats":30},{"rooms_fullname":"Buchanan","rooms_number":"D214","rooms_seats":22},{"rooms_fullname":"Buchanan","rooms_number":"D216","rooms_seats":24},{"rooms_fullname":"Buchanan","rooms_number":"D217","rooms_seats":65},{"rooms_fullname":"Buchanan","rooms_number":"D218","rooms_seats":65},{"rooms_fullname":"Buchanan","rooms_number":"D219","rooms_seats":65},{"rooms_fullname":"Buchanan","rooms_number":"D221","rooms_seats":30},{"rooms_fullname":"Buchanan","rooms_number":"D222","rooms_seats":65},{"rooms_fullname":"Buchanan","rooms_number":"D228","rooms_seats":24},{"rooms_fullname":"Buchanan","rooms_number":"D229","rooms_seats":30},{"rooms_fullname":"Chemistry","rooms_number":"D300","rooms_seats":114},{"rooms_fullname":"Buchanan","rooms_number":"D301","rooms_seats":40},{"rooms_fullname":"Buchanan","rooms_number":"D304","rooms_seats":30},{"rooms_fullname":"Buchanan","rooms_number":"D306","rooms_seats":22},{"rooms_fullname":"Buchanan","rooms_number":"D307","rooms_seats":30},{"rooms_fullname":"Buchanan","rooms_number":"D312","rooms_seats":40},{"rooms_fullname":"Buchanan","rooms_number":"D313","rooms_seats":30},{"rooms_fullname":"Buchanan","rooms_number":"D314","rooms_seats":40},{"rooms_fullname":"Buchanan","rooms_number":"D315","rooms_seats":22},{"rooms_fullname":"Buchanan","rooms_number":"D316","rooms_seats":50},{"rooms_fullname":"Buchanan","rooms_number":"D317","rooms_seats":50},{"rooms_fullname":"Buchanan","rooms_number":"D319","rooms_seats":22},{"rooms_fullname":"Buchanan","rooms_number":"D322","rooms_seats":50},{"rooms_fullname":"Buchanan","rooms_number":"D323","rooms_seats":31},{"rooms_fullname":"Buchanan","rooms_number":"D325","rooms_seats":22},{"rooms_fullname":"Woodward (Instructional Resources Centre-IRC)","rooms_number":"G41","rooms_seats":30},{"rooms_fullname":"Woodward (Instructional Resources Centre-IRC)","rooms_number":"G44","rooms_seats":14},{"rooms_fullname":"Woodward (Instructional Resources Centre-IRC)","rooms_number":"G53","rooms_seats":10},{"rooms_fullname":"Woodward (Instructional Resources Centre-IRC)","rooms_number":"G55","rooms_seats":10},{"rooms_fullname":"Woodward (Instructional Resources Centre-IRC)","rooms_number":"G57","rooms_seats":12},{"rooms_fullname":"Woodward (Instructional Resources Centre-IRC)","rooms_number":"G59","rooms_seats":10},{"rooms_fullname":"Woodward (Instructional Resources Centre-IRC)","rooms_number":"G65","rooms_seats":12},{"rooms_fullname":"Woodward (Instructional Resources Centre-IRC)","rooms_number":"G66","rooms_seats":16}]};
+        return facade.performQuery(query).then(function (response:InsightResponse) {
+            expect(response.body).to.deep.equal(expectation);
+        }).catch(function (response) {
+            expect.fail("Should not occur");
+        })
+    });
+
+    it("Should match another alternate third sample D3 query", function() {
+        var that = this;
+        let query: QueryRequest =   {
+            "GET": ["rooms_fullname", "rooms_number", "rooms_seats"],
+            "WHERE": {"AND": [
+                {"NOT": {"GT": {"rooms_lat": 49.261292}}},
+                {"NOT": {"LT": {"rooms_lon": -123.245214}}},
+                {"LT": {"rooms_lat": 49.262966}},
+                {"GT": {"rooms_lon": -123.249886}},
+                {"IS": {"rooms_furniture": "*Movable Tables*"}}
+            ]},
+            "AS": "TABLE"
+        };
+
+        let expectation:any = {"render":"TABLE","result":[{"rooms_fullname":"Robert F. Osborne Centre","rooms_number":"203A","rooms_seats":40},{"rooms_fullname":"Robert F. Osborne Centre","rooms_number":"A","rooms_seats":442}]};
         return facade.performQuery(query).then(function (response:InsightResponse) {
             expect(response.body).to.deep.equal(expectation);
         }).catch(function (response) {
