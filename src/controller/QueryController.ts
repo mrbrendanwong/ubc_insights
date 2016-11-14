@@ -234,15 +234,36 @@ export default class QueryController {
     private unionArrays(a1:any, a2:any, getRequests:any):any {
         var hash:any = {};
         var arr:any = [];
-        for (var i = 0; i < a1.length; i++) {
-            if (hash[a1[i]["courses_uuid"]] !== a1[i]["courses_uuid"])
-                hash[a1[i]["courses_uuid"]] = a1[i]["courses_uuid"];
-            arr[arr.length] = a1[i];
+        let mainID:any = "";
+        for (var x = 0; x < getRequests.length; x++) {
+            if (getRequests[x].indexOf("_") >= 0){
+                mainID = getRequests[x].split("_")[0];
+            }
         }
-        for (var i = 0; i < a2.length; i++) {
-            if (hash[a2[i]["courses_uuid"]] !== a2[i]["courses_uuid"]) {
-                hash[a2[i]["courses_uuid"]] = a2[i]["courses_uuid"];
-                arr[arr.length] = a2[i];
+        console.log(mainID);
+        if (mainID == "courses") {
+            for (var i = 0; i < a1.length; i++) {
+                if (hash[a1[i]["courses_uuid"]] !== a1[i]["courses_uuid"])
+                    hash[a1[i]["courses_uuid"]] = a1[i]["courses_uuid"];
+                arr[arr.length] = a1[i];
+            }
+            for (var j = 0; j < a2.length; j++) {
+                if (hash[a2[j]["courses_uuid"]] !== a2[j]["courses_uuid"]) {
+                    hash[a2[j]["courses_uuid"]] = a2[j]["courses_uuid"];
+                    arr[arr.length] = a2[j];
+                }
+            }
+        } else {
+            for (var a = 0; a < a1.length; a++) {
+                if (hash[a1[a]["rooms_name"]] !== a1[a]["rooms_name"])
+                    hash[a1[a]["rooms_name"]] = a1[a]["rooms_name"];
+                arr[arr.length] = a1[a];
+            }
+            for (var b = 0; b < a2.length; b++) {
+                if (hash[a2[b]["rooms_name"]] !== a2[b]["rooms_name"]) {
+                    hash[a2[b]["rooms_name"]] = a2[b]["rooms_name"];
+                    arr[arr.length] = a2[b];
+                }
             }
         }
         return arr;
