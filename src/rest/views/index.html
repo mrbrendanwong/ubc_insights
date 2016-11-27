@@ -1,53 +1,383 @@
 <!DOCTYPE html>
 <head>
-  <link rel="stylesheet" href="./public/bootstrap.min.css">
-  <link rel="stylesheet" href="./public/main.css">
-  <script src="./public/jquery.min.js"></script>
-  <script src="./public/bootstrap.min.js"></script>
-  <script src="./public/d3.min.js"></script>
-  <script src="./public/main.js"></script>
+    <link rel="stylesheet" href="./public/bootstrap.min.css">
+    <link rel="stylesheet" href="./public/main.css">
+    <script src="./public/jquery.min.js"></script>
+    <script src="./public/bootstrap.min.js"></script>
+    <script src="./public/d3.min.js"></script>
+    <script src="./public/main.js"></script>
+    <link rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.4.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+
+
 </head>
 <html>
-  <body>
-    <div id="dataset">
-      <div class="form-group">
-	<h3>Dataset</h3>
-	<label for="datasetId">ID:</label>
-	<input type="text" class="form-control" id="datasetId">
-	<label for="datasetZip">Archive:</label>
-	<input type="file" class="form-control" id="datasetZip">
-	</div>
-	<button type="button" class="btn btn-primary" id="datasetAdd">Add Dataset</button>
-	<button type="button" class="btn btn-primary" id="datasetRm">Remove Dataset</button>
+<style>
+    h1 .btn-group {
+        display: inline-block;
+    }
+
+    .bg-1 {
+        background-color: #FFFFFF; /* White */
+        color: #002FDC;
+    }
+
+    .bg-2 {
+        background-color: #0073CC; /* Blue */
+        color: #ffffff;
+    }
+
+    .bg-3 {
+        background-color: #dedede; /* Light Grey */
+        color: #000000;
+    }
+
+    .scrollable-menu {
+        height: auto;
+        max-height: 200px;
+        overflow-x: hidden;
+    }
+
+    #coursesSearchButton {
+        float: right;
+        margin-left: -50%;
+        margin-top: 2em;
+        margin-right: 1em;
+        height: 100%;
+    }
+
+</style>
+<body>
+<script>
+    function searchCourses(){
+        var department = $('#coursesButton').text().trim();
+        var year = $('#yearButton').text().trim();
+        var title = $('#titleButton').text().trim();
+        var instructor = $('#instructorButton').text().trim();
+        var averageOption = $('#averageButton').text().trim();
+        var sectionOption = $('#sectionButton').text().trim();
+        var passOption = $('#passButton').text().trim();
+        var failOption = $('#failButton').text().trim();
+        var sectionSize = $('#sizeButton').text().trim();
+        if (sectionSize == "Equal")
+            sectionSize = "EQ";
+        else if (sectionSize == "Greater")
+            sectionSize = "GT";
+        else
+            sectionSize = "LT";
+
+    }
+</script>
+<nav class="navbar navbar-fixed-top" style="background-color:   #010C82">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <a class="navbar-brand" href="#" style="color: #FFFFFF">UBCInsight</a>
+        </div>
     </div>
-    <div id="container">
-      <h3>Query</h3>
-      <form id="queryForm">
-	<div class="form-group">
-	  <label for="query">Query:</label>
-	  <textarea class="form-control" rows="10" id="query"></textarea>
-	</div>
-	<button type="submit" class="btn btn-primary">Submit</button>
-      </form>
+</nav>
+<br>
+<div class="container-fluid bg-1">
+    <br>
+    <br>
+    <h4>UBC COURSE SCHEDULER</h4>
+</div>
+
+
+
+<div class="container-fluid bg-2 text-left">
+    <br>
+    <h3>Search For Courses</h3>
+</div>
+
+
+<!--<div class="container-fuild bg-1" id="coursesSearch">-->
+<!--<div class="input-group-btn">-->
+<!--<button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">Select-->
+<!--<span class="caret"></span></button>-->
+<!--<ul id="ResultList" class="dropdown-menu scrollable-menu" role="menu">-->
+<!--<li><a>hi</a></li>-->
+<!--</ul>-->
+<!--</div>-->
+
+<!--</div>-->
+<button id="coursesSearchButton" class="btn btn-primary" type="button"><span
+        class="glyphicon glyphicon-search" style="float: right;" onClick="searchCourses();"></span></button>
+<div class="input-group">
+    <h1> I want courses in the
+        <span class="btn-group" id="departmentMenu">
+            <button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown" id="coursesButton">All
+            <span class="caret"></span></button>
+        <ul id="DepartmentList" class="dropdown-menu scrollable-menu" role="menu">
+            <li><a href="#">All</a></li>
+        </ul>
+        </span> department for
+        <span class="btn-group">
+            <button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown" id="yearButton">All
+            <span class="caret"></span></button>
+        <ul class="dropdown-menu scrollable-menu" role="menu" id="yearMenu">
+            <li><a href="#">All</a></li>
+            <li><a href="#">1st year</a></li>
+            <li><a href="#">2nd year</a></li>
+            <li><a href="#">3rd year</a></li>
+            <li><a href="#">4th year</a></li>
+            <li><a href="#">5th year</a></li>
+        </ul>
+        </span> students.
+        <br>
+        <a class="text-primary" data-toggle="collapse" href="#collapseExample" aria-exanded="false">
+            <small>Advanced Search
+                <span class="	glyphicon glyphicon-chevron-down"></span></small>
+        </a>
+        <div class="collapse bg-3" id="collapseExample">
+            <div class="card card-block">
+                <h3> I also want courses with the title
+                    <span class="btn-group" id="titleMenu">
+            <button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown" id="titleButton">All
+            <span class="caret"></span></button>
+        <ul id="TitleList" class="dropdown-menu scrollable-menu" role="menu">
+            <li><a href="#">All</a></li>
+        </ul></span> taught by
+                    <span class="btn-group" id="instructorMenu">
+            <button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown" id="instructorButton">All
+            <span class="caret"></span></button>
+        <ul id="InstructorList" class="dropdown-menu scrollable-menu" role="menu">
+            <li><a href="#">All</a></li>
+        </ul></span> with a section size of
+                    <span class="btn-group" id="asdf"><input id= "SectionSize" type="text" class="form-control" size="2" placeholder="Size...">
+                    </span>or <span class="btn-group">
+            <button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown" id="sizeButton">Equal
+            <span class="caret"></span></button>
+        <ul class="dropdown-menu scrollable-menu" role="menu" id="sizeMenu">
+            <li><a href="#">Equal</a></li>
+            <li><a href="#">Greater</a></li>
+            <li><a href="#">Lower</a></li>
+        </ul>
+        </span><br>
+                    I only want courses with the
+                    <span class="btn-group"><button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown" id="averageButton">Highest
+                        <span class="caret"></span></button>
+                    <ul class="dropdown-menu scrollable-menu" role="menu" id="averageMenu">
+                        <li><a href="#">Highest</a></li>
+                        <li><a href="#">Lowest</a></li>
+                    </ul></span> average, the
+                    <span class="btn-group"><button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown" id="sectionButton">Highest
+                        <span class="caret"></span></button>
+                    <ul class="dropdown-menu scrollable-menu" role="menu" id="sectionMenu">
+                        <li><a href="#">Highest</a></li>
+                        <li><a href="#">Lowest</a></li>
+                    </ul></span> amount of sections, with the
+                    <span class="btn-group"><button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown" id="passButton">Highest
+                        <span class="caret"></span></button>
+                    <ul class="dropdown-menu scrollable-menu" role="menu" id="passMenu">
+                        <li><a href="#">Highest</a></li>
+                        <li><a href="#">Lowest</a></li>
+                    </ul></span> amount of passing students and the
+                    <span class="btn-group"><button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown" id="failButton">Lowest
+                        <span class="caret"></span></button>
+                    <ul class="dropdown-menu scrollable-menu" role="menu" id="failMenu">
+                        <li><a href="#">Highest</a></li>
+                        <li><a href="#">Lowest</a></li>
+                    </ul></span> amount of failing students.</h3>
+            </div>
+        </div>
+    </h1>
+</div>
+
+<div class="container-fluid bg-2">
+    <h2>SEARCH RESULTS</h2>
+</div>
+
+
+
+<div id="dataset">
+    <div class="form-group">
+        <h3>Dataset</h3>
+        <label for="datasetId">ID:</label>
+        <input type="text" class="form-control" id="datasetId">
+        <label for="datasetZip">Archive:</label>
+        <input type="file" class="form-control" id="datasetZip">
     </div>
-    <div id="render">
-      <h3>Result</h3>
+    <button type="button" class="btn btn-primary" id="datasetAdd">Add Dataset</button>
+    <button type="button" class="btn btn-primary" id="datasetRm">Remove Dataset</button>
+</div>
+<div id="container">
+    <h3>Query</h3>
+    <form id="queryForm">
+        <div class="form-group">
+            <label for="query">Query:</label>
+            <textarea class="form-control" rows="10" id="query"></textarea>
+        </div>
+        <button type="submit" id="queryButton" class="btn btn-primary">Submit</button>
+    </form>
+</div>
+
+<div id="render">
+    <h3>Result</h3>
+</div>
+
+<div class="modal fade" id="errorModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                        aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title"></h4>
+            </div>
+            <div class="modal-body">
+                <p></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
     </div>
-    <div class="modal fade" id="errorModal" tabindex="-1" role="dialog">
-      <div class="modal-dialog" role="document">
-	<div class="modal-content">
-	  <div class="modal-header">
-	    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-	    <h4 class="modal-title"></h4>
-	  </div>
-	  <div class="modal-body">
-	    <p></p>
-	  </div>
-	  <div class="modal-footer">
-	    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-	  </div>
-	</div>
-      </div>
-      </div>
-  </body>
+</div>
+<script>
+    var departmentList = [];
+    var currentDepartment = "";
+    var currentCourse = "";
+    var currentYear = "";
+    var previousCount = 0;
+    $(document).ready(function () {
+        var query = "{\"GET\": [\"courses_dept\"],\"WHERE\": {},\"GROUP\": [ \"courses_dept\"],\"APPLY\": [ ],\"ORDER\": { \"dir\": \"UP\", \"keys\": [\"courses_dept\"]},\"AS\":\"TABLE\"}";
+        sendRequest(query, 'initial');
+
+    });
+
+    function sendRequest(query, scenario) {
+        console.log('hi');
+        try {
+            $.ajax("/query", {
+                type: "POST", data: query, contentType: "application/json", dataType: "json", success: function (data) {
+                    // Retrieve current year
+                    currentYear = $("#yearButton").text();
+
+                    console.log("What is this " + currentYear);
+                    if (scenario == "courseTitles") {
+                        console.log('previous count is ' + previousCount);
+                        for (var x = 0; x < 500; x++) {
+                            $('#titledropdown-link' + x).remove();
+                            $('#instructordropdown-link' + x).remove();
+                        }
+                        // Reset Title
+                        console.log("about to reset");
+                        $("#TitleList li a").parents(".input-group").find('#titleButton').html('All' + ' <span class="caret"></span>');
+                        $("#TitleList li a").parents(".input-group").find('#titleButton').val('All');
+                        $("#InstructorList li a").parents(".input-group").find('#titleButton').html('All' + ' <span class="caret"></span>');
+                        $("#InstructorList li a").parents(".input-group").find('#titleButton').val('All');
+
+                    }
+                    for (var i = 0; i < data["result"].length; i++) {
+                        switch (scenario) {
+                            case "initial":
+                                $('#DepartmentList').append('<li><a href="#" id="dropdown-link' + i + '">' + data["result"][i]["courses_dept"] + '</a></li>');
+                                break;
+                            case "courseTitles":
+                                $('#TitleList').append('<li><a href="#" id="titledropdown-link' + i + '">' + data["result"][i]["courses_title"] + '</a></li>');
+                                //       console.log(data["result"][i]["courses_title"]);
+                                break;
+                            case "courseInstructors":
+                                $('#InstructorList').append('<li><a href="#" id="instructordropdown-link' + i + '">' + data["result"][i]["courses_instructor"] + '</a></li>');
+                                //     console.log(data["result"][i]["courses_instructor"]);
+                                break;
+                        }
+                    }
+                    previousCount = data["result"].length;
+                    switch (scenario) {
+                        case "initial":
+                            $("#DepartmentList li a").click(function () {
+                                $(this).parents(".input-group").find('#coursesButton').html($(this).text() + ' <span class="caret"></span>');
+                                $(this).parents(".input-group").find('#coursesButton').val($(this).data('value'));
+                                currentDepartment = $(this).text();
+                                currentYear = $("#yearButton").text();
+                                var query = "";
+                                if (currentDepartment.trim() != "All" && currentYear.trim() != "All") {
+                                    var year = Number(currentYear.charAt(0));
+                                    query = "{\"GET\": [\"courses_title\"],\"WHERE\": {\"AND\": [{\"IS\": {\"courses_dept\": \"" + currentDepartment + "\"}}, {\"IS\": {\"courses_id\": \"" + year + "*\"}}]},\"GROUP\": [ \"courses_title\"],\"APPLY\": [ ],\"ORDER\": { \"dir\": \"UP\", \"keys\": [\"courses_title\"]},\"AS\":\"TABLE\"}";
+                                    console.log(query);
+                                }else if (currentDepartment.trim() != "All" && currentYear.trim() == "All"){
+                                    query = "{\"GET\": [\"courses_title\"],\"WHERE\": {\"IS\": {\"courses_dept\": \"" + currentDepartment + "\"}},\"GROUP\": [ \"courses_title\"],\"APPLY\": [ ],\"ORDER\": { \"dir\": \"UP\", \"keys\": [\"courses_title\"]},\"AS\":\"TABLE\"}";
+                                }else
+                                    query = "{\"GET\": [\"courses_title\"],\"WHERE\": {},\"GROUP\": [ \"courses_title\"],\"APPLY\": [ ],\"ORDER\": { \"dir\": \"UP\", \"keys\": [\"courses_title\"]},\"AS\":\"TABLE\"}";
+
+                                console.log(query);
+                                sendRequest(query, 'courseTitles');
+                            });
+                            break;
+                        case "courseTitles":
+                            $("#TitleList li a").click(function () {
+                                $(this).parents(".input-group").find('#titleButton').html($(this).text() + ' <span class="caret"></span>');
+                                $(this).parents(".input-group").find('#titleButton').val($(this).data('value'));
+                                currentYear = $("#yearButton").text();
+                                currentCourse = $(this).text();
+                                var query = "";
+                                //    if (currentCourse.trim() != "All" && currentYear.trim() != "All") {
+                                //        var year = Number(currentYear.charAt(0));
+                             //   query = "{\"GET\": [\"courses_instructor\"],\"WHERE\": {\"AND\": [{\"IS\": {\"courses_title\": \"" + currentCourse + "\"}}, {\"IS\": {\"courses_id\": \"" + year + "*\"}}]} ,\"GROUP\": [ \"courses_instructor\"],\"APPLY\": [ ],\"ORDER\": { \"dir\": \"UP\", \"keys\": [\"courses_instructor\"]},\"AS\":\"TABLE\"}";
+                                //     }
+                                //    else if (currentCourse.trim() != "All" && currentYear.trim() == "All")
+                                if (currentCourse.trim() != "All")
+                                    query = "{\"GET\": [\"courses_instructor\"],\"WHERE\": {\"IS\": {\"courses_title\": \"" + currentCourse + "\"}} ,\"GROUP\": [ \"courses_instructor\"],\"APPLY\": [ ],\"ORDER\": { \"dir\": \"UP\", \"keys\": [\"courses_instructor\"]},\"AS\":\"TABLE\"}";
+                                else
+                                    query = "{\"GET\": [\"courses_instructor\"],\"WHERE\": {\"IS\": {\"courses_dept\": \"" + currentDepartment + "\"}},\"GROUP\": [ \"courses_instructor\"],\"APPLY\": [ ],\"ORDER\": { \"dir\": \"UP\", \"keys\": [\"courses_instructor\"]},\"AS\":\"TABLE\"}";
+                                sendRequest(query, 'courseInstructors');
+                            });
+                            break;
+                        case "courseInstructors":
+                            $("#InstructorList li a").click(function () {
+                                $(this).parents(".input-group").find('#instructorButton').html($(this).text() + ' <span class="caret"></span>');
+                                $(this).parents(".input-group").find('#instructorButton').val($(this).data('value'));
+                                var query = "{\"GET\": [\"courses_instructor\"],\"WHERE\": {\"IS\": {\"courses_title\": \"" + currentCourse + "\"}},\"GROUP\": [ \"courses_id\"],\"APPLY\": [ ],\"ORDER\": { \"dir\": \"UP\", \"keys\": [\"courses_id\"]},\"AS\":\"TABLE\"}";
+                                //  sendRequest(query, 'courseInstructors')
+                            });
+                            break;
+                    }
+
+                }
+            }).fail(function (e) {
+                //  spawnHttpErrorModal(e)
+            });
+        } catch (err) {
+            //  spawnErrorModal("Query Error", err);
+        }
+
+    }
+// TODO: Condense these into a single function
+    $("#yearMenu li a").click(function () {
+        if ($(this).id = "yearMenu") {
+            $(this).parents(".input-group").find('#yearButton').html($(this).text() + ' <span class="caret"></span>');
+            $(this).parents(".input-group").find('#yearButton').val($(this).data('value'));
+        }
+    });
+
+    $("#sizeMenu li a").click(function () {
+            $(this).parents(".input-group").find('#sizeButton').html($(this).text() + ' <span class="caret"></span>');
+            $(this).parents(".input-group").find('#sizeButton').val($(this).data('value'));
+    });
+
+
+    $("#averageMenu li a").click(function () {
+            $(this).parents(".input-group").find('#averageButton').html($(this).text() + ' <span class="caret"></span>');
+            $(this).parents(".input-group").find('#averageButton').val($(this).data('value'));
+    });
+
+    $("#sectionMenu li a").click(function () {
+            $(this).parents(".input-group").find('#sectionButton').html($(this).text() + ' <span class="caret"></span>');
+            $(this).parents(".input-group").find('#sectionButton').val($(this).data('value'));
+    });
+
+
+    $("#passMenu li a").click(function () {
+            $(this).parents(".input-group").find('#passButton').html($(this).text() + ' <span class="caret"></span>');
+            $(this).parents(".input-group").find('#passButton').val($(this).data('value'));
+    });
+
+
+    $("#failMenu li a").click(function () {
+            $(this).parents(".input-group").find('#failButton').html($(this).text() + ' <span class="caret"></span>');
+            $(this).parents(".input-group").find('#failButton').val($(this).data('value'));
+    });
+
+</script>
+</body>
 </html>
