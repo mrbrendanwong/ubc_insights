@@ -397,8 +397,9 @@ export default class QueryController {
                                 break;
                             case 'year':
                                 currentResult["courses_year"] = unfinishedDataset[x].courses_year;
+                                break;
                             default:
-                                console.log("Uh oh, you sent an invalid key");
+                                console.log("Uh oh, you sent an invalid key, you sent :" + dataID);
                                 break;
                         }
                         break;
