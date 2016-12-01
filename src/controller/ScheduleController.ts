@@ -1,10 +1,18 @@
 /**
  * Created by Brendon on 2016-11-26.
  */
-import Log from "../Util";
-
 export default class ScheduleController {
 
+
+    public launchCommand():any {
+        var exec = require('child_process').exec;
+        var cmd = 'node ./src/controller/CalendarController.js';
+
+        exec(cmd, function(error:any, stdout:any, stderr:any) {
+            console.log(stdout);
+            // command output is in stdout
+        });
+    };
     /**
      * Build a schedule for every single room
      * Will return in the form of
@@ -41,7 +49,7 @@ export default class ScheduleController {
                     {"20:00-21:00":""},
                     {"21:00-22:00":""},
                     {"22:00-23:00":""},
-                    {"23:00-24:00":""}],
+                    {"23:00-23:59":""}],
                 "tt":[
                     {"00:30-02:00":""},
                     {"02:00-03:30":""},
@@ -58,7 +66,7 @@ export default class ScheduleController {
                     {"18:30-20:00":""},
                     {"20:00-21:30":""},
                     {"21:30-23:00":""},
-                    {"23:00-00:30":""}],
+                    {"23:00-23:59":""}],
                 "seats": rooms[i]["rooms_seats"],
                 "quality": 100
             }
@@ -255,7 +263,7 @@ export default class ScheduleController {
             var currentSectionSize: number = currentCourse["courses_pass"] + currentCourse["courses_fail"];
             var currentCourseShortName = currentCourse["courses_dept"].toUpperCase() + " " + currentCourse["courses_id"];
             var currentCourseName = currentCourse["courses_dept"].toUpperCase() + " " + currentCourse["courses_id"] +
-                " " + currentCourse["courses_uuid"] + " - " + "Section Size: " + currentSectionSize.toString() ;
+                " - " + "Section Size: " + currentSectionSize.toString() ;
 
             // Sort diffs from smallest to largest
             var currentSizeDiffs = this.getRoomSizeDiffs(currentCourse, rooms); // Find size diffs for this course
@@ -270,13 +278,13 @@ export default class ScheduleController {
                 let currentRoom: string = sortedCurrentSizeDiffs[a][0];
 
                 // Try and find a time in MWF
-                var goodDayMWF = this.findATime(currentCourseShortName, currentCourseName, sortedRooms, currentRoom, fullSchedule, 'mwf', 8, 17, foundATime);
+                var goodDayMWF:any = this.findATime(currentCourseShortName, currentCourseName, sortedRooms, currentRoom, fullSchedule, 'mwf', 8, 17, foundATime);
                 foundATime = goodDayMWF[0];
                 fullSchedule = goodDayMWF[1];
 
                 // If no time in MWF, check TT
                 if (!foundATime) {
-                    var goodDayTT = this.findATime(currentCourseShortName, currentCourseName, sortedRooms, currentRoom, fullSchedule, 'tt', 5, 11, foundATime);
+                    var goodDayTT:any = this.findATime(currentCourseShortName, currentCourseName, sortedRooms, currentRoom, fullSchedule, 'tt', 5, 11, foundATime);
                     foundATime = goodDayTT[0];
                     fullSchedule = goodDayTT[1];
                 }
