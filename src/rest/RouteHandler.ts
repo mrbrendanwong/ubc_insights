@@ -90,7 +90,8 @@ export default class RouteHandler {
         try {
             let query: QueryRequest = req.params;
             if (req.params[1] != undefined) {
-                if (req.params[1][Object.keys(req.params[1])]['seats'] != undefined){
+                var indexString:any = Object.keys(req.params[1]);
+                if (req.params[1][indexString]['seats'] != undefined){
                     let sController = RouteHandler.scheduleController;
                     //    let cController = RouteHandler.calendarController;
                     //          CalendarController.setScheduleObject(req.params);
