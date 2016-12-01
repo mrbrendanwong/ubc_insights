@@ -32,8 +32,6 @@
     "start": "node src/App.js"
   },
   "dependencies": {
-    "@types/react": "^0.14.49",
-    "@types/react-dom": "^0.14.18",
     "google-auth-library": "^0.9.10",
     "googleapis": "^14.2.0",
     "jszip": "^3.1.2",

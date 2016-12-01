@@ -49,7 +49,7 @@ export default class ScheduleController {
                     {"20:00-21:00":""},
                     {"21:00-22:00":""},
                     {"22:00-23:00":""},
-                    {"23:00-24:00":""}],
+                    {"23:00-23:59":""}],
                 "tt":[
                     {"00:30-02:00":""},
                     {"02:00-03:30":""},
@@ -66,7 +66,7 @@ export default class ScheduleController {
                     {"18:30-20:00":""},
                     {"20:00-21:30":""},
                     {"21:30-23:00":""},
-                    {"23:00-00:30":""}],
+                    {"23:00-23:59":""}],
                 "seats": rooms[i]["rooms_seats"],
                 "quality": 100
             }
@@ -263,7 +263,7 @@ export default class ScheduleController {
             var currentSectionSize: number = currentCourse["courses_pass"] + currentCourse["courses_fail"];
             var currentCourseShortName = currentCourse["courses_dept"].toUpperCase() + " " + currentCourse["courses_id"];
             var currentCourseName = currentCourse["courses_dept"].toUpperCase() + " " + currentCourse["courses_id"] +
-                " " + currentCourse["courses_uuid"] + " - " + "Section Size: " + currentSectionSize.toString() ;
+                " - " + "Section Size: " + currentSectionSize.toString() ;
 
             // Sort diffs from smallest to largest
             var currentSizeDiffs = this.getRoomSizeDiffs(currentCourse, rooms); // Find size diffs for this course

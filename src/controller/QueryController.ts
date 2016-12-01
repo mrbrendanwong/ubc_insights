@@ -845,9 +845,6 @@ export default class QueryController {
         // TODO: THE ABOVE IS FOR TESTING SCHEDULE
 
 
-
-
-
         if (query.GET) {
             // #D1 support
             queryResult = controller.queryDataset(query.GET);
