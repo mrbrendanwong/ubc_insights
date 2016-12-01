@@ -5,6 +5,7 @@
 import {Datasets} from "./DatasetController";
 import Log from "../Util";
 import DatasetController from '../controller/DatasetController';
+import ScheduleController from '../controller/ScheduleController'
 
 export interface QueryRequest {
     GET: string|string[];
@@ -21,6 +22,8 @@ export interface QueryResponse {
 export default class QueryController {
     private static datasetController = new DatasetController();
     private datasets:Datasets = null;
+
+    private static scheduleController = new ScheduleController();
 
     constructor(datasets:Datasets) {
         this.datasets = datasets;
@@ -784,6 +787,66 @@ export default class QueryController {
         // TODO: implement this (where we handle get, where, etc.)
         let queryResult:Array<any>;
         let controller = QueryController.datasetController;
+        let controller2 = QueryController.scheduleController;
+
+
+        // TODO: THE BELOW IS FOR TESTING SCHEDULE
+        var courses: any[] = [
+            { courses_uuid: 41, courses_dept: 'cpsc', courses_id: '301', courses_pass: 200, courses_fail: 0},
+        { courses_uuid: 42, courses_dept: 'cpsc', courses_id: '301', courses_pass: 200, courses_fail: 0},
+        { courses_uuid: 43, courses_dept: 'cpsc', courses_id: '301', courses_pass: 200, courses_fail: 0},
+        { courses_uuid: 44, courses_dept: 'cpsc', courses_id: '301', courses_pass: 200, courses_fail: 0},
+        { courses_uuid: 45, courses_dept: 'cpsc', courses_id: '301', courses_pass: 200, courses_fail: 0},
+        { courses_uuid: 1, courses_dept: 'cpsc', courses_id: '301', courses_pass: 100, courses_fail: 0},
+        { courses_uuid: 2, courses_dept: 'cpsc', courses_id: '301', courses_pass: 100, courses_fail: 0},
+        { courses_uuid: 3, courses_dept: 'cpsc', courses_id: '301', courses_pass: 100, courses_fail: 0},
+        { courses_uuid: 4, courses_dept: 'cpsc', courses_id: '301', courses_pass: 100, courses_fail: 0},
+        { courses_uuid: 5, courses_dept: 'cpsc', courses_id: '301', courses_pass: 100, courses_fail: 0},
+        { courses_uuid: 6, courses_dept: 'cpsc', courses_id: '301', courses_pass: 100, courses_fail: 0},
+        { courses_uuid: 7, courses_dept: 'cpsc', courses_id: '301', courses_pass: 100, courses_fail: 0},
+        { courses_uuid: 8, courses_dept: 'cpsc', courses_id: '301', courses_pass: 100, courses_fail: 0},
+        { courses_uuid: 9, courses_dept: 'cpsc', courses_id: '301', courses_pass: 100, courses_fail: 0},
+        { courses_uuid: 10, courses_dept: 'cpsc', courses_id: '301', courses_pass: 100, courses_fail: 0},
+        { courses_uuid: 11, courses_dept: 'cpsc', courses_id: '301', courses_pass: 100, courses_fail: 0},
+        { courses_uuid: 12, courses_dept: 'cpsc', courses_id: '301', courses_pass: 100, courses_fail: 0},
+        { courses_uuid: 13, courses_dept: 'cpsc', courses_id: '301', courses_pass: 100, courses_fail: 0},
+        { courses_uuid: 14, courses_dept: 'cpsc', courses_id: '301', courses_pass: 100, courses_fail: 0},
+        { courses_uuid: 15, courses_dept: 'cpsc', courses_id: '301', courses_pass: 100, courses_fail: 0},
+        { courses_uuid: 16, courses_dept: 'cpsc', courses_id: '301', courses_pass: 100, courses_fail: 0},
+        { courses_uuid: 17, courses_dept: 'cpsc', courses_id: '301', courses_pass: 100, courses_fail: 0},
+        { courses_uuid: 18, courses_dept: 'cpsc', courses_id: '301', courses_pass: 100, courses_fail: 0},
+        { courses_uuid: 19, courses_dept: 'cpsc', courses_id: '301', courses_pass: 100, courses_fail: 0},
+        { courses_uuid: 20, courses_dept: 'cpsc', courses_id: '301', courses_pass: 100, courses_fail: 0},
+        { courses_uuid: 21, courses_dept: 'cpsc', courses_id: '301', courses_pass: 100, courses_fail: 0},
+        { courses_uuid: 22, courses_dept: 'cpsc', courses_id: '301', courses_pass: 100, courses_fail: 0},
+        { courses_uuid: 23, courses_dept: 'cpsc', courses_id: '301', courses_pass: 100, courses_fail: 0},
+        { courses_uuid: 24, courses_dept: 'cpsc', courses_id: '301', courses_pass: 100, courses_fail: 0},
+        { courses_uuid: 25, courses_dept: 'cpsc', courses_id: '301', courses_pass: 100, courses_fail: 0},
+        { courses_uuid: 26, courses_dept: 'cpsc', courses_id: '301', courses_pass: 100, courses_fail: 0},
+        { courses_uuid: 27, courses_dept: 'cpsc', courses_id: '301', courses_pass: 100, courses_fail: 0},
+        { courses_uuid: 28, courses_dept: 'cpsc', courses_id: '301', courses_pass: 100, courses_fail: 0},
+        { courses_uuid: 29, courses_dept: 'cpsc', courses_id: '301', courses_pass: 100, courses_fail: 0},
+        { courses_uuid: 30, courses_dept: 'cpsc', courses_id: '301', courses_pass: 100, courses_fail: 0},
+        { courses_uuid: 100, courses_dept: 'cpsc', courses_id: '301', courses_pass: 50, courses_fail: 0},
+        { courses_uuid: 101, courses_dept: 'cpsc', courses_id: '301', courses_pass: 50, courses_fail: 0},
+        { courses_uuid: 102, courses_dept: 'cpsc', courses_id: '301', courses_pass: 50, courses_fail: 0},
+        { courses_uuid: 103, courses_dept: 'cpsc', courses_id: '301', courses_pass: 50, courses_fail: 0},
+        { courses_uuid: 104, courses_dept: 'cpsc', courses_id: '301', courses_pass: 50, courses_fail: 0},
+    ];
+
+        var rooms: any[] = [
+            { rooms_fullname: 'Hugh Dempster Pavilion', rooms_shortname: 'DMP', rooms_number: '310', rooms_seats: 50 },
+            { rooms_fullname: 'Hugh Dempster Pavilion', rooms_shortname: 'DMP', rooms_number: '110', rooms_seats: 150 }
+        ];
+
+        var schedule = controller2.scheduleRooms(courses, rooms);
+        var visibleSchedule = JSON.stringify(schedule);
+        console.log("THIS IS QUERY CONTROLLER TO TEST SCHEDULE " + visibleSchedule);
+        // TODO: THE ABOVE IS FOR TESTING SCHEDULE
+
+
+
+
 
         if (query.GET) {
             // #D1 support
