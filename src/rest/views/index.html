@@ -130,6 +130,7 @@
 <script>
     function searchCourses(){
         $('#CourseSearchFailed').hide();
+        $('#courseResultWindow').show();
         $('#CourseResultArea').empty();
         console.log('HI');
         var department = $('#coursesButton').text().trim();
@@ -193,8 +194,8 @@
         // No advanced options
         // var query = "{\"GET\": [\"courses_dept\",\"courses_id\",\"courses_title\",\"courses_year\",\"courses_instructor\",\"courses_pass\",\"courses_fail\",\"courses_avg\"],\"WHERE\": {\"AND\": [{\"IS\": {\"courses_dept\": \"" + department + "\"}}, {\"IS\": {\"courses_id\": \"" + year + "*\"}}]},\"GROUP\": [\"courses_dept\",\"courses_id\",\"courses_title\",\"courses_year\",\"courses_instructor\",\"courses_pass\",\"courses_fail\",\"courses_avg\"],\"APPLY\": [ ],\"ORDER\": { \"dir\": \"UP\", \"keys\": [\"courses_title\"]},\"AS\":\"TABLE\"}";
 
-        try {
-            $.ajax("/query", {
+                try {
+                    $.ajax("/query", {
                 type: "POST", data: query, contentType: "application/json", dataType: "json", success: function (data) {
                     console.log("HI")
                     if (data["result"].length == 0)
@@ -207,13 +208,13 @@
                                 || ((sectionSize == "GT") && (numStudents > inputSize))
                                 || ((sectionSize == "LT") && (numStudents < inputSize))) {
                                 if (i % 2 == 0)
-                                    $('#CourseResultArea').append('<div class="container-fluid bg-1" style="height:100%" id="result' + i + '"><div class="row"><div class="col-sm-11" id="data' + i + '"><h3>' + data["result"][i]["courses_dept"].toUpperCase() + ' ' + data["result"][i]["courses_id"] + ': ' + data["result"][i]["courses_title"] + '</h3>' +
-                                        '<h4>Offered in ' + data["result"][i]["courses_year"] + ' and taught by ' + data["result"][i]["courses_instructor"] + '</h4>' +
+                                    $('#CourseResultArea').append('<div class="container-fluid bg-1" style="height:100%" id="result' + i + '"><div class="row"><div class="col-sm-11" id="data' + i + '"><h4>' + data["result"][i]["courses_dept"].toUpperCase() + ' ' + data["result"][i]["courses_id"] + ': ' + data["result"][i]["courses_title"] + '</h4>' +
+                                        '<h5>Offered in ' + data["result"][i]["courses_year"] + ' and taught by ' + data["result"][i]["courses_instructor"] + '</h5>' +
                                         '<h5>Section Size: ' + numStudents + '  Average Grade: ' + data["result"][i]["courses_avg"] + ' Passing Students: ' + data["result"][i]["courses_pass"] + ' Failing Students: ' + data["result"][i]["courses_fail"] + ' Section ID: ' + data["result"][i]["courses_uuid"] + '</h5></div>' +
                                         '<div class="col-sm-1"><button id="coursesResultButton1" class="btn btn-primary" type="button" onClick="addCourse($(\'#data' + i + '\'),$(\'#result' + i + '\'));">Select</span></button></div></div></div>');
                                 else
-                                    $('#CourseResultArea').append('<div class="container-fluid bg-3" style="height:100%" id="result' + i + '"><div class="row"><div class="col-sm-11" id="data' + i + '"><h3>' + data["result"][i]["courses_dept"].toUpperCase() + ' ' + data["result"][i]["courses_id"] + ': ' + data["result"][i]["courses_title"] + '</h3>' +
-                                        '<h4>Offered in ' + data["result"][i]["courses_year"] + ' and taught by ' + data["result"][i]["courses_instructor"] + '</h4>' +
+                                    $('#CourseResultArea').append('<div class="container-fluid bg-3" style="height:100%" id="result' + i + '"><div class="row"><div class="col-sm-11" id="data' + i + '"><h4>' + data["result"][i]["courses_dept"].toUpperCase() + ' ' + data["result"][i]["courses_id"] + ': ' + data["result"][i]["courses_title"] + '</h4>' +
+                                        '<h5>Offered in ' + data["result"][i]["courses_year"] + ' and taught by ' + data["result"][i]["courses_instructor"] + '</h5>' +
                                         '<h5>Section Size: ' + numStudents + '  Average Grade: ' + data["result"][i]["courses_avg"] + ' Passing Students: ' + data["result"][i]["courses_pass"] + ' Failing Students: ' + data["result"][i]["courses_fail"] + ' Section ID: ' + data["result"][i]["courses_uuid"] + '</h5></div>' +
                                         '<div class="col-sm-1"><button id="coursesResultButton2" class="btn btn-primary" type="button" style="background-color:#010C82; border-color:#010C82;" onClick="addCourse($(\'#data' + i + '\'),$(\'#result' + i + '\'));">Select</span></button></div></div></div>');
 
@@ -235,6 +236,7 @@
 
     function searchRooms(){
         $('#RoomSearchFailed').hide();
+        $('#roomResultWindow').show();
         $('#RoomResultArea').empty();
         var building = $('#roomsButton').text().trim();
         var floor = $('#floorButton').text().trim();
@@ -345,20 +347,23 @@
         // var array = retrieveText();
         var parsedCourses = [];
         var parsedRooms = [];
-        var parsedInformation = [parsedCourses, parsedRooms];
         var iterationCourse = {};
         var iterationRoom = {};
         //console.log(array);
         for (var x = 0; x < 2; x++) {
             var array = retrieveText(x);
             for (var i = 0; i < array.length; i++) {
+                console.log(parsedCourses);
                 if (i % 4 == 0) {
                     if (x == 0) {
                         iterationCourse = {};
                         iterationCourse['courses_dept'] = (array[i].data.substring(0, array[i].data.indexOf(":")).split(" ")[0]).toLowerCase();
                         iterationCourse['courses_id'] = array[i].data.substring(0, array[i].data.indexOf(":")).split(" ")[1];
-                        console.log(array[i].data.substring(0, array[i].data.indexOf(":")).split(" ")[0]); // Department
-                        console.log(array[i].data.substring(0, array[i].data.indexOf(":")).split(" ")[1]); // Course Number
+                      //  console.log(iterationCourse['courses_dept']);
+                      //  console.log(iterationCourse['courses_id']);
+                      //  console.log('yup');
+                   //     console.log(array[i].data.substring(0, array[i].data.indexOf(":")).split(" ")[0]); // Department
+                    //    console.log(array[i].data.substring(0, array[i].data.indexOf(":")).split(" ")[1]); // Course Number
                     }
                     else {
 
@@ -367,9 +372,9 @@
                         iterationRoom['rooms_number'] = array[i].data.substring(array[i].data.indexOf(" "),array[i].data.indexOf("i")).trim();
                         iterationRoom['rooms_fullname'] = array[i].data.substring(array[i].data.indexOf(" in ") + 4, array[i].data.length).trim();
 
-                        console.log(array[i].data.substring(0, array[i].data.indexOf(" ")).trim()); // Rooms Short Name
-                        console.log(array[i].data.substring(array[i].data.indexOf(" "),array[i].data.indexOf("i")).trim()); // Rooms number
-                        console.log(array[i].data.substring(array[i].data.indexOf(" in ") + 4, array[i].data.length).trim()); // Rooms Full name
+                    //    console.log(array[i].data.substring(0, array[i].data.indexOf(" ")).trim()); // Rooms Short Name
+                     //   console.log(array[i].data.substring(array[i].data.indexOf(" "),array[i].data.indexOf("i")).trim()); // Rooms number
+                     //   console.log(array[i].data.substring(array[i].data.indexOf(" in ") + 4, array[i].data.length).trim()); // Rooms Full name
                     }
                 } else if (i % 2 == 0) {
                     if (x == 0) {
@@ -377,14 +382,16 @@
                         iterationCourse['courses_pass'] = array[i].data.substring(array[i].data.indexOf("s:") + 2, array[i].data.indexOf("F")).trim();
                         iterationCourse['courses_fail'] = array[i].data.substring(array[i].data.lastIndexOf("s:") + 2, array[i].data.lastIndexOf("S")).trim();
 
-                        console.log(array[i].data.substring(array[i].data.indexOf("s:") + 2, array[i].data.indexOf("F")).trim()); // Passing students
-                        console.log(array[i].data.substring(array[i].data.lastIndexOf("s:") + 2, array[i].data.lastIndexOf("S")).trim()); // Failing students
-                        console.log(array[i].data.substring(array[i].data.lastIndexOf(":") + 1, array[i].data.length).trim()); // Course UUID
+                    //    console.log(array[i].data.substring(array[i].data.indexOf("s:") + 2, array[i].data.indexOf("F")).trim()); // Passing students
+                     //   console.log(array[i].data.substring(array[i].data.lastIndexOf("s:") + 2, array[i].data.lastIndexOf("S")).trim()); // Failing students
+                      //  console.log(array[i].data.substring(array[i].data.lastIndexOf(":") + 1, array[i].data.length).trim()); // Course UUID
+                        //console.log('added');
+                        console.log()
                         parsedCourses.push(iterationCourse)
                     }
 
-                } else if ((x == 1) && (x % 4 == 1)) {
-                    console.log(array[i].data.substring(array[i].data.indexOf("seats:") + 6, array[i].data.indexOf(", Type")).trim()); // Number of seats
+                } else if ((x == 1) && (i % 4 == 1)) {
+                   // console.log(array[i].data.substring(array[i].data.indexOf("seats:") + 6, array[i].data.indexOf(", Type")).trim()); // Number of seats
                     iterationRoom['rooms_seats'] = array[i].data.substring(array[i].data.indexOf("seats:") + 6, array[i].data.indexOf(", Type")).trim();
                     parsedRooms.push(iterationRoom);
                 }
@@ -392,9 +399,19 @@
             }
         }
 
-        console.log(parsedInformation);
-        return parsedInformation;
-
+        var parsedInformation = [parsedCourses, parsedRooms];
+        console.log(parsedCourses[0]);
+        setTimeout(function(){
+            console.log('hiiiiii');
+            console.log(parsedCourses[0]);
+            console.log(parsedCourses[1]);
+            console.log(parsedRooms[0]);
+            console.log('hiiiiii');
+            var calendar = ScheduleController.prototype.scheduleRooms(parsedCourses, parsedRooms);
+            console.log(calendar);
+            //      createCalendar(parsedCourses, parsedRooms);
+            //do what you need here
+        }, 1000);
 
 
     }
@@ -696,7 +713,7 @@
 
 
 
-<div class="container-fluid bg-2" style="margin-top:-18px;">
+<div class="container-fluid bg-2" style="margin-top:-18px; display: none" id="courseResultWindow">
     <div class="container">
         <h3>Course Search Results</h3>
     </div>
@@ -708,7 +725,7 @@
         overflow-x: hidden;">
     </div>
 </div>
-<div class="container-fluid bg-2">
+<div class="container-fluid bg-2" style="display: none" id="roomResultWindow">
     <div class="container">
         <h3>Room Search Results</h3>
     </div>
@@ -1033,5 +1050,16 @@
     });
 
 </script>
+<script>
+   // function createCalendar(courses, rooms) {
+      //  console.log('my courses ' + courses);
+       // var test = ScheduleController.prototype.scheduleRooms(courses, rooms);
+        //console.log("HERE WE GO");
+        //console.log(test);
+    //}
+</script>
+
+
+<script type="text/javascript" src="./public/ScheduleController.js"></script>
 </body>
 </html>
