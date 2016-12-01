@@ -32,6 +32,10 @@
         color: #000000;
     }
 
+    .bg-4 {
+        background-color: #F5F5F5;
+    }
+
     .scrollable-menu {
         height: auto;
         max-height: 200px;
@@ -88,7 +92,7 @@
     #roomsResultButton1{
         /*text-align: center;*/
         /*font-size: 24px;*/
-        margin-top: 2.5em;
+        margin-top: 2em;
         /*margin-right: 0em;*/
         /*height: 155px;*/
         /*width: 100%;*/
@@ -100,7 +104,7 @@
     #roomsResultButton2{
         /*text-align: center;*/
         /*font-size: 24px;*/
-        margin-top: 2.5em;
+        margin-top: 2em;
         /*margin-right: 0em;*/
         /*height: 155px;*/
         /*width: 100%;*/
@@ -125,6 +129,8 @@
 <body>
 <script>
     function searchCourses(){
+        $('#CourseSearchFailed').hide();
+        $('#CourseResultArea').empty();
         console.log('HI');
         var department = $('#coursesButton').text().trim();
         var year = $('#yearButton').text().trim();
@@ -134,7 +140,10 @@
         var instructor = $('#instructorButton').text().trim();
         var averageOption = $('#averageButton').text().trim();
         var sectionOption = $('#sectionButton').text().trim();
+
         var passOption = $('#passButton').text().trim();
+
+        console.log(passOption == "Lowest");
         var failOption = $('#failButton').text().trim();
         var inputSize = Number($('#SectionSize').val().trim());
         console.log(inputSize);
@@ -145,12 +154,41 @@
             sectionSize = "GT";
         else
             sectionSize = "LT";
+        var queryOrder = "";
+        // Default order
+        if ((averageOption == "No Filter") && (passOption == "No Filter") && (failOption == "No Filter"))
+            queryOrder = "UP";
+        else if ((averageOption == "Lowest") || (passOption == "Lowest") || (failOption == "Lowest"))
+            queryOrder ="UP";
+        else
+            queryOrder ="DOWN";
+
+        var orderPriority = [];
+        if ($('#averageRadioButton').is(':checked')) {
+            orderPriority[0] = "\"courses_avg\",";
+            orderPriority[1] = "\"courses_pass\",";
+            orderPriority[2] = "\"courses_fail\",";
+        }
+        else if ($('#PassRadioButton').is(':checked')) {
+            orderPriority[0] = "\"courses_pass\",";
+            orderPriority[1] = "\"courses_avg\",";
+            orderPriority[2] = "\"courses_fail\",";
+        }
+        else if ($('#FailRadioButton').is(':checked')) {
+            orderPriority[0] = "\"courses_fail\",";
+            orderPriority[1] = "\"courses_avg\",";
+            orderPriority[2] = "\"courses_pass\",";
+        } else {
+            orderPriority[0] = "";
+            orderPriority[1] = "";
+            orderPriority[2] = "";
+        }
         // TODO: Figure out if GROUP is needed  here
         // If all advance options are chosen
         var query = "{\"GET\": [\"courses_dept\",\"courses_id\",\"courses_title\",\"courses_year\",\"courses_instructor\",\"courses_pass\",\"courses_fail\",\"courses_avg\"]," +
-            "\"WHERE\": {\"AND\": [{\"IS\": {\"courses_dept\": \"" + department + "\"}}, " +
-            "{\"IS\": {\"courses_id\": \"" + year + "*\"}}, {\"IS\": {\"courses_title\": \"" + (title == "All" ? "*": title) + "*\"}}, {\"IS\": {\"courses_instructor\": \"" + (instructor == "All" ? "*": instructor) + "*\"}}]}," +
-            "\"ORDER\": { \"dir\": \"UP\", \"keys\": [\"courses_title\"]},\"AS\":\"TABLE\"}";
+            "\"WHERE\": {\"AND\": [{\"IS\": {\"courses_dept\": \"" + (department == "All" ? "*" : department + "*") + "\"}}, " +
+            "{\"IS\": {\"courses_id\": \"" + (year == "All" ? "*": year + "*") + "\"}}, {\"IS\": {\"courses_title\": \"" + (title == "All" ? "*": title + "*") + "\"}}, {\"IS\": {\"courses_instructor\": \"" + (instructor == "All" ? "*": instructor + "*") + "\"}}]}," +
+            "\"ORDER\": { \"dir\": \"" + queryOrder +"\", \"keys\": [" + orderPriority[0] + orderPriority[1] + orderPriority[2] + "\"courses_id\", \"courses_dept\"]},\"AS\":\"TABLE\"}";
 
         // No advanced options
         // var query = "{\"GET\": [\"courses_dept\",\"courses_id\",\"courses_title\",\"courses_year\",\"courses_instructor\",\"courses_pass\",\"courses_fail\",\"courses_avg\"],\"WHERE\": {\"AND\": [{\"IS\": {\"courses_dept\": \"" + department + "\"}}, {\"IS\": {\"courses_id\": \"" + year + "*\"}}]},\"GROUP\": [\"courses_dept\",\"courses_id\",\"courses_title\",\"courses_year\",\"courses_instructor\",\"courses_pass\",\"courses_fail\",\"courses_avg\"],\"APPLY\": [ ],\"ORDER\": { \"dir\": \"UP\", \"keys\": [\"courses_title\"]},\"AS\":\"TABLE\"}";
@@ -158,23 +196,27 @@
         try {
             $.ajax("/query", {
                 type: "POST", data: query, contentType: "application/json", dataType: "json", success: function (data) {
-                    console.log("HI");
-                    for (var i = 0; i < data["result"].length; i++) {
-                        var numStudents = (Number(data["result"][i]["courses_fail"]) + Number(data["result"][i]["courses_pass"]));
-                        if ((inputSize == 0
-                            || (sectionSize == "EQ") && (numStudents = inputSize))
-                            || ((sectionSize == "GT") && (numStudents > inputSize))
-                            || ((sectionSize == "LT") && (numStudents < inputSize))) {
-                            if (i % 2 == 0)
-                                $('#CourseResultArea').append('<div class="container-fluid bg-1" style="height:100%" id="result' + i + '"><div class="row"><div class="col-sm-11" id="data' + i + '"><h3>' + data["result"][i]["courses_dept"].toUpperCase() + ' ' + data["result"][i]["courses_id"] + ': ' + data["result"][i]["courses_title"] + '</h3>' +
-                                    '<h4>Offered in ' + data["result"][i]["courses_year"] + ' and taught by ' + data["result"][i]["courses_instructor"] + '</h4>' +
-                                    '<h5>Section Size: ' + numStudents + '  Average Grade: ' + data["result"][i]["courses_avg"] + '</h5></div>' +
-                                    '<div class="col-sm-1"><button id="coursesResultButton1" class="btn btn-primary" type="button" onClick="addCourse($(\'#data' + i + '\'),$(\'#result' + i + '\'));">Select</span></button></div></div></div>');
-                            else
-                                $('#CourseResultArea').append('<div class="container-fluid bg-3" style="height:100%" id="result' + i + '"><div class="row"><div class="col-sm-11" id="data' + i + '"><h3>' + data["result"][i]["courses_dept"].toUpperCase() + ' ' + data["result"][i]["courses_id"] + ': ' + data["result"][i]["courses_title"] + '</h3>' +
-                                    '<h4>Offered in ' + data["result"][i]["courses_year"] + ' and taught by ' + data["result"][i]["courses_instructor"] + '</h4>' +
-                                    '<h5>Section Size: ' + numStudents + '  Average Grade: ' + data["result"][i]["courses_avg"] + '</h5></div>' +
-                                    '<div class="col-sm-1"><button id="coursesResultButton2" class="btn btn-primary" type="button" style="background-color:#010C82; border-color:#010C82;" onClick="addCourse($(\'#data' + i + '\'),$(\'#result' + i + '\'));">Select</span></button></div></div></div>');
+                    console.log("HI")
+                    if (data["result"].length == 0)
+                        $('#CourseSearchFailed').show();
+                    else {
+                        for (var i = 0; i < data["result"].length; i++) {
+                            var numStudents = (Number(data["result"][i]["courses_fail"]) + Number(data["result"][i]["courses_pass"]));
+                            if ((inputSize == 0
+                                || (sectionSize == "EQ") && (numStudents = inputSize))
+                                || ((sectionSize == "GT") && (numStudents > inputSize))
+                                || ((sectionSize == "LT") && (numStudents < inputSize))) {
+                                if (i % 2 == 0)
+                                    $('#CourseResultArea').append('<div class="container-fluid bg-1" style="height:100%" id="result' + i + '"><div class="row"><div class="col-sm-11" id="data' + i + '"><h3>' + data["result"][i]["courses_dept"].toUpperCase() + ' ' + data["result"][i]["courses_id"] + ': ' + data["result"][i]["courses_title"] + '</h3>' +
+                                        '<h4>Offered in ' + data["result"][i]["courses_year"] + ' and taught by ' + data["result"][i]["courses_instructor"] + '</h4>' +
+                                        '<h5>Section Size: ' + numStudents + '  Average Grade: ' + data["result"][i]["courses_avg"] + ' Passing Students: ' + data["result"][i]["courses_pass"] + ' Failing Students: ' + data["result"][i]["courses_fail"] + '</h5></div>' +
+                                        '<div class="col-sm-1"><button id="coursesResultButton1" class="btn btn-primary" type="button" onClick="addCourse($(\'#data' + i + '\'),$(\'#result' + i + '\'));">Select</span></button></div></div></div>');
+                                else
+                                    $('#CourseResultArea').append('<div class="container-fluid bg-3" style="height:100%" id="result' + i + '"><div class="row"><div class="col-sm-11" id="data' + i + '"><h3>' + data["result"][i]["courses_dept"].toUpperCase() + ' ' + data["result"][i]["courses_id"] + ': ' + data["result"][i]["courses_title"] + '</h3>' +
+                                        '<h4>Offered in ' + data["result"][i]["courses_year"] + ' and taught by ' + data["result"][i]["courses_instructor"] + '</h4>' +
+                                        '<h5>Section Size: ' + numStudents + '  Average Grade: ' + data["result"][i]["courses_avg"] + ' Passing Students: ' + data["result"][i]["courses_pass"] + ' Failing Students: ' + data["result"][i]["courses_fail"] + '</h5></div>' +
+                                        '<div class="col-sm-1"><button id="coursesResultButton2" class="btn btn-primary" type="button" style="background-color:#010C82; border-color:#010C82;" onClick="addCourse($(\'#data' + i + '\'),$(\'#result' + i + '\'));">Select</span></button></div></div></div>');
+                            }
                         }
                     }
 //                                '<div class="col-sm-1 bg-2"><button id="coursesResultButton" class="btn btn-primary" type="button"><span class="glyphicon glyphicon-ok" style="float: right;" onClick="searchCourses();"></span></button></div></div></div>');
@@ -191,7 +233,8 @@
     }
 
     function searchRooms(){
-        console.log('HI');
+        $('#RoomSearchFailed').hide();
+        $('#RoomResultArea').empty();
         var building = $('#roomsButton').text().trim();
         var floor = $('#floorButton').text().trim();
         if (floor != "All")
@@ -218,26 +261,30 @@
             $.ajax("/query", {
                 type: "POST", data: query, contentType: "application/json", dataType: "json", success: function (data) {
                     console.log("HI");
-                    for (var i = 0; i < data["result"].length; i++) {
-                        // The user inputted a distance
-                        if (inputDistance != 0) {
-                            // if (i == 0){;
-                            var distance = findDistance(currentLatLon[0], currentLatLon[1], data["result"][i]["rooms_lat"], data["result"][i]["rooms_lon"]);
-                            console.log(distance + ' is nice');
-                            if (distance > inputDistance)
-                                continue;
+                    if (data["result"].length == 0)
+                        $('#RoomSearchFailed').show();
+                    else {
+                        for (var i = 0; i < data["result"].length; i++) {
+                            // The user inputted a distance
+                            if (inputDistance != 0) {
+                                // if (i == 0){;
+                                var distance = findDistance(currentLatLon[0], currentLatLon[1], data["result"][i]["rooms_lat"], data["result"][i]["rooms_lon"]);
+                                console.log(distance + ' is nice');
+                                if (distance > inputDistance)
+                                    continue;
+                            }
+                            //}
+                            if (i % 2 == 0)
+                                $('#RoomResultArea').append('<div class="container-fluid bg-1" style="height:100%" id="roomResult' + i + '"><div class="row"><div class="col-sm-11" id="roomData' + i + '"><h4>' + data["result"][i]["rooms_shortname"].toUpperCase() + ' ' + data["result"][i]["rooms_number"] + ' in ' + data["result"][i]["rooms_fullname"] + '</h4>' +
+                                    '<h5>Number of seats: ' + data["result"][i]["rooms_seats"] + ', Type: ' + data["result"][i]["rooms_type"] + ', Furniture: ' + data["result"][i]["rooms_furniture"] + '</h5>' +
+                                    '<h5>Latitude: ' + data["result"][i]["rooms_lat"] + '  Longitude: ' + data["result"][i]["rooms_lon"] + '</h5></div>' +
+                                    '<div class="col-sm-1"><button id="roomsResultButton1" class="btn btn-primary" type="button" onClick="addRoom($(\'#roomData' + i + '\'),$(\'#roomResult' + i + '\'));">Select</span></button></div></div></div>');
+                            else
+                                $('#RoomResultArea').append('<div class="container-fluid bg-3" style="height:100%" id="roomResult' + i + '"><div class="row"><div class="col-sm-11" id="roomData' + i + '"><h4>' + data["result"][i]["rooms_shortname"].toUpperCase() + ' ' + data["result"][i]["rooms_number"] + ' in ' + data["result"][i]["rooms_fullname"] + '</h4>' +
+                                    '<h5>Number of seats: ' + data["result"][i]["rooms_seats"] + ', Type: ' + data["result"][i]["rooms_type"] + ', Furniture: ' + data["result"][i]["rooms_furniture"] + '</h5>' +
+                                    '<h5>Latitude: ' + data["result"][i]["rooms_lat"] + '  Longitude: ' + data["result"][i]["rooms_lon"] + '</h5></div>' +
+                                    '<div class="col-sm-1"><button id="roomsResultButton2" class="btn btn-primary" type="button" style="background-color:#010C82; border-color:#010C82;" onClick="addRoom($(\'#roomData' + i + '\'),$(\'#roomResult' + i + '\'));">Select</span></button></div></div></div>');
                         }
-                        //}
-                        if (i % 2 == 0)
-                            $('#RoomResultArea').append('<div class="container-fluid bg-1" style="height:100%" id="roomResult' + i + '"><div class="row"><div class="col-sm-11" id="roomData' + i + '"><h4>' + data["result"][i]["rooms_shortname"].toUpperCase() + ' ' + data["result"][i]["rooms_number"] + ' in ' + data["result"][i]["rooms_fullname"] + '</h4>' +
-                                '<h5>Number of seats: ' + data["result"][i]["rooms_seats"] +  ', Type: ' + data["result"][i]["rooms_type"] + ', Furniture: ' + data["result"][i]["rooms_furniture"] + '</h5>' +
-                                '<h5>Latitude: ' + data["result"][i]["rooms_lat"] + '  Longitude: ' + data["result"][i]["rooms_lon"] + '</h5></div>' +
-                                '<div class="col-sm-1"><button id="roomsresultButton1" class="btn btn-primary" type="button" onClick="addRoom($(\'#roomData' + i + '\'),$(\'#roomResult' + i + '\'));">Select</span></button></div></div></div>');
-                        else
-                            $('#RoomResultArea').append('<div class="container-fluid bg-3" style="height:100%" id="roomResult' + i + '"><div class="row"><div class="col-sm-11" id="roomData' + i + '"><h4>' + data["result"][i]["rooms_shortname"].toUpperCase() + ' ' + data["result"][i]["rooms_number"] + ' in ' + data["result"][i]["rooms_fullname"] + '</h4>' +
-                                '<h5>Number of seats: ' + data["result"][i]["rooms_seats"] +  ', Type: ' + data["result"][i]["rooms_type"] + ', Furniture: ' + data["result"][i]["rooms_furniture"] + '</h5>' +
-                                '<h5>Latitude: ' + data["result"][i]["rooms_lat"] + '  Longitude: ' + data["result"][i]["rooms_lon"] + '</h5></div>' +
-                                '<div class="col-sm-1"><button id="roomsResultButton2" class="btn btn-primary" type="button" style="background-color:#010C82; border-color:#010C82;" onClick="addRoom($(\'#roomData' + i + '\'),$(\'#roomResult' + i + '\'));">Select</span></button></div></div></div>');
                     }
 //                                '<div class="col-sm-1 bg-2"><button id="coursesResultButton" class="btn btn-primary" type="button"><span class="glyphicon glyphicon-ok" style="float: right;" onClick="searchCourses();"></span></button></div></div></div>');
 
@@ -255,13 +302,19 @@
     function addCourse(selectedCourse, correspondingRow){
         console.log(selectedCourse);
         $('#CurrentCourseList').append(selectedCourse);
+        $(selectedCourse).append('<button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown" onClick="removeSelection($(this).parent())">Remove');
         $(correspondingRow).remove();
     }
 
     function addRoom(selectedRoom, correspondingRow){
         console.log(selectedRoom);
         $('#CurrentRoomList').append(selectedRoom);
+        $(selectedRoom).append('<button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown" onClick="removeSelection($(this).parent())">Remove');
         $(correspondingRow).remove();
+    }
+
+    function removeSelection(selection){
+        $(selection).remove();
     }
 
     // Found here: http://stackoverflow.com/questions/5260423/torad-javascript-function-throwing-error
@@ -305,19 +358,25 @@
     </div>
 </div>
 
-<div class="container">
-    <div class="panel-group">
-        <div class="panel panel-default">
-            <div class="panel-heading">
-                <h3> I want courses in the
-                    <span class="btn-group" id="departmentMenu">
+<div class="alert alert-danger" id="CourseSearchFailed"  style="display: none">
+    <strong>Error!</strong> No search results could be found.
+</div>
+
+
+<div class="container-fluid bg-4">
+    <div class="container">
+        <div class="panel-group" >
+            <div class="panel panel-default" style="border:0;">
+                <div class="panel-heading">
+                    <h3> I want courses in the
+                        <span class="btn-group" id="departmentMenu">
             <button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown" id="coursesButton">All
             <span class="caret"></span></button>
         <ul id="DepartmentList" class="dropdown-menu scrollable-menu" role="menu">
             <li><a href="#">All</a></li>
         </ul>
         </span> department for
-                    <span class="btn-group">
+                        <span class="btn-group">
             <button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown" id="yearButton">All
             <span class="caret"></span></button>
         <ul class="dropdown-menu scrollable-menu" role="menu" id="yearMenu">
@@ -329,73 +388,80 @@
             <li><a href="#">5th year</a></li>
         </ul>
         </span> students.
-                    <button id="coursesSearchButton" class="btn btn-primary pull-right" type="button"><span class="glyphicon glyphicon-search"  onClick="searchCourses();"></span></button>
-                </h3>
+                        <button id="coursesSearchButton" class="btn btn-primary pull-right" type="button"><span class="glyphicon glyphicon-search"  onClick="searchCourses();"></span></button>
+                    </h3>
 
-                <h4 class="panel-title">
-                    <a data-toggle="collapse" href="#collapse1">Advanced Search
-                        <span class="glyphicon glyphicon-chevron-down"></span></a>
-                </h4>
-            </div>
-            <div id="collapse1" class="panel-collapse collapse">
-                <div class="panel-body"><div class="form-group row">
-                    <br>
-                    <label for="titleButton" class="col-xs-3 col-form-label">Title</label>
-                    <div class="col-xs-9">
+                    <h4 class="panel-title">
+                        <a data-toggle="collapse" href="#collapse1">Advanced Search
+                            <span class="glyphicon glyphicon-chevron-down"></span></a>
+                    </h4>
+                </div>
+                <div id="collapse1" class="panel-collapse collapse">
+                    <div class="panel-body"><div class="form-group row">
+                        <br>
+                        <label for="titleButton" class="col-xs-3 col-form-label">Title</label>
+                        <div class="col-xs-9">
                     <span class="btn-group" id="titleMenu">
             <button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown" id="titleButton">All
             <span class="caret"></span></button>
         <ul id="TitleList" class="dropdown-menu scrollable-menu" role="menu">
             <li><a href="#">All</a></li>
         </ul></span>
-                    </div>
-                    <label for="instructorButton" class="col-xs-3 col-form-label">Instructor</label>
-                    <div class="col-xs-9"><span class="btn-group" id="instructorMenu">
+                        </div>
+                        <label for="instructorButton" class="col-xs-3 col-form-label">Instructor</label>
+                        <div class="col-xs-9"><span class="btn-group" id="instructorMenu">
             <button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown" id="instructorButton">All
             <span class="caret"></span></button>
         <ul id="InstructorList" class="dropdown-menu scrollable-menu" role="menu">
             <li><a href="#">All</a></li>
         </ul></span></div>
-                    <label for="SectionSize" class="col-xs-3 col-form-label">Section Size</label>
-                    <div class="col-xs-9"><span class="btn-group" id="asdf"><input id= "SectionSize" type="text" class="form-control" size="2" placeholder="Size...">
+                        <label for="SectionSize" class="col-xs-3 col-form-label">Section Size</label>
+                        <div class="col-xs-9"><span class="btn-group" id="asdf"><input id= "SectionSize" type="text" class="form-control" size="2" placeholder="Size...">
                     </span>  or <span class="btn-group">
-            <button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown" id="sizeButton">Equal
+            <button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown" id="sizeButton">Greater
             <span class="caret"></span></button>
         <ul class="dropdown-menu scrollable-menu" role="menu" id="sizeMenu">
-            <li><a href="#">Equal</a></li>
             <li><a href="#">Greater</a></li>
+            <li><a href="#">Equal</a></li>
             <li><a href="#">Lower</a></li>
         </ul>
         </span>
-                    </div>
-                    <label for="averageButton" class="col-xs-3 col-form-label">Course Average </label>
-                    <div class="col-xs-9">
-                        <span class="btn-group"><button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown" id="averageButton">Highest
+                        </div>
+                        <label for="averageButton" class="col-xs-3 col-form-label">Course Average </label>
+                        <div class="col-xs-9">
+                        <span class="btn-group"><button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown" id="averageButton">No Filter
                         <span class="caret"></span></button>
                     <ul class="dropdown-menu scrollable-menu" role="menu" id="averageMenu">
+                        <li><a href="#">No Filter</a></li>
                         <li><a href="#">Highest</a></li>
                         <li><a href="#">Lowest</a></li>
                     </ul></span>
-                    </div>
-                    <label for="passButton" class="col-xs-3 col-form-label">Pass Rate </label>
-                    <div class="col-xs-9">
-                        <span class="btn-group"><button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown" id="passButton">Highest
+                            <label><input type="radio" name="optradio" id="averageRadioButton"> Priority?</label>
+                        </div>
+                        <label for="passButton" class="col-xs-3 col-form-label">Pass Rate </label>
+                        <div class="col-xs-9">
+                        <span class="btn-group"><button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown" id="passButton">No Filter
                         <span class="caret"></span></button>
                     <ul class="dropdown-menu scrollable-menu" role="menu" id="passMenu">
+                        <li><a href="#">No Filter</a></li>
                         <li><a href="#">Highest</a></li>
                         <li><a href="#">Lowest</a></li>
                     </ul></span>
-                    </div>
-                    <label for="failButton" class="col-xs-3 col-form-label">Fail Rate </label>
-                    <div class="col-xs-9">
-                        <span class="btn-group"><button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown" id="failButton">Lowest
+                            <label><input type="radio" name="optradio" id="PassRadioButton"> Priority?</label>
+                        </div>
+                        <label for="failButton" class="col-xs-3 col-form-label">Fail Rate </label>
+                        <div class="col-xs-9">
+                        <span class="btn-group"><button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown" id="failButton">No Filter
                         <span class="caret"></span></button>
                     <ul class="dropdown-menu scrollable-menu" role="menu" id="failMenu">
+                        <li><a href="#">No Filter</a></li>
                         <li><a href="#">Highest</a></li>
                         <li><a href="#">Lowest</a></li>
                     </ul></span>
-                    </div>
-                </div></div>
+                            <label><input type="radio" name="optradio" id="FailRadioButton"> Priority?</label>
+                        </div>
+                    </div></div>
+                </div>
             </div>
         </div>
     </div>
@@ -406,26 +472,30 @@
 
 
 
-<div class="container-fluid bg-2" style="margin-top:-18px;">
-    <div class="container">
-        <h3>Search For Rooms</h3>
+    <div class="container-fluid bg-2" style="margin-top:-18px;">
+        <div class="container">
+            <h3>Search For Rooms</h3>
+        </div>
     </div>
-</div>
 
+    <div class="alert alert-danger" id="RoomSearchFailed" style="display: none">
+        <strong>Error!</strong> No search results could be found.
+    </div>
 
-<div class="container">
-    <div class="panel-group">
-        <div class="panel panel-default">
-            <div class="panel-heading">
-                <h3> I want rooms in the
-                    <span class="btn-group" id="buildingMenu">
+    <div class="container-fluid bg-4">
+        <div class="container">
+            <div class="panel-group">
+                <div class="panel panel-default" style="border:0;">
+                    <div class="panel-heading">
+                        <h3> I want rooms in the
+                            <span class="btn-group" id="buildingMenu">
             <button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown" id="roomsButton">All
             <span class="caret"></span></button>
         <ul id="BuildingList" class="dropdown-menu scrollable-menu" role="menu">
             <li><a href="#">All</a></li>
         </ul>
         </span> building on the
-                    <span class="btn-group">
+                            <span class="btn-group">
             <button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown" id="floorButton">All
             <span class="caret"></span></button>
         <ul class="dropdown-menu scrollable-menu" role="menu" id="floorMenu">
@@ -437,18 +507,18 @@
             <li><a href="#">5th</a></li>
         </ul>
         </span>.
-                    <button id="roomsSearchButton" class="btn btn-primary pull-right" type="button"><span class="glyphicon glyphicon-search" onClick="searchRooms();"></span></button>
-                </h3>
-                <h4 class="panel-title">
-                    <a data-toggle="collapse" href="#collapse2">Advanced Search
-                        <span class="glyphicon glyphicon-chevron-down"></span></a>
-                </h4>
-            </div>
-            <div id="collapse2" class="panel-collapse collapse">
-                <div class="panel-body"><div class="form-group row">
-                    <br>
-                    <label for="RoomSize" class="col-xs-3 col-form-label">Room Size</label>
-                    <div class="col-xs-9"><span class="btn-group" id="fdsa"><input id= "RoomSize" type="text" class="form-control" size="2" placeholder="Size...">
+                            <button id="roomsSearchButton" class="btn btn-primary pull-right" type="button"><span class="glyphicon glyphicon-search" onClick="searchRooms();"></span></button>
+                        </h3>
+                        <h4 class="panel-title">
+                            <a data-toggle="collapse" href="#collapse2">Advanced Search
+                                <span class="glyphicon glyphicon-chevron-down"></span></a>
+                        </h4>
+                    </div>
+                    <div id="collapse2" class="panel-collapse collapse">
+                        <div class="panel-body"><div class="form-group row">
+                            <br>
+                            <label for="RoomSize" class="col-xs-3 col-form-label">Room Size</label>
+                            <div class="col-xs-9"><span class="btn-group" id="fdsa"><input id= "RoomSize" type="text" class="form-control" size="2" placeholder="Size...">
                     </span>  or <span class="btn-group">
             <button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown" id="RoomSizeButton">Greater
             <span class="caret"></span></button>
@@ -458,9 +528,9 @@
             <li><a href="#">Lower</a></li>
         </ul>
         </span>
-                    </div>
-                    <label for="roomTypeButton" class="col-xs-3 col-form-label">Room Type </label>
-                    <div class="col-xs-9">
+                            </div>
+                            <label for="roomTypeButton" class="col-xs-3 col-form-label">Room Type </label>
+                            <div class="col-xs-9">
                         <span class="btn-group" id="roomTypeMenu">
             <button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown" id="roomTypeButton">All
             <span class="caret"></span></button>
@@ -468,9 +538,9 @@
             <li><a href="#">All</a></li>
         </ul>
         </span>
-                    </div>
-                    <label for="furnitureButton" class="col-xs-3 col-form-label">Furniture Type </label>
-                    <div class="col-xs-9">
+                            </div>
+                            <label for="furnitureButton" class="col-xs-3 col-form-label">Furniture Type </label>
+                            <div class="col-xs-9">
                         <span class="btn-group" id="furnitureMenu">
             <button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown" id="furnitureButton">All
             <span class="caret"></span></button>
@@ -478,9 +548,9 @@
             <li><a href="#">All</a></li>
         </ul>
         </span>
-                    </div>
-                    <label for="BuildingDistance" class="col-xs-3 col-form-label">Within  </label>
-                    <div class="col-xs-9"><span class="btn-group" id="distance"><input id= "BuildingDistance" type="text" class="form-control" size="5" placeholder="Distance...">
+                            </div>
+                            <label for="BuildingDistance" class="col-xs-3 col-form-label">Within  </label>
+                            <div class="col-xs-9"><span class="btn-group" id="distance"><input id= "BuildingDistance" type="text" class="form-control" size="5" placeholder="Distance...">
                     </span> meters of <span class="btn-group" id="locationMenu">
             <button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown" id="locationButton">All
             <span class="caret"></span></button>
@@ -488,391 +558,409 @@
             <li><a href="#">All</a></li>
         </ul>
         </span></div>
-                </div></div>
+                        </div></div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
-</div>
-
-<!--<div class="input-group" id="roomsSearchContainer">-->
-<!--<h1> I want rooms in the-->
-<!--<span class="btn-group" id="buildingMenu">-->
-<!--<button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown" id="roomsButton">All-->
-<!--<span class="caret"></span></button>-->
-<!--<ul id="BuildingList" class="dropdown-menu scrollable-menu" role="menu">-->
-<!--<li><a href="#">All</a></li>-->
-<!--</ul>-->
-<!--</span> building on the-->
-<!--<span class="btn-group">-->
-<!--<button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown" id="floorButton">All-->
-<!--<span class="caret"></span></button>-->
-<!--<ul class="dropdown-menu scrollable-menu" role="menu" id="floorMenu">-->
-<!--<li><a href="#">All</a></li>-->
-<!--<li><a href="#">1st</a></li>-->
-<!--<li><a href="#">2nd</a></li>-->
-<!--<li><a href="#">3rd</a></li>-->
-<!--<li><a href="#">4th</a></li>-->
-<!--<li><a href="#">5th</a></li>-->
-<!--</ul>-->
-<!--</span>.-->
-<!--<br>-->
-<!--<a class="text-primary" data-toggle="collapse" href="#collapse" aria-exanded="false">-->
-<!--<small>Advanced Search-->
-<!--<span class="glyphicon glyphicon-chevron-down"></span></small>-->
-<!--</a>-->
-<!--<div class="collapse bg-3" id="collapse">-->
-<!--<div class="card card-block">-->
-<!--<h3> I also want the rooms to hold-->
-<!--<span class="btn-group" ><input id= "RoomSize" type="text" class="form-control" size="2" placeholder="Size...">-->
-<!--</span> or <span class="btn-group">-->
-<!--<button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown" id="RoomSizeButton">Equal-->
-<!--<span class="caret"></span></button>-->
-<!--<ul class="dropdown-menu scrollable-menu" role="menu" id="RoomSizeMenu">-->
-<!--<li><a href="#">Equal</a></li>-->
-<!--<li><a href="#">Greater</a></li>-->
-<!--<li><a href="#">Lower</a></li>-->
-<!--</ul>-->
-<!--</span> with the rooms being of type <span class="btn-group" id="roomTypeMenu">-->
-<!--<button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown" id="roomTypeButton">All-->
-<!--<span class="caret"></span></button>-->
-<!--<ul id="RoomTypeList" class="dropdown-menu scrollable-menu" role="menu">-->
-<!--<li><a href="#">All</a></li>-->
-<!--</ul>-->
-<!--</span> and having furniture like <span class="btn-group" id="furnitureMenu">-->
-<!--<button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown" id="furnitureButton">All-->
-<!--<span class="caret"></span></button>-->
-<!--<ul id="FurnitureList" class="dropdown-menu scrollable-menu" role="menu">-->
-<!--<li><a href="#">All</a></li>-->
-<!--</ul>-->
-<!--</span>-->
-<!--</h3>-->
-<!--</div>-->
-<!--</div>-->
-<!--</h1>-->
-<!--</div>-->
+    <!--<div class="input-group" id="roomsSearchContainer">-->
+    <!--<h1> I want rooms in the-->
+    <!--<span class="btn-group" id="buildingMenu">-->
+    <!--<button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown" id="roomsButton">All-->
+    <!--<span class="caret"></span></button>-->
+    <!--<ul id="BuildingList" class="dropdown-menu scrollable-menu" role="menu">-->
+    <!--<li><a href="#">All</a></li>-->
+    <!--</ul>-->
+    <!--</span> building on the-->
+    <!--<span class="btn-group">-->
+    <!--<button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown" id="floorButton">All-->
+    <!--<span class="caret"></span></button>-->
+    <!--<ul class="dropdown-menu scrollable-menu" role="menu" id="floorMenu">-->
+    <!--<li><a href="#">All</a></li>-->
+    <!--<li><a href="#">1st</a></li>-->
+    <!--<li><a href="#">2nd</a></li>-->
+    <!--<li><a href="#">3rd</a></li>-->
+    <!--<li><a href="#">4th</a></li>-->
+    <!--<li><a href="#">5th</a></li>-->
+    <!--</ul>-->
+    <!--</span>.-->
+    <!--<br>-->
+    <!--<a class="text-primary" data-toggle="collapse" href="#collapse" aria-exanded="false">-->
+    <!--<small>Advanced Search-->
+    <!--<span class="glyphicon glyphicon-chevron-down"></span></small>-->
+    <!--</a>-->
+    <!--<div class="collapse bg-3" id="collapse">-->
+    <!--<div class="card card-block">-->
+    <!--<h3> I also want the rooms to hold-->
+    <!--<span class="btn-group" ><input id= "RoomSize" type="text" class="form-control" size="2" placeholder="Size...">-->
+    <!--</span> or <span class="btn-group">-->
+    <!--<button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown" id="RoomSizeButton">Equal-->
+    <!--<span class="caret"></span></button>-->
+    <!--<ul class="dropdown-menu scrollable-menu" role="menu" id="RoomSizeMenu">-->
+    <!--<li><a href="#">Equal</a></li>-->
+    <!--<li><a href="#">Greater</a></li>-->
+    <!--<li><a href="#">Lower</a></li>-->
+    <!--</ul>-->
+    <!--</span> with the rooms being of type <span class="btn-group" id="roomTypeMenu">-->
+    <!--<button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown" id="roomTypeButton">All-->
+    <!--<span class="caret"></span></button>-->
+    <!--<ul id="RoomTypeList" class="dropdown-menu scrollable-menu" role="menu">-->
+    <!--<li><a href="#">All</a></li>-->
+    <!--</ul>-->
+    <!--</span> and having furniture like <span class="btn-group" id="furnitureMenu">-->
+    <!--<button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown" id="furnitureButton">All-->
+    <!--<span class="caret"></span></button>-->
+    <!--<ul id="FurnitureList" class="dropdown-menu scrollable-menu" role="menu">-->
+    <!--<li><a href="#">All</a></li>-->
+    <!--</ul>-->
+    <!--</span>-->
+    <!--</h3>-->
+    <!--</div>-->
+    <!--</div>-->
+    <!--</h1>-->
+    <!--</div>-->
 
 
 
 
 
 
-<div class="container-fluid bg-2" style="margin-top:-18px;">
-    <div class="container">
-        <h3>Course Search Results</h3>
+    <div class="container-fluid bg-2" style="margin-top:-18px;">
+        <div class="container">
+            <h3>Course Search Results</h3>
+        </div>
     </div>
-</div>
-<div container="container-fluid bg-3">
-    <div class="container" id="CourseResultArea">
+    <div container="container-fluid bg-3">
+        <div class="container" id="CourseResultArea" style="
+        height: auto;
+        max-height: 300px;
+        overflow-x: hidden;">
+        </div>
     </div>
-</div>
-<div class="container-fluid bg-2">
-    <div class="container">
-        <h3>Room Search Results</h3>
+    <div class="container-fluid bg-2">
+        <div class="container">
+            <h3>Room Search Results</h3>
+        </div>
     </div>
-</div>
 
-<div container="container-fluid bg-3">
-    <div class="container" id="RoomResultArea">
+    <div container="container-fluid bg-3">
+        <div class="container" id="RoomResultArea" style="
+        height: auto;
+        max-height: 300px;
+        overflow-x: hidden;">
+        </div>
     </div>
-</div>
-<div class="container-fluid text-center" style="background-color:#010C82; color:#FFFFFF">
-    <h3>ADD SELECTION TO LIST</h3>
-</div>
+    <div class="container-fluid text-center" style="background-color:#010C82; color:#FFFFFF">
+        <h3>ADD SELECTION TO LIST</h3>
+    </div>
 
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-sm-6 text-center bg-2"><h3>YOUR CURRENT COURSES</h3></div>
-        <div class="col-sm-6 text-center bg-3"><h3>YOUR CURRENT ROOMS</h3></div>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-sm-6 text-center bg-2"><h3>YOUR CURRENT COURSES</h3></div>
+            <div class="col-sm-6 text-center bg-3"><h3>YOUR CURRENT ROOMS</h3></div>
+        </div>
     </div>
-</div>
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-sm-6 text-center" style="
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-sm-6 text-center" style="
         height: auto;
         max-height: 200px;
         overflow-x: hidden;" id="CurrentCourseList"></div>
-        <div class="col-sm-6 text-center" style="
+            <div class="col-sm-6 text-center" style="
         height: auto;
         max-height: 200px;
         overflow-x: hidden;" id="CurrentRoomList"></div>
+        </div>
     </div>
-</div>
 
 
-<div class="container-fluid text-center" style="background-color:#010C82; color:#FFFFFF">
-    <h3>BUILD MY ROOM SCHEDULE <span class="glyphicon glyphicon-play"></span></h3>
-</div>
-
-
-
-
-
-
-<div id="dataset">
-    <div class="form-group">
-        <h3>Dataset</h3>
-        <label for="datasetId">ID:</label>
-        <input type="text" class="form-control" id="datasetId">
-        <label for="datasetZip">Archive:</label>
-        <input type="file" class="form-control" id="datasetZip">
+    <div class="container-fluid text-center" style="background-color:#010C82; color:#FFFFFF">
+        <h3>BUILD MY ROOM SCHEDULE <span class="glyphicon glyphicon-play"></span></h3>
     </div>
-    <button type="button" class="btn btn-primary" id="datasetAdd">Add Dataset</button>
-    <button type="button" class="btn btn-primary" id="datasetRm">Remove Dataset</button>
-</div>
-<div id="container">
-    <h3>Query</h3>
-    <form id="queryForm">
+
+
+
+
+
+
+    <div id="dataset">
         <div class="form-group">
-            <label for="query">Query:</label>
-            <textarea class="form-control" rows="10" id="query"></textarea>
+            <h3>Dataset</h3>
+            <label for="datasetId">ID:</label>
+            <input type="text" class="form-control" id="datasetId">
+            <label for="datasetZip">Archive:</label>
+            <input type="file" class="form-control" id="datasetZip">
         </div>
-        <button type="submit" id="queryButton" class="btn btn-primary">Submit</button>
-    </form>
-</div>
-
-<div id="render">
-    <h3>Result</h3>
-</div>
-
-<div class="modal fade" id="errorModal" tabindex="-1" role="dialog">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
-                        aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title"></h4>
+        <button type="button" class="btn btn-primary" id="datasetAdd">Add Dataset</button>
+        <button type="button" class="btn btn-primary" id="datasetRm">Remove Dataset</button>
+    </div>
+    <div id="container">
+        <h3>Query</h3>
+        <form id="queryForm">
+            <div class="form-group">
+                <label for="query">Query:</label>
+                <textarea class="form-control" rows="10" id="query"></textarea>
             </div>
-            <div class="modal-body">
-                <p></p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            <button type="submit" id="queryButton" class="btn btn-primary">Submit</button>
+        </form>
+    </div>
+
+    <div id="render">
+        <h3>Result</h3>
+    </div>
+
+    <div class="modal fade" id="errorModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                            aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title"></h4>
+                </div>
+                <div class="modal-body">
+                    <p></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                </div>
             </div>
         </div>
     </div>
-</div>
-<script>
-    var departmentList = [];
-    var currentDepartment = "";
-    var currentBuilding = "";
-    var currentCourse = "";
-    var currentYear = "";
-    var currentFloor = "";
-    var previousCount = 0;
-    $(document).ready(function () {
-        var query = "{\"GET\": [\"courses_dept\"],\"WHERE\": {},\"GROUP\": [ \"courses_dept\"],\"APPLY\": [ ],\"ORDER\": { \"dir\": \"UP\", \"keys\": [\"courses_dept\"]},\"AS\":\"TABLE\"}";
-        sendRequest(query, 'initialCourses');
-        query = "{\"GET\": [\"rooms_fullname\", \"rooms_lat\", \"rooms_lon\"],\"WHERE\": {},\"GROUP\": [ \"rooms_fullname\",\"rooms_lat\", \"rooms_lon\"],\"APPLY\": [ ],\"ORDER\": { \"dir\": \"UP\", \"keys\": [\"rooms_fullname\"]},\"AS\":\"TABLE\"}";
-        sendRequest(query, 'initialRooms');
-        query = "{\"GET\": [\"rooms_type\"],\"WHERE\": {},\"GROUP\": [\"rooms_type\"],\"APPLY\": [ ],\"ORDER\": { \"dir\": \"UP\", \"keys\": [\"rooms_type\"]},\"AS\":\"TABLE\"}";
-        sendRequest(query, 'initialTypes');
-        query = "{\"GET\": [\"rooms_furniture\"],\"WHERE\": {},\"GROUP\": [\"rooms_furniture\"],\"APPLY\": [ ],\"ORDER\": { \"dir\": \"UP\", \"keys\": [\"rooms_furniture\"]},\"AS\":\"TABLE\"}";
-        sendRequest(query, 'initialFurniture');
-        $('#locationButton').prop('disabled', true);
+    <script>
+        var departmentList = [];
+        var currentDepartment = "";
+        var currentBuilding = "";
+        var currentCourse = "";
+        var currentYear = "";
+        var currentFloor = "";
+        var previousCount = 0;
+        $(document).ready(function () {
+            var query = "{\"GET\": [\"courses_dept\"],\"WHERE\": {},\"GROUP\": [ \"courses_dept\"],\"APPLY\": [ ],\"ORDER\": { \"dir\": \"UP\", \"keys\": [\"courses_dept\"]},\"AS\":\"TABLE\"}";
+            sendRequest(query, 'initialCourses');
+            query = "{\"GET\": [\"courses_instructor\"],\"WHERE\": {},\"GROUP\": [ \"courses_instructor\"],\"APPLY\": [ ],\"ORDER\": { \"dir\": \"UP\", \"keys\": [\"courses_instructor\"]},\"AS\":\"TABLE\"}";
+            sendRequest(query, 'initialInstructors');
+            query = "{\"GET\": [\"rooms_fullname\", \"rooms_lat\", \"rooms_lon\"],\"WHERE\": {},\"GROUP\": [ \"rooms_fullname\",\"rooms_lat\", \"rooms_lon\"],\"APPLY\": [ ],\"ORDER\": { \"dir\": \"UP\", \"keys\": [\"rooms_fullname\"]},\"AS\":\"TABLE\"}";
+            sendRequest(query, 'initialRooms');
+            query = "{\"GET\": [\"rooms_type\"],\"WHERE\": {},\"GROUP\": [\"rooms_type\"],\"APPLY\": [ ],\"ORDER\": { \"dir\": \"UP\", \"keys\": [\"rooms_type\"]},\"AS\":\"TABLE\"}";
+            sendRequest(query, 'initialTypes');
+            query = "{\"GET\": [\"rooms_furniture\"],\"WHERE\": {},\"GROUP\": [\"rooms_furniture\"],\"APPLY\": [ ],\"ORDER\": { \"dir\": \"UP\", \"keys\": [\"rooms_furniture\"]},\"AS\":\"TABLE\"}";
+            sendRequest(query, 'initialFurniture');
+            $('#locationButton').prop('disabled', true);
 
-    });
+        });
 
-    function sendRequest(query, scenario) {
-        console.log('hi');
-        try {
-            $.ajax("/query", {
-                type: "POST", data: query, contentType: "application/json", dataType: "json", success: function (data) {
-                    // Retrieve current year
-                    currentYear = $("#yearButton").text();
+        function sendRequest(query, scenario) {
+            console.log('hi');
+            try {
+                $.ajax("/query", {
+                    type: "POST", data: query, contentType: "application/json", dataType: "json", success: function (data) {
+                        // Retrieve current year
+                        currentYear = $("#yearButton").text();
 
-                    console.log("What is this " + currentYear);
-                    if (scenario == "courseTitles") {
-                        console.log('previous count is ' + previousCount);
-                        for (var x = 0; x < 500; x++) {
-                            $('#titledropdown-link' + x).remove();
-                            $('#instructordropdown-link' + x).remove();
+                        console.log("What is this " + currentYear);
+                        if (scenario == "courseTitles") {
+                            console.log('previous count is ' + previousCount);
+                            for (var x = 0; x < 500; x++) {
+                                $('#titledropdown-link' + x).remove();
+                                $('#instructordropdown-link' + x).remove();
+                            }
+                            // Reset Title
+                            console.log("about to reset");
+                            $("#TitleList li a").parents(".input-group").find('#titleButton').html('All' + ' <span class="caret"></span>');
+                            $("#TitleList li a").parents(".input-group").find('#titleButton').val('All');
+                            $("#InstructorList li a").parents(".input-group").find('#titleButton').html('All' + ' <span class="caret"></span>');
+                            $("#InstructorList li a").parents(".input-group").find('#titleButton').val('All');
+
                         }
-                        // Reset Title
-                        console.log("about to reset");
-                        $("#TitleList li a").parents(".input-group").find('#titleButton').html('All' + ' <span class="caret"></span>');
-                        $("#TitleList li a").parents(".input-group").find('#titleButton').val('All');
-                        $("#InstructorList li a").parents(".input-group").find('#titleButton').html('All' + ' <span class="caret"></span>');
-                        $("#InstructorList li a").parents(".input-group").find('#titleButton').val('All');
-
-                    }
-                    for (var i = 0; i < data["result"].length; i++) {
-                        switch (scenario) {
-                            case "initialCourses":
-                                $('#DepartmentList').append('<li><a href="#" id="dropdown-link' + i + '">' + data["result"][i]["courses_dept"] + '</a></li>');
-                                break;
-                            case "courseTitles":
-                                $('#TitleList').append('<li><a href="#" id="titledropdown-link' + i + '">' + data["result"][i]["courses_title"] + '</a></li>');
-                                //       console.log(data["result"][i]["courses_title"]);
-                                break;
-                            case "courseInstructors":
-                                $('#InstructorList').append('<li><a href="#" id="instructordropdown-link' + i + '">' + data["result"][i]["courses_instructor"] + '</a></li>');
-                                //     console.log(data["result"][i]["courses_instructor"]);
-                                break;
-                            case "initialRooms":
-                                $('#BuildingList').append('<li><a href="#" id="dropdown-link' + i + '">' + data["result"][i]["rooms_fullname"] + '</a></li>');
-                                addLatLon(data["result"][i]["rooms_fullname"], data["result"][i]["rooms_lat"], data["result"][i]["rooms_lon"]);
-                                break;
-                            case 'initialTypes':
-                                $('#RoomTypeList').append('<li><a href="#" id="dropdown-link' + i + '">' + data["result"][i]["rooms_type"] + '</a></li>');
-                                break;
-                            case 'initialFurniture':
-                                $('#FurnitureList').append('<li><a href="#" id="dropdown-link' + i + '">' + data["result"][i]["rooms_furniture"] + '</a></li>');
-                                break;
+                        for (var i = 0; i < data["result"].length; i++) {
+                            switch (scenario) {
+                                case "initialCourses":
+                                    $('#DepartmentList').append('<li><a href="#" id="dropdown-link' + i + '">' + data["result"][i]["courses_dept"] + '</a></li>');
+                                    break;
+                                case "initialInstructors":
+                                    $('#InstructorList').append('<li><a href="#" id="instructordropdown-link' + i + '">' + data["result"][i]["courses_instructor"] + '</a></li>');
+                                    break;
+                                case "courseTitles":
+                                    $('#TitleList').append('<li><a href="#" id="titledropdown-link' + i + '">' + data["result"][i]["courses_title"] + '</a></li>');
+                                    //       console.log(data["result"][i]["courses_title"]);
+                                    break;
+                                case "courseInstructors":
+                                    $('#InstructorList').append('<li><a href="#" id="instructordropdown-link' + i + '">' + data["result"][i]["courses_instructor"] + '</a></li>');
+                                    //     console.log(data["result"][i]["courses_instructor"]);
+                                    break;
+                                case "initialRooms":
+                                    $('#BuildingList').append('<li><a href="#" id="dropdown-link' + i + '">' + data["result"][i]["rooms_fullname"] + '</a></li>');
+                                    addLatLon(data["result"][i]["rooms_fullname"], data["result"][i]["rooms_lat"], data["result"][i]["rooms_lon"]);
+                                    break;
+                                case 'initialTypes':
+                                    $('#RoomTypeList').append('<li><a href="#" id="dropdown-link' + i + '">' + data["result"][i]["rooms_type"] + '</a></li>');
+                                    break;
+                                case 'initialFurniture':
+                                    $('#FurnitureList').append('<li><a href="#" id="dropdown-link' + i + '">' + data["result"][i]["rooms_furniture"] + '</a></li>');
+                                    break;
 //                            case "roomsType":
 //                                $('#RoomTypeList').append('<li><a href="#" id="dropdown-link' + i + '">' + data["result"][i]["rooms_type"] + '</a></li>');
 //                                break;
 //                            case "roomsFurniture":
 //                                $('#FurnitureList').append('<li><a href="#" id="dropdown-link' + i + '">' + data["result"][i]["rooms_furniture"] + '</a></li>');
 //                                break;
-                            default:
-                                break;
+                                default:
+                                    break;
 
+                            }
+
+                        }
+                        previousCount = data["result"].length;
+                        switch (scenario) {
+                            case "initialCourses":
+                                $("#DepartmentList li a").click(function () {
+                                    $(this).parents(".panel-group").find('#coursesButton').html($(this).text() + ' <span class="caret"></span>');
+                                    $(this).parents(".panel-group").find('#coursesButton').val($(this).data('value'));
+                                    currentDepartment = $(this).text();
+                                    currentYear = $("#yearButton").text();
+                                    var query = "";
+                                    if (currentDepartment.trim() != "All" && currentYear.trim() != "All") {
+                                        var year = Number(currentYear.charAt(0));
+                                        query = "{\"GET\": [\"courses_title\"],\"WHERE\": {\"AND\": [{\"IS\": {\"courses_dept\": \"" + currentDepartment + "\"}}, {\"IS\": {\"courses_id\": \"" + year + "*\"}}]},\"GROUP\": [ \"courses_title\"],\"APPLY\": [ ],\"ORDER\": { \"dir\": \"UP\", \"keys\": [\"courses_title\"]},\"AS\":\"TABLE\"}";
+                                        console.log(query);
+                                    }else if (currentDepartment.trim() != "All" && currentYear.trim() == "All"){
+                                        query = "{\"GET\": [\"courses_title\"],\"WHERE\": {\"IS\": {\"courses_dept\": \"" + currentDepartment + "\"}},\"GROUP\": [ \"courses_title\"],\"APPLY\": [ ],\"ORDER\": { \"dir\": \"UP\", \"keys\": [\"courses_title\"]},\"AS\":\"TABLE\"}";
+                                    }else
+                                        query = "{\"GET\": [\"courses_title\"],\"WHERE\": {},\"GROUP\": [ \"courses_title\"],\"APPLY\": [ ],\"ORDER\": { \"dir\": \"UP\", \"keys\": [\"courses_title\"]},\"AS\":\"TABLE\"}";
+
+                                    console.log(query);
+                                    sendRequest(query, 'courseTitles');
+                                });
+                                break;
+                            case "initialInstructors":
+                                $("#InstructorList li a").click(function () {
+                                    $(this).parents(".panel-group").find('#instructorButton').html($(this).text() + ' <span class="caret"></span>');
+                                    $(this).parents(".panel-group").find('#instructorButton').val($(this).data('value'));
+
+                                });
+                                break;
+                            case "courseTitles":
+                                $("#TitleList li a").click(function () {
+                                    $(this).parents(".panel-group").find('#titleButton').html($(this).text() + ' <span class="caret"></span>');
+                                    $(this).parents(".panel-group").find('#titleButton').val($(this).data('value'));
+                                    currentYear = $("#yearButton").text();
+                                    currentCourse = $(this).text();
+                                    var query = "";
+                                    //    if (currentCourse.trim() != "All" && currentYear.trim() != "All") {
+                                    //        var year = Number(currentYear.charAt(0));
+                                    //   query = "{\"GET\": [\"courses_instructor\"],\"WHERE\": {\"AND\": [{\"IS\": {\"courses_title\": \"" + currentCourse + "\"}}, {\"IS\": {\"courses_id\": \"" + year + "*\"}}]} ,\"GROUP\": [ \"courses_instructor\"],\"APPLY\": [ ],\"ORDER\": { \"dir\": \"UP\", \"keys\": [\"courses_instructor\"]},\"AS\":\"TABLE\"}";
+                                    //     }
+                                    //    else if (currentCourse.trim() != "All" && currentYear.trim() == "All")
+                                    if (currentCourse.trim() != "All")
+                                        query = "{\"GET\": [\"courses_instructor\"],\"WHERE\": {\"IS\": {\"courses_title\": \"" + currentCourse + "\"}} ,\"GROUP\": [ \"courses_instructor\"],\"APPLY\": [ ],\"ORDER\": { \"dir\": \"UP\", \"keys\": [\"courses_instructor\"]},\"AS\":\"TABLE\"}";
+                                    else
+                                        query = "{\"GET\": [\"courses_instructor\"],\"WHERE\": {\"IS\": {\"courses_dept\": \"" + currentDepartment + "\"}},\"GROUP\": [ \"courses_instructor\"],\"APPLY\": [ ],\"ORDER\": { \"dir\": \"UP\", \"keys\": [\"courses_instructor\"]},\"AS\":\"TABLE\"}";
+                                    sendRequest(query, 'courseInstructors');
+                                });
+                                break;
+                            case "courseInstructors":
+                                $("#InstructorList li a").click(function () {
+                                    $(this).parents(".panel-group").find('#instructorButton').html($(this).text() + ' <span class="caret"></span>');
+                                    $(this).parents(".panel-group").find('#instructorButton').val($(this).data('value'));
+
+                                });
+                                break;
+                            case "initialRooms":
+                                $("#BuildingList li a").click(function () {
+                                    $(this).parents(".panel-group").find('#roomsButton').html($(this).text() + ' <span class="caret"></span>');
+                                    $(this).parents(".panel-group").find('#roomsButton').val($(this).data('value'));
+                                    $(this).parents(".panel-group").find('#locationButton').html($(this).text() + ' <span class="caret"></span>');
+                                    $(this).parents(".panel-group").find('#locationButton').val($(this).data('value'));
+                                    currentBuilding = $(this).text();
+                                    currentFloor = $("#floorButton").text();
+                                    var query = "";
+                                    //     if (currentBuilding.trim() != "All" && currentFloor.trim() != "All") {
+                                    //         var floor = Number(currentFloor.charAt(0));
+                                    //              var roomTypeQuery = "{\"GET\": [\"rooms_type\"],\"WHERE\": {\"AND\": [{\"IS\": {\"rooms_fullname\": \"" + currentBuilding + "\"}}, {\"IS\": {\"rooms_number\": \"" + floor + "*\"}}]},\"GROUP\": [ \"rooms_type\"],\"APPLY\": [ ],\"ORDER\": { \"dir\": \"UP\", \"keys\": [\"rooms_type\"]},\"AS\":\"TABLE\"}";
+                                    //              var roomFurnitureQuery = "{\"GET\": [\"rooms_furniture\"],\"WHERE\": {\"AND\": [{\"IS\": {\"rooms_fullname\": \"" + currentBuilding + "\"}}, {\"IS\": {\"rooms_number\": \"" + floor + "*\"}}]},\"GROUP\": [ \"rooms_furniture\"],\"APPLY\": [ ],\"ORDER\": { \"dir\": \"UP\", \"keys\": [\"rooms_furniture\"]},\"AS\":\"TABLE\"}";
+                                    //             sendRequest(roomTypeQuery, 'roomsType');
+                                    //            sendRequest(roomFurnitureQuery, 'roomsFurniture');
+                                    //       }else if (currentDepartment.trim() != "All" && currentYear.trim() == "All"){
+                                    //          query = "{\"GET\": [\"courses_title\"],\"WHERE\": {\"IS\": {\"courses_dept\": \"" + currentDepartment + "\"}},\"GROUP\": [ \"courses_title\"],\"APPLY\": [ ],\"ORDER\": { \"dir\": \"UP\", \"keys\": [\"courses_title\"]},\"AS\":\"TABLE\"}";
+                                    //     }else
+                                    //        query = "{\"GET\": [\"courses_title\"],\"WHERE\": {},\"GROUP\": [ \"courses_title\"],\"APPLY\": [ ],\"ORDER\": { \"dir\": \"UP\", \"keys\": [\"courses_title\"]},\"AS\":\"TABLE\"}";
+
+                                    //    console.log(query);
+                                    //  sendRequest(query, 'roomsType');
+                                    //sendRequest(query, 'roomsFurniture');
+                                });
+                                break;
+                            case "initialTypes":
+                                $("#roomTypeMenu li a").click(function () {
+                                    $(this).parents(".panel-group").find('#roomTypeButton').html($(this).text() + ' <span class="caret"></span>');
+                                    $(this).parents(".panel-group").find('#roomTypeButton').val($(this).data('value'));
+                                });
+                                break;
+                            case "initialFurniture":
+                                $("#furnitureMenu li a").click(function () {
+                                    $(this).parents(".panel-group").find('#furnitureButton').html($(this).text() + ' <span class="caret"></span>');
+                                    $(this).parents(".panel-group").find('#furnitureButton').val($(this).data('value'));
+                                });
+                                break;
                         }
 
                     }
-                    previousCount = data["result"].length;
-                    switch (scenario) {
-                        case "initialCourses":
-                            $("#DepartmentList li a").click(function () {
-                                $(this).parents(".panel-group").find('#coursesButton').html($(this).text() + ' <span class="caret"></span>');
-                                $(this).parents(".panel-group").find('#coursesButton').val($(this).data('value'));
-                                currentDepartment = $(this).text();
-                                currentYear = $("#yearButton").text();
-                                var query = "";
-                                if (currentDepartment.trim() != "All" && currentYear.trim() != "All") {
-                                    var year = Number(currentYear.charAt(0));
-                                    query = "{\"GET\": [\"courses_title\"],\"WHERE\": {\"AND\": [{\"IS\": {\"courses_dept\": \"" + currentDepartment + "\"}}, {\"IS\": {\"courses_id\": \"" + year + "*\"}}]},\"GROUP\": [ \"courses_title\"],\"APPLY\": [ ],\"ORDER\": { \"dir\": \"UP\", \"keys\": [\"courses_title\"]},\"AS\":\"TABLE\"}";
-                                    console.log(query);
-                                }else if (currentDepartment.trim() != "All" && currentYear.trim() == "All"){
-                                    query = "{\"GET\": [\"courses_title\"],\"WHERE\": {\"IS\": {\"courses_dept\": \"" + currentDepartment + "\"}},\"GROUP\": [ \"courses_title\"],\"APPLY\": [ ],\"ORDER\": { \"dir\": \"UP\", \"keys\": [\"courses_title\"]},\"AS\":\"TABLE\"}";
-                                }else
-                                    query = "{\"GET\": [\"courses_title\"],\"WHERE\": {},\"GROUP\": [ \"courses_title\"],\"APPLY\": [ ],\"ORDER\": { \"dir\": \"UP\", \"keys\": [\"courses_title\"]},\"AS\":\"TABLE\"}";
+                }).fail(function (e) {
+                    //  spawnHttpErrorModal(e)
+                });
+            } catch (err) {
+                //  spawnErrorModal("Query Error", err);
+            }
 
-                                console.log(query);
-                                sendRequest(query, 'courseTitles');
-                            });
-                            break;
-                        case "courseTitles":
-                            $("#TitleList li a").click(function () {
-                                $(this).parents(".panel-group").find('#titleButton').html($(this).text() + ' <span class="caret"></span>');
-                                $(this).parents(".panel-group").find('#titleButton').val($(this).data('value'));
-                                currentYear = $("#yearButton").text();
-                                currentCourse = $(this).text();
-                                var query = "";
-                                //    if (currentCourse.trim() != "All" && currentYear.trim() != "All") {
-                                //        var year = Number(currentYear.charAt(0));
-                                //   query = "{\"GET\": [\"courses_instructor\"],\"WHERE\": {\"AND\": [{\"IS\": {\"courses_title\": \"" + currentCourse + "\"}}, {\"IS\": {\"courses_id\": \"" + year + "*\"}}]} ,\"GROUP\": [ \"courses_instructor\"],\"APPLY\": [ ],\"ORDER\": { \"dir\": \"UP\", \"keys\": [\"courses_instructor\"]},\"AS\":\"TABLE\"}";
-                                //     }
-                                //    else if (currentCourse.trim() != "All" && currentYear.trim() == "All")
-                                if (currentCourse.trim() != "All")
-                                    query = "{\"GET\": [\"courses_instructor\"],\"WHERE\": {\"IS\": {\"courses_title\": \"" + currentCourse + "\"}} ,\"GROUP\": [ \"courses_instructor\"],\"APPLY\": [ ],\"ORDER\": { \"dir\": \"UP\", \"keys\": [\"courses_instructor\"]},\"AS\":\"TABLE\"}";
-                                else
-                                    query = "{\"GET\": [\"courses_instructor\"],\"WHERE\": {\"IS\": {\"courses_dept\": \"" + currentDepartment + "\"}},\"GROUP\": [ \"courses_instructor\"],\"APPLY\": [ ],\"ORDER\": { \"dir\": \"UP\", \"keys\": [\"courses_instructor\"]},\"AS\":\"TABLE\"}";
-                                sendRequest(query, 'courseInstructors');
-                            });
-                            break;
-                        case "courseInstructors":
-                            $("#InstructorList li a").click(function () {
-                                $(this).parents(".panel-group").find('#instructorButton').html($(this).text() + ' <span class="caret"></span>');
-                                $(this).parents(".panel-group").find('#instructorButton').val($(this).data('value'));
-
-                            });
-                            break;
-                        case "initialRooms":
-                            $("#BuildingList li a").click(function () {
-                                $(this).parents(".panel-group").find('#roomsButton').html($(this).text() + ' <span class="caret"></span>');
-                                $(this).parents(".panel-group").find('#roomsButton').val($(this).data('value'));
-                                $(this).parents(".panel-group").find('#locationButton').html($(this).text() + ' <span class="caret"></span>');
-                                $(this).parents(".panel-group").find('#locationButton').val($(this).data('value'));
-                                currentBuilding = $(this).text();
-                                currentFloor = $("#floorButton").text();
-                                var query = "";
-                           //     if (currentBuilding.trim() != "All" && currentFloor.trim() != "All") {
-                           //         var floor = Number(currentFloor.charAt(0));
-                      //              var roomTypeQuery = "{\"GET\": [\"rooms_type\"],\"WHERE\": {\"AND\": [{\"IS\": {\"rooms_fullname\": \"" + currentBuilding + "\"}}, {\"IS\": {\"rooms_number\": \"" + floor + "*\"}}]},\"GROUP\": [ \"rooms_type\"],\"APPLY\": [ ],\"ORDER\": { \"dir\": \"UP\", \"keys\": [\"rooms_type\"]},\"AS\":\"TABLE\"}";
-                      //              var roomFurnitureQuery = "{\"GET\": [\"rooms_furniture\"],\"WHERE\": {\"AND\": [{\"IS\": {\"rooms_fullname\": \"" + currentBuilding + "\"}}, {\"IS\": {\"rooms_number\": \"" + floor + "*\"}}]},\"GROUP\": [ \"rooms_furniture\"],\"APPLY\": [ ],\"ORDER\": { \"dir\": \"UP\", \"keys\": [\"rooms_furniture\"]},\"AS\":\"TABLE\"}";
-                       //             sendRequest(roomTypeQuery, 'roomsType');
-                        //            sendRequest(roomFurnitureQuery, 'roomsFurniture');
-                         //       }else if (currentDepartment.trim() != "All" && currentYear.trim() == "All"){
-                          //          query = "{\"GET\": [\"courses_title\"],\"WHERE\": {\"IS\": {\"courses_dept\": \"" + currentDepartment + "\"}},\"GROUP\": [ \"courses_title\"],\"APPLY\": [ ],\"ORDER\": { \"dir\": \"UP\", \"keys\": [\"courses_title\"]},\"AS\":\"TABLE\"}";
-                           //     }else
-                            //        query = "{\"GET\": [\"courses_title\"],\"WHERE\": {},\"GROUP\": [ \"courses_title\"],\"APPLY\": [ ],\"ORDER\": { \"dir\": \"UP\", \"keys\": [\"courses_title\"]},\"AS\":\"TABLE\"}";
-
-                                //    console.log(query);
-                                //  sendRequest(query, 'roomsType');
-                                //sendRequest(query, 'roomsFurniture');
-                            });
-                            break;
-                        case "initialTypes":
-                            $("#roomTypeMenu li a").click(function () {
-                                $(this).parents(".panel-group").find('#roomTypeButton').html($(this).text() + ' <span class="caret"></span>');
-                                $(this).parents(".panel-group").find('#roomTypeButton').val($(this).data('value'));
-                            });
-                            break;
-                        case "initialFurniture":
-                            $("#furnitureMenu li a").click(function () {
-                                $(this).parents(".panel-group").find('#furnitureButton').html($(this).text() + ' <span class="caret"></span>');
-                                $(this).parents(".panel-group").find('#furnitureButton').val($(this).data('value'));
-                            });
-                            break;
-                    }
-
-                }
-            }).fail(function (e) {
-                //  spawnHttpErrorModal(e)
-            });
-        } catch (err) {
-            //  spawnErrorModal("Query Error", err);
         }
+        // TODO: Condense these into a single function
+        $("#yearMenu li a").click(function () {
+            if ($(this).id = "yearMenu") {
+                $(this).parents(".panel-group").find('#yearButton').html($(this).text() + ' <span class="caret"></span>');
+                $(this).parents(".panel-group").find('#yearButton').val($(this).data('value'));
+            }
+        });
 
-    }
-    // TODO: Condense these into a single function
-    $("#yearMenu li a").click(function () {
-        if ($(this).id = "yearMenu") {
-            $(this).parents(".panel-group").find('#yearButton').html($(this).text() + ' <span class="caret"></span>');
-            $(this).parents(".panel-group").find('#yearButton').val($(this).data('value'));
-        }
-    });
-
-    $("#sizeMenu li a").click(function () {
-        $(this).parents(".panel-group").find('#sizeButton').html($(this).text() + ' <span class="caret"></span>');
-        $(this).parents(".panel-group").find('#sizeButton').val($(this).data('value'));
-    });
+        $("#sizeMenu li a").click(function () {
+            $(this).parents(".panel-group").find('#sizeButton').html($(this).text() + ' <span class="caret"></span>');
+            $(this).parents(".panel-group").find('#sizeButton').val($(this).data('value'));
+        });
 
 
-    $("#averageMenu li a").click(function () {
-        $(this).parents(".panel-group").find('#averageButton').html($(this).text() + ' <span class="caret"></span>');
-        $(this).parents(".panel-group").find('#averageButton').val($(this).data('value'));
-    });
+        $("#averageMenu li a").click(function () {
+            $(this).parents(".panel-group").find('#averageButton').html($(this).text() + ' <span class="caret"></span>');
+            $(this).parents(".panel-group").find('#averageButton').val($(this).data('value'));
+        });
 
-    $("#sectionMenu li a").click(function () {
-        $(this).parents(".panel-group").find('#sectionButton').html($(this).text() + ' <span class="caret"></span>');
-        $(this).parents(".panel-group").find('#sectionButton').val($(this).data('value'));
-    });
-
-
-    $("#passMenu li a").click(function () {
-        $(this).parents(".panel-group").find('#passButton').html($(this).text() + ' <span class="caret"></span>');
-        $(this).parents(".panel-group").find('#passButton').val($(this).data('value'));
-    });
+        $("#sectionMenu li a").click(function () {
+            $(this).parents(".panel-group").find('#sectionButton').html($(this).text() + ' <span class="caret"></span>');
+            $(this).parents(".panel-group").find('#sectionButton').val($(this).data('value'));
+        });
 
 
-    $("#failMenu li a").click(function () {
-        $(this).parents(".panel-group").find('#failButton').html($(this).text() + ' <span class="caret"></span>');
-        $(this).parents(".panel-group").find('#failButton').val($(this).data('value'));
-    });
+        $("#passMenu li a").click(function () {
+            $(this).parents(".panel-group").find('#passButton').html($(this).text() + ' <span class="caret"></span>');
+            $(this).parents(".panel-group").find('#passButton').val($(this).data('value'));
+        });
 
 
-    $("#floorMenu li a").click(function () {
-        $(this).parents(".panel-group").find('#floorButton').html($(this).text() + ' <span class="caret"></span>');
-        $(this).parents(".panel-group").find('#floorButton').val($(this).data('value'));
-    });
+        $("#failMenu li a").click(function () {
+            $(this).parents(".panel-group").find('#failButton').html($(this).text() + ' <span class="caret"></span>');
+            $(this).parents(".panel-group").find('#failButton').val($(this).data('value'));
+        });
 
-    $("#RoomSizeMenu li a").click(function () {
-        $(this).parents(".panel-group").find('#RoomSizeButton').html($(this).text() + ' <span class="caret"></span>');
-        $(this).parents(".panel-group").find('#RoomSizeButton').val($(this).data('value'));
-    });
 
-</script>
+        $("#floorMenu li a").click(function () {
+            $(this).parents(".panel-group").find('#floorButton').html($(this).text() + ' <span class="caret"></span>');
+            $(this).parents(".panel-group").find('#floorButton').val($(this).data('value'));
+        });
+
+        $("#RoomSizeMenu li a").click(function () {
+            $(this).parents(".panel-group").find('#RoomSizeButton').html($(this).text() + ' <span class="caret"></span>');
+            $(this).parents(".panel-group").find('#RoomSizeButton').val($(this).data('value'));
+        });
+
+    </script>
 </body>
 </html>
