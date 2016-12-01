@@ -1,10 +1,18 @@
 /**
  * Created by Brendon on 2016-11-26.
  */
-import Log from "../Util";
-
 export default class ScheduleController {
 
+
+    public launchCommand():any {
+        var exec = require('child_process').exec;
+        var cmd = 'ls';
+
+        exec(cmd, function(error:any, stdout:any, stderr:any) {
+            console.log(stdout);
+            // command output is in stdout
+        });
+    };
     /**
      * Build a schedule for every single room
      * Will return in the form of
@@ -270,13 +278,13 @@ export default class ScheduleController {
                 let currentRoom: string = sortedCurrentSizeDiffs[a][0];
 
                 // Try and find a time in MWF
-                var goodDayMWF = this.findATime(currentCourseShortName, currentCourseName, sortedRooms, currentRoom, fullSchedule, 'mwf', 8, 17, foundATime);
+                var goodDayMWF:any = this.findATime(currentCourseShortName, currentCourseName, sortedRooms, currentRoom, fullSchedule, 'mwf', 8, 17, foundATime);
                 foundATime = goodDayMWF[0];
                 fullSchedule = goodDayMWF[1];
 
                 // If no time in MWF, check TT
                 if (!foundATime) {
-                    var goodDayTT = this.findATime(currentCourseShortName, currentCourseName, sortedRooms, currentRoom, fullSchedule, 'tt', 5, 11, foundATime);
+                    var goodDayTT:any = this.findATime(currentCourseShortName, currentCourseName, sortedRooms, currentRoom, fullSchedule, 'tt', 5, 11, foundATime);
                     foundATime = goodDayTT[0];
                     fullSchedule = goodDayTT[1];
                 }
