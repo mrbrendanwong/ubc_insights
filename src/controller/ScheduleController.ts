@@ -202,15 +202,15 @@ export default class ScheduleController {
             wholeDayCount = this.countCourses(wholeDayCount, roomScheduleTT, 0, roomScheduleTT.length);
 
             // Get the courses for early day
-            wholeDayCount = this.countCourses(wholeDayCount, roomScheduleMWF, 0, 8);
-            wholeDayCount = this.countCourses(wholeDayCount, roomScheduleTT, 0, 5);
+            outsideDayCount = this.countCourses(outsideDayCount, roomScheduleMWF, 0, 8);
+            outsideDayCount = this.countCourses(outsideDayCount, roomScheduleTT, 0, 5);
 
             // Get the courses for late day
-            wholeDayCount = this.countCourses(wholeDayCount, roomScheduleMWF, 17, 24);
-            wholeDayCount = this.countCourses(wholeDayCount, roomScheduleTT, 11, 16);
+            outsideDayCount = this.countCourses(outsideDayCount, roomScheduleMWF, 17, 24);
+            outsideDayCount = this.countCourses(outsideDayCount, roomScheduleTT, 11, 16);
 
             // Account for if good courses = 0
-            fullSchedule[scheduleKeys[z]]["quality"] += (outsideDayCount / wholeDayCount) * 100;
+            fullSchedule[scheduleKeys[z]]["quality"] -= (outsideDayCount / wholeDayCount) * 100;
 
         }
         return fullSchedule;
