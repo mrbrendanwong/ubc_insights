@@ -30,6 +30,8 @@
     "start": "node src/App.js"
   },
   "dependencies": {
+    "google-auth-library": "^0.9.10",
+    "googleapis": "^14.2.0",
     "jszip": "^3.1.2",
     "mochawesome": "^1.5.2",
     "parse5": "^2.2.3",
