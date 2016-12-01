@@ -344,76 +344,147 @@
     }
 
     function retrieveInformation(){
-        // var array = retrieveText();
-//        var parsedCourses = [];
-//        var parsedRooms = [];
-//        var iterationCourse = {};
-//        var iterationRoom = {};
-//        //console.log(array);
-//        for (var x = 0; x < 2; x++) {
-//            var array = retrieveText(x);
-//            for (var i = 0; i < array.length; i++) {
-//                console.log(parsedCourses);
-//                if (i % 4 == 0) {
-//                    if (x == 0) {
-//                        iterationCourse = {};
-//                        iterationCourse['courses_dept'] = (array[i].data.substring(0, array[i].data.indexOf(":")).split(" ")[0]).toLowerCase();
-//                        iterationCourse['courses_id'] = array[i].data.substring(0, array[i].data.indexOf(":")).split(" ")[1];
-//                      //  console.log(iterationCourse['courses_dept']);
-//                      //  console.log(iterationCourse['courses_id']);
-//                      //  console.log('yup');
-//                   //     console.log(array[i].data.substring(0, array[i].data.indexOf(":")).split(" ")[0]); // Department
-//                    //    console.log(array[i].data.substring(0, array[i].data.indexOf(":")).split(" ")[1]); // Course Number
-//                    }
-//                    else {
-//
-//                        iterationRoom = {};
-//                        iterationRoom['rooms_shortname'] = array[i].data.substring(0, array[i].data.indexOf(" ")).trim();
-//                        iterationRoom['rooms_number'] = array[i].data.substring(array[i].data.indexOf(" "),array[i].data.indexOf("i")).trim();
-//                        iterationRoom['rooms_fullname'] = array[i].data.substring(array[i].data.indexOf(" in ") + 4, array[i].data.length).trim();
-//
-//                    //    console.log(array[i].data.substring(0, array[i].data.indexOf(" ")).trim()); // Rooms Short Name
-//                     //   console.log(array[i].data.substring(array[i].data.indexOf(" "),array[i].data.indexOf("i")).trim()); // Rooms number
-//                     //   console.log(array[i].data.substring(array[i].data.indexOf(" in ") + 4, array[i].data.length).trim()); // Rooms Full name
-//                    }
-//                } else if (i % 2 == 0) {
-//                    if (x == 0) {
-//                        iterationCourse['courses_uuid'] = array[i].data.substring(array[i].data.lastIndexOf(":") + 1, array[i].data.length).trim();
-//                        iterationCourse['courses_pass'] = array[i].data.substring(array[i].data.indexOf("s:") + 2, array[i].data.indexOf("F")).trim();
-//                        iterationCourse['courses_fail'] = array[i].data.substring(array[i].data.lastIndexOf("s:") + 2, array[i].data.lastIndexOf("S")).trim();
-//
-//                    //    console.log(array[i].data.substring(array[i].data.indexOf("s:") + 2, array[i].data.indexOf("F")).trim()); // Passing students
-//                     //   console.log(array[i].data.substring(array[i].data.lastIndexOf("s:") + 2, array[i].data.lastIndexOf("S")).trim()); // Failing students
-//                      //  console.log(array[i].data.substring(array[i].data.lastIndexOf(":") + 1, array[i].data.length).trim()); // Course UUID
-//                        //console.log('added');
-//                        console.log()
-//                        parsedCourses.push(iterationCourse)
-//                    }
-//
-//                } else if ((x == 1) && (i % 4 == 1)) {
-//                   // console.log(array[i].data.substring(array[i].data.indexOf("seats:") + 6, array[i].data.indexOf(", Type")).trim()); // Number of seats
-//                    iterationRoom['rooms_seats'] = array[i].data.substring(array[i].data.indexOf("seats:") + 6, array[i].data.indexOf(", Type")).trim();
-//                    parsedRooms.push(iterationRoom);
-//                }
-//
-//            }
+        $('#calendarResultWindow').show();
+        $('#CalendarContainer').html("");
+        var array = retrieveText();
+        var parsedCourses = [];
+        var parsedRooms = [];
+        var iterationCourse = {};
+        var iterationRoom = {};
+        //console.log(array);
+        for (var x = 0; x < 2; x++) {
+            var array = retrieveText(x);
+            for (var i = 0; i < array.length; i++) {
+                console.log(parsedCourses);
+                if (i % 4 == 0) {
+                    if (x == 0) {
+                        iterationCourse = {};
+                        iterationCourse['courses_dept'] = (array[i].data.substring(0, array[i].data.indexOf(":")).split(" ")[0]).toLowerCase();
+                        iterationCourse['courses_id'] = array[i].data.substring(0, array[i].data.indexOf(":")).split(" ")[1];
+                        //  console.log(iterationCourse['courses_dept']);
+                        //  console.log(iterationCourse['courses_id']);
+                        //  console.log('yup');
+                        //     console.log(array[i].data.substring(0, array[i].data.indexOf(":")).split(" ")[0]); // Department
+                        //    console.log(array[i].data.substring(0, array[i].data.indexOf(":")).split(" ")[1]); // Course Number
+                    }
+                    else {
 
-//    }
-//
-//        var parsedInformation = [parsedCourses, parsedRooms];
-//        console.log(parsedCourses[0]);
-//        setTimeout(function(){
-//            console.log('hiiiiii');
-//            console.log(parsedCourses[0]);
-//            console.log(parsedCourses[1]);
-//            console.log(parsedRooms[0]);
-//            console.log('hiiiiii');
-//            var calendar = ScheduleController.prototype.scheduleRooms(parsedCourses, parsedRooms);
-//            console.log(calendar);
-//            //      createCalendar(parsedCourses, parsedRooms);
-//            //do what you need here
-//        }, 1000);
-        ScheduleController.prototype.launchCommand();
+                        iterationRoom = {};
+                        iterationRoom['rooms_shortname'] = array[i].data.substring(0, array[i].data.indexOf(" ")).trim();
+                        iterationRoom['rooms_number'] = array[i].data.substring(array[i].data.indexOf(" "),array[i].data.indexOf("i")).trim();
+                        iterationRoom['rooms_fullname'] = array[i].data.substring(array[i].data.indexOf(" in ") + 4, array[i].data.length).trim();
+
+                        //    console.log(array[i].data.substring(0, array[i].data.indexOf(" ")).trim()); // Rooms Short Name
+                        //   console.log(array[i].data.substring(array[i].data.indexOf(" "),array[i].data.indexOf("i")).trim()); // Rooms number
+                        //   console.log(array[i].data.substring(array[i].data.indexOf(" in ") + 4, array[i].data.length).trim()); // Rooms Full name
+                    }
+                } else if (i % 2 == 0) {
+                    if (x == 0) {
+                        iterationCourse['courses_uuid'] = array[i].data.substring(array[i].data.lastIndexOf(":") + 1, array[i].data.length).trim();
+                        iterationCourse['courses_pass'] = Number(array[i].data.substring(array[i].data.indexOf("s:") + 2, array[i].data.indexOf("F")).trim());
+                        iterationCourse['courses_fail'] = Number(array[i].data.substring(array[i].data.lastIndexOf("s:") + 2, array[i].data.lastIndexOf("S")).trim());
+
+                        //    console.log(array[i].data.substring(array[i].data.indexOf("s:") + 2, array[i].data.indexOf("F")).trim()); // Passing students
+                        //   console.log(array[i].data.substring(array[i].data.lastIndexOf("s:") + 2, array[i].data.lastIndexOf("S")).trim()); // Failing students
+                        //  console.log(array[i].data.substring(array[i].data.lastIndexOf(":") + 1, array[i].data.length).trim()); // Course UUID
+                        //console.log('added');
+                        console.log()
+                        parsedCourses.push(iterationCourse)
+                    }
+
+                } else if ((x == 1) && (i % 4 == 1)) {
+                    // console.log(array[i].data.substring(array[i].data.indexOf("seats:") + 6, array[i].data.indexOf(", Type")).trim()); // Number of seats
+                    iterationRoom['rooms_seats'] = array[i].data.substring(array[i].data.indexOf("seats:") + 6, array[i].data.indexOf(", Type")).trim();
+                    parsedRooms.push(iterationRoom);
+                }
+
+            }
+
+        }
+
+        var parsedInformation = [parsedCourses, parsedRooms];
+        console.log(parsedCourses[0]);
+        //     setTimeout(function(){
+        console.log('hiiiiii');
+        console.log(parsedCourses[0]);
+        console.log(parsedCourses[1]);
+        console.log(parsedRooms[0]);
+        console.log('hiiiiii');
+        var i = 0;
+        var calendar = ScheduleController.prototype.scheduleRooms(parsedCourses, parsedRooms);
+        console.log(calendar);
+        //       var test = createCalendar(parsedCourses, parsedRooms);
+        for (var property in calendar[1]) {
+            //if (calendar[1].hasOwnProperty(property))
+            //        for (var moreProperties in calendar[1][property])id="result' + i + '"
+            //          if (moreProperties == 'seats')
+            $('#CalendarContainer').append('<div class="container bg-3"><div class="row bg-1" id="CalendarRow' + i + '"><div class="col-xs-6" id="MWF' + i + '"><h3>' + property + ' -  ' + calendar[1][property]['seats'] + ' Seats ' + '</h3></div>');
+            $('#MWF'+i).append('<div class="row"><div class="col-xs-6 bg-1" id="mwfTime' + i + '"><h4>MONDAY WEDNESDAY FRIDAY</h4>');
+            for (var q = 0; q < calendar[1][property]['mwf'].length; q++){
+                if (calendar[1][property]['mwf'][q+1] == undefined)
+                    $('#mwfTime'+i).append('<h5>' + JSON.stringify(calendar[1][property]['mwf'][q])+'</h5></div>');
+                else
+                    $('#mwfTime'+i).append('<h5>' + JSON.stringify(calendar[1][property]['mwf'][q])+'</h5>');
+            }
+            $('#CalendarRow'+i).append('<div class="col-xs-6" id="TT' + i +'"><h3>' + 'Schedule Quality: ' + calendar[1][property]['quality'] + '%' + '</h3></div>');
+            $('#TT'+i).append('<div class="col-xs-6 bg-1" id="ttTime' + i +'"><h4>TUESDAY THURSDAY</h4>');
+            for (var z = 0; z < calendar[1][property]['tt'].length; z++){
+                if (calendar[1][property]['tt'][z+1] == undefined)
+                    $('#ttTime'+i).append('<h5>' + JSON.stringify(calendar[1][property]['tt'][z])+'</h5></div>');
+                else
+                    $('#ttTime'+i).append('<h5>' + JSON.stringify(calendar[1][property]['tt'][z])+'</h5>');
+            }
+           // $('#CalendarContainer').append('</div>');
+        i++;
+        }
+
+        $('#GoogleContainer').show();
+        return calendar;
+
+//            for (var q = 1; q < calendar[1]; q++){
+        //               $('#CalendarContainer').append('<div class="container bg-3"><div class="row"><div class="col-xs-6"><h3>" + +"</h3>')
+
+        //}
+//            $('#CalendarContainer').append('<div class="container bg-3"><div class="row"><div class="col-xs-6"><h3>" + +"</h3>')
+//            <div class="container bg-3">
+//            <div class="row">
+//            <div class="col-xs-6">
+//            <h3>DMP 310 - 160 Seats</h3>
+//        </div>
+//        <div class="col-xs-6">
+//            <h3>Schedule Quality: 100%</h3>
+//        </div>
+//        </div>
+//        </div>
+//        <div class="row">
+//            <div class="col-xs-6">
+//            <h3>MONDAY WEDNESDAY FRIDAY</h3>
+//        <h5>time</h5>
+//        <h5>time</h5>
+//        <h5>time</h5>
+//        <h5>time</h5>
+//        <h5>time</h5>
+//        <h5>time</h5>
+//        <h5>time</h5>
+//        <h5>time</h5>
+//        <h5>time</h5>
+//        </div>
+//        <div class="col-xs-6">
+//            <h3>TUESDAY THURSDAY</h3>
+//        <h5>time</h5>
+//        <h5>time</h5>
+//        <h5>time</h5>
+//        <h5>time</h5>
+//        <h5>time</h5>
+//        <h5>time</h5>
+//        <h5>time</h5>
+//        <h5>time</h5>
+//        <h5>time</h5>
+//        </div>
+//        </div>
+        //do what you need here
+        //    }, 1000);
+        // ScheduleController.prototype.launchCommand();
     }
 
     // Full credit to this SO post: http://stackoverflow.com/questions/298750/how-do-i-select-text-nodes-with-jquery
@@ -426,11 +497,16 @@
             return this.nodeType == 3;
         });
     }
+
+        function addToGoogleCalendar(calendar) {
+            $("textarea#query").val(JSON.stringify(calendar));
+            $("#queryButton").click();
+        }
 </script>
 <nav class="navbar navbar-fixed-top" style="background-color:#010C82">
     <div class="container-fluid">
         <div class="navbar-header">
-            <a class="navbar-brand" href="#" style="color: #FFFFFF">UBCInsight</a>
+            <a class="navbar-brand" href="#" style="color: #FFFFFF">INSIGHT<b>UBC</b></a>
         </div>
     </div>
 </nav>
@@ -441,7 +517,7 @@
 
 <div class="container-fluid bg-2">
     <div class="container">
-        <h3>Search For Courses</h3>
+        <h3>SEARCH FOR COURSES</h3>
     </div>
 </div>
 
@@ -561,7 +637,7 @@
 
 <div class="container-fluid bg-2" style="margin-top:-18px;">
     <div class="container">
-        <h3>Search For Rooms</h3>
+        <h3>SEARCH FOR ROOMS</h3>
     </div>
 </div>
 
@@ -593,7 +669,7 @@
             <li><a href="#">4th</a></li>
             <li><a href="#">5th</a></li>
         </ul>
-        </span>.
+        </span> floor.
                         <button id="roomsSearchButton" class="btn btn-primary pull-right" type="button"><span class="glyphicon glyphicon-search" onClick="searchRooms();"></span></button>
                     </h3>
                     <h4 class="panel-title">
@@ -715,7 +791,7 @@
 
 <div class="container-fluid bg-2" style="margin-top:-18px; display: none" id="courseResultWindow">
     <div class="container">
-        <h3>Course Search Results</h3>
+        <h3>COURSE SEARCH RESULTS</h3>
     </div>
 </div>
 <div container="container-fluid bg-3">
@@ -727,7 +803,7 @@
 </div>
 <div class="container-fluid bg-2" style="display: none" id="roomResultWindow">
     <div class="container">
-        <h3>Room Search Results</h3>
+        <h3>ROOM SEARCH RESULTS</h3>
     </div>
 </div>
 
@@ -762,17 +838,31 @@
 </div>
 
 
-<div class="container-fluid text-center" style="background-color:#010C82; color:#FFFFFF">
-    <h3>BUILD MY ROOM SCHEDULE <span class="glyphicon glyphicon-play"></span></h3>
-    <button onClick="retrieveInformation();">ASDSDF</button>
+<div class="container-fluid text-center" style="background-color:#010C82; color:#FFFFFF;">
+    <h3><button style="background-color:#010C82; border-color:#010C82 " onClick="retrieveInformation();">BUILD MY ROOM SCHEDULE <span class="glyphicon glyphicon-play"></span></button></h3>
+</div>
+<br>
+<div class="container-fluid bg-2" style="margin-top:-24px; display: none;" id="calendarResultWindow">
+    <div class="container">
+        <h3>CALENDAR RESULT</h3>
+    </div>
+</div>
+
+
+<div class="container" id="CalendarContainer" style="height: auto; max-height: 600px; overflow-x: hidden;">
+
+</div>
+
+
+
+<div class="container-fluid text-center" style="background-color:#010C82; color:#FFFFFF; display: none;" id="GoogleContainer">
+    <h3><button style="background-color:#010C82; border-color:#010C82" onClick="var calendar = retrieveInformation(); addToGoogleCalendar(calendar);">ADD TO MY GOOGLE CALENDAR <span class="glyphicon glyphicon-play"></span></button></h3>
 </div>
 
 
 
 
-
-
-<div id="dataset">
+<div id="dataset" style="display: none;">
     <div class="form-group">
         <h3>Dataset</h3>
         <label for="datasetId">ID:</label>
@@ -783,7 +873,7 @@
     <button type="button" class="btn btn-primary" id="datasetAdd">Add Dataset</button>
     <button type="button" class="btn btn-primary" id="datasetRm">Remove Dataset</button>
 </div>
-<div id="container">
+<div id="container" style="display: none;">
     <h3>Query</h3>
     <form id="queryForm">
         <div class="form-group">
@@ -794,11 +884,11 @@
     </form>
 </div>
 
-<div id="render">
+<div id="render" style="display: none;">
     <h3>Result</h3>
 </div>
 
-<div class="modal fade" id="errorModal" tabindex="-1" role="dialog">
+<div class="modal fade" id="errorModal" tabindex="-1" role="dialog" style="display: none;">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
@@ -1058,8 +1148,6 @@
     //console.log(test);
     //}
 </script>
-
-
 <script type="text/javascript" src="./public/ScheduleController.js"></script>
 </body>
 </html>

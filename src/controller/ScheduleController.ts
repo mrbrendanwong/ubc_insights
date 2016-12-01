@@ -6,7 +6,7 @@ export default class ScheduleController {
 
     public launchCommand():any {
         var exec = require('child_process').exec;
-        var cmd = 'ls';
+        var cmd = 'node ./src/controller/CalendarController.js';
 
         exec(cmd, function(error:any, stdout:any, stderr:any) {
             console.log(stdout);

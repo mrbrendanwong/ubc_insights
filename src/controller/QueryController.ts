@@ -787,9 +787,7 @@ export default class QueryController {
         // TODO: implement this (where we handle get, where, etc.)
         let queryResult:Array<any>;
         let controller = QueryController.datasetController;
-        let controller2 = QueryController.scheduleController;
 
-        controller2.launchCommand();
         // TODO: THE BELOW IS FOR TESTING SCHEDULE
     //     var courses: any[] = [
     //         { courses_uuid: 41, courses_dept: 'cpsc', courses_id: '301', courses_pass: 200, courses_fail: 0},

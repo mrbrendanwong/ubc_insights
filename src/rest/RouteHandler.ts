@@ -10,13 +10,14 @@ import {Datasets} from '../controller/DatasetController';
 import {QueryRequest} from "../controller/QueryController";
 import Log from '../Util';
 import QueryController from "../controller/QueryController";
+import ScheduleController from "../controller/ScheduleController";
 import InsightFacade from "../controller/InsightFacade";
 import {InsightResponse} from "../controller/IInsightFacade";
-
 export default class RouteHandler {
 
     private static datasetController = new DatasetController();
     private static insightFacade = new InsightFacade();
+    private static scheduleController = new ScheduleController();
 
     public static getHomepage(req: restify.Request, res: restify.Response, next: restify.Next) {
         Log.trace('RoutHandler::getHomepage(..)');
@@ -88,6 +89,17 @@ export default class RouteHandler {
         Log.trace('RouteHandler::postQuery(..) - params: ' + JSON.stringify(req.params));
         try {
             let query: QueryRequest = req.params;
+            if (req.params[1] != undefined) {
+                if (req.params[1][Object.keys(req.params[1])]['seats'] != undefined){
+                    let sController = RouteHandler.scheduleController;
+                    //    let cController = RouteHandler.calendarController;
+                    //          CalendarController.setScheduleObject(req.params);
+                    //  cController.setScheduleObject(req.params);
+                    sController.launchCommand();
+                    return next();
+                }
+
+            }
             let iController = RouteHandler.insightFacade;
             iController.performQuery(query).then(function (result:InsightResponse) {
                 res.json(result.code,result.body);
